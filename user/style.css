@@ -1,0 +1,44 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+#controls {
+  display: flex;
+  z-index: 1;
+  flex-shrink: 0;
+  padding: 3px;
+}
+
+#controls input {
+  flex: 1;
+  padding: 3px;
+}
+
+#controls button {
+  cursor: pointer;
+  padding: 3px;
+}
+
+#status {
+  align-self: center;
+  white-space: nowrap;
+  padding: 3px;
+}
+
+#capture {
+  flex: 1;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+  outline: none;
+}

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Remote Input</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="controls">
+    <input id="room" placeholder="Room" value="ws://localhost:8765/room1">
+    <button id="connectBtn">Connect</button>
+    <span id="status">Disconnected</span>
+  </div>
+  <div id="capture" tabindex="0"></div>
+  <script src="script.js"></script>
+</body>
+</html>
