@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>WebSocket Test</h3>
+
+<input id="room" placeholder="Room" value="room1">
+<button id="connect" onclick="connect()">Connect</button>
+
+<br><br>
+
+<input id="message" placeholder="Message" disabled>
+<button id="sendButton" onclick="send()" disabled>Send</button>
+
+<div id="status">Not connected</div>
+<div id="messages"></div>
+
+<script>
+let socket;
+
+function connect() {
+  const room = document.getElementById("room").value;
+
+  socket = new WebSocket("ws://localhost:8765/" + room);
+
+  socket.onopen = function() {
+    document.getElementById("status").textContent = "Connected";
+    document.getElementById("room").disabled = true;
+    document.getElementById("connect").disabled = true;
+    document.getElementById("message").disabled = false;
+    document.getElementById("sendButton").disabled = false;
+
+  };
+
+  socket.onmessage = function(event) {
+    log("Received: " + event.data);
+  };
+
+  socket.onclose = function() {
+    document.getElementById("status").textContent = "Disconnected";
+    log("Connection closed");
+  };
+
+  socket.onerror = function() {
+    log("Connection error");
+  };
+}
+
+function send() {
+  const input = document.getElementById("message");
+
+  if (input.value !== "") {
+    socket.send(input.value);
+    log("Sent: " + input.value);
+    input.value = "";
+  }
+}
+
+function log(text) {
+  document.getElementById("messages").innerHTML +=
+    "<div>" + text + "</div>";
+}
+
+document.getElementById("message").addEventListener("keydown", function(event) {
+  if (event.key === "Enter") {
+    send();
+  }
+});
+</script>
+
+</body>
+</html>
