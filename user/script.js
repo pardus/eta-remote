@@ -5,6 +5,8 @@ const connectBtn = document.getElementById("connectBtn");
 const roomEl = document.getElementById("room");
 const statusEl = document.getElementById("status");
 
+const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
+
 let ws = null;
 
 function setStatus(text) {
@@ -18,6 +20,7 @@ function connect() {
         setStatus("Connected");
         connectBtn.textContent = "Disconnect";
         capture.focus();
+        send("connect", properties());
     };
 
     ws.onclose = () => {
@@ -31,7 +34,18 @@ function connect() {
 
 function send(type, data) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    ws.send(JSON.stringify({ type, ...data }));
+    ws.send(JSON.stringify({type, ...data }));
+}
+
+function properties(){
+    return {
+        mobile: isMobileDevice,
+        platform: navigator.platform || null,
+        useragent: navigator.userAgent || null,
+        language: navigator.language || null,
+        maxTouchPoints: navigator.maxTouchPoints || 0,
+        orientation: screen.orientation?.type || null
+    };
 }
 
 function coords(e) {
@@ -50,7 +64,7 @@ for (const action of TOUCH_ACTIONS) {
     capture.addEventListener(action, (e) => {
         e.preventDefault();
         const touch = e.changedTouches[0] || e.touches[0];
-        send("touch", { ...coords(touch), action });
+        send("touch", {...coords(touch), action });
     }, { passive: false });
 }
 
@@ -65,10 +79,22 @@ capture.addEventListener("wheel", (e) => {
     send("wheel", { ...coords(e), dx: e.deltaX, dy: e.deltaY });
 }, { passive: false });
 
+// Screen rotate
+let previousOrientation = screen.orientation?.type || null
+window.addEventListener("resize", () => {
+    const currentOrientation = screen.orientation?.type || null;
+    if (currentOrientation !== previousOrientation) {
+        previousOrientation = currentOrientation;
+        const rect = capture.getBoundingClientRect();
+        send("rotate", {orientation: currentOrientation , h: rect.height, w: rect.width});
+    }
+});
+
+
 // Keyboard events
 for (const action of ["keydown", "keyup"]) {
     capture.addEventListener(action, (e) => {
-        send("key", { key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
+        send("key", {key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
     });
 }
 
