@@ -4,12 +4,16 @@ import asyncio
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
+import uuid
+import json
+
 rooms: dict[str, set] = {}
 
 
 async def handler(websocket):
     path = websocket.request.path
     clients = rooms.setdefault(path, set())
+    client_id = str(uuid.uuid4())
 
     clients.add(websocket)
     print(f"Client joined {path}; clients={len(clients)}")
@@ -18,6 +22,9 @@ async def handler(websocket):
         async for message in websocket:
             # Forward the message to every other client in this room
             recipients = clients - {websocket}
+            message = json.loads(message)
+            message["uuid"] = client_id
+            message = json.dumps(message, indent=2)
 
             await asyncio.gather(
                 *(client.send(message) for client in recipients),
