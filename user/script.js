@@ -51,22 +51,36 @@ function properties(){
 function coords(e) {
     const rect = capture.getBoundingClientRect();
     return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-        h: rect.height,
-        w: rect.width,
+        x: parseInt(e.clientX - rect.left),
+        y: parseInt(e.clientY - rect.top),
+        h: parseInt(rect.height),
+        w: parseInt(rect.width),
     };
 }
 
-// Touch events
 const TOUCH_ACTIONS = ["touchstart", "touchmove", "touchend"];
+
 for (const action of TOUCH_ACTIONS) {
-    capture.addEventListener(action, (e) => {
-        e.preventDefault();
-        const touch = e.changedTouches[0] || e.touches[0];
-        send("touch", {...coords(touch), action });
-    }, { passive: false });
+    capture.addEventListener(
+        action,
+        (e) => {
+            e.preventDefault();
+
+            const touches = Array.from(e.changedTouches, (touch) => ({
+                ...coords(touch),
+                identifier: touch.identifier
+            }));
+
+            send("touch", {
+                action,
+                touches
+            });
+        },
+        { passive: false }
+    );
 }
+
+
 
 // Mouse events
 capture.addEventListener("mousedown", (e) => send("mouse", { ...coords(e), action: "down", button: e.button }));
@@ -86,7 +100,7 @@ window.addEventListener("resize", () => {
     if (currentOrientation !== previousOrientation) {
         previousOrientation = currentOrientation;
         const rect = capture.getBoundingClientRect();
-        send("rotate", {orientation: currentOrientation , h: rect.height, w: rect.width});
+        send("rotate", {orientation: currentOrientation , h: parseInt(rect.height), w: parseInt(rect.width)});
     }
 });
 
