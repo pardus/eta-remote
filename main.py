@@ -4,6 +4,7 @@
 import os
 import sys
 import signal
+import json
 
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
@@ -13,6 +14,7 @@ for sub in ("client", "server"):
 
 from websocket import WebSocketClient
 from main import PipeUInputHandler
+from keymap import build_keymap
 
 
 class RemoteControl:
@@ -24,11 +26,22 @@ class RemoteControl:
         self.threads = []
 
     def _serve_http(self):
-        handler = lambda *a, **kw: SimpleHTTPRequestHandler(  # noqa: E731
-            *a, directory=self.user_dir, **kw
-        )
-        self.httpd = ThreadingHTTPServer(("0.0.0.0", self.port), handler)
-        print(f"http server on http://0.0.0.0:{self.port} serving {self.user_dir}")
+        user_dir = self.user_dir
+
+        class Handler(SimpleHTTPRequestHandler):
+            def do_GET(self):
+                if self.path.split("?")[0] == "/keymap.json":
+                    body = json.dumps(build_keymap(), ensure_ascii=False).encode()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
+                return super().do_GET()
+
+        self.httpd = ThreadingHTTPServer(("0.0.0.0", self.port), lambda *a, **kw: Handler(*a, directory=user_dir, **kw))
+        print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
         self.httpd.serve_forever()
 
     def _run_server(self):
