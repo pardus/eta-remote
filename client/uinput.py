@@ -109,6 +109,7 @@ class UInputHandler:
         ])
 
         self.mouse = _create_device("remote-mouse", [
+            (INPUT_PROP_POINTER, None),
             (EV_REL.REL_X, None),
             (EV_REL.REL_Y, None),
             (EV_REL.REL_WHEEL, None),
