@@ -6,8 +6,8 @@
 
 const keyboardLayoutCodes = [
     ['Esc', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
-    ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
-    ['CapsLock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\''],
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\''],
     ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'],
     ['Ctrl', 'Super', 'Alt', 'Space', 'Fn', 'Altgr', 'Enter'],
 ];
@@ -84,6 +84,7 @@ const fnLabels = {
     'A': 'Left',  'S': 'Down',   'D': 'Right',
     'R': 'PgUp',  'F': 'PgDn',
     'Backspace': 'Delete',
+    'T': 'Tab', 'G': 'CapsLock',
 };
 
 // - Friendly display text per code ---------------------
@@ -296,6 +297,8 @@ const VirtualKeyboard = (() => {
     let toggleBtn = null;
     let container = null;
 
+    const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
+
     function toggle() {
         if (!container) return;
         isVisible = !isVisible;
@@ -304,6 +307,7 @@ const VirtualKeyboard = (() => {
     }
 
     function init(callback, parentEl) {
+        if(!isMobileDevice) return;
         onKeyCallback = callback;
 
         toggleBtn = document.createElement('button');
