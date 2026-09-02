@@ -60,6 +60,13 @@ body {
   -webkit-user-select: none;
 }
 
+#virtual-keyboard .layer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 2px;
+}
+
 #virtual-keyboard .row {
   display: flex;
   gap: 2px;

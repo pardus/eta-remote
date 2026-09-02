@@ -58,8 +58,8 @@ function send() {
 }
 
 function log(text) {
-  document.getElementById("messages").innerHTML +=
-    "<div>" + text + "</div>";
+  document.getElementById("messages").innerHTML =
+    "<div>" + text + "</div>" + document.getElementById("messages").innerHTML; 
 }
 
 document.getElementById("message").addEventListener("keydown", function(event) {

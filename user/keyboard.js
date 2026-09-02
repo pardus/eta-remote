@@ -3,12 +3,11 @@
 // Keyboard layout. Each entry is a display label; the wire `code` is
 // resolved via labelToCode so the client EV_KEY lookup works directly.
 const keyboardLayoutCodes = [
-    ['Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'PrtSc', 'Del'],
-    ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
-    ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\', 'Home'],
-    ['CapsLock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', 'Enter', 'PgUp'],
-    ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'End', 'Up', 'PgDn'],
-    ['Ctrl', 'Super', 'Alt', 'Space', 'Altgr', 'Left', 'Down', 'Right']
+    ['Esc', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
+    ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+    ['CapsLock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\''],
+    ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'],
+    ['Ctrl', 'Super', 'Alt', 'Space', 'Fn', 'Altgr',  'Enter']
 ];
 
 // Display label -> JS KeyboardEvent.code
@@ -58,11 +57,34 @@ const labelToCode = {
     'F11': 'F11', 'F12': 'F12',
 };
 
+// When Fn is held these labels change to the mapped one.
+const fnLabels = {
+    '1': 'F1', '2': 'F2', '3': 'F3', '4': 'F4', '5': 'F5',
+    '6': 'F6', '7': 'F7', '8': 'F8', '9': 'F9', '0': 'F10',
+    '-': 'F11', '=': 'F12', 'W': "Up", "A": "Left", 
+    "S": "Down", "D": "Right", "Q": "Home", "E": "End",
+    "R": "PgUp", "F": "PgDn", "Backspace": "Delete"
+};
+
 function codeForLabel(label) {
     if (labelToCode.hasOwnProperty(label)) {
         return labelToCode[label];
     }
     return label;
+}
+
+function displayForLabel(label) {
+    const code = codeForLabel(label);
+    if (keyDisplay.hasOwnProperty(code)) {
+        return keyDisplay[code];
+    }
+    if (code.startsWith('Key') && code.length === 4) {
+        return code[3];
+    }
+    if (code.startsWith('Digit') && code.length === 6) {
+        return code[5];
+    }
+    return code;
 }
 
 // Friendly button text for each JS code.
@@ -98,27 +120,14 @@ const keyDisplay = {
     'ArrowDown': '▼',
     'ArrowRight': '▶',
     'Delete': 'Del',
-    'PrintScreen': 'PrtSc'						
+    'PrintScreen': 'PrtSc'
 };
-
-function displayForCode(code) {
-    if (keyDisplay.hasOwnProperty(code)) {
-        return keyDisplay[code];
-    }
-    if (code.startsWith('Key') && code.length === 4) {
-        return code[3];
-    }
-    if (code.startsWith('Digit') && code.length === 6) {
-        return code[5];
-    }
-    return code;
-}
 
 let onKeyCallback = null;
 
 function sendKey(action, code) {
     if (onKeyCallback) {
-        const display = displayForCode(code);
+        const display = keyDisplay.hasOwnProperty(code) ? keyDisplay[code] : code;
         onKeyCallback(action, { key: display, code, display });
     }
 }
@@ -126,76 +135,95 @@ function sendKey(action, code) {
 // Track currently pressed buttons to avoid stuck keys
 let pressedButtons = new Set();
 
-function releaseButton(keyButton, code) {
+function releaseButton(keyButton) {
     if (!isButtonDown(keyButton)) return;
     pressedButtons.delete(keyButton);
     keyButton.classList.remove('active');
-    sendKey('up', code);
+    sendKey('up', keyButton._code);
 }
 
 function isButtonDown(keyButton) {
     return pressedButtons.has(keyButton);
 }
 
-function listenPress(code, keyButton) {
+function listenPress(keyButton) {
     if (isButtonDown(keyButton)) return;
     pressedButtons.add(keyButton);
     keyButton.classList.add('active');
-    sendKey('down', code);
+    sendKey('down', keyButton._code);
 }
 
-// Function to create a keyboard
-function createKeyboard(page, labels) {
-    const container = document.getElementById(page);
+const FN_LABEL = 'Fn';
+let fnActive = false;
+
+function relabelKeys(keys) {
+    for (const k of keys) {
+        const activeLabel = fnActive && fnLabels.hasOwnProperty(k.label) ? fnLabels[k.label] : k.label;
+        k.button.textContent = displayForLabel(activeLabel);
+        k.button._code = codeForLabel(activeLabel);
+    }
+}
+
+function createKeyboard(labels) {
+    const root = document.createElement('div');
+    root.className = 'layer';
+
+    const fnButtons = [];
 
     labels.forEach(row => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'row';
 
         row.forEach(label => {
-            const code = codeForLabel(label);
             const keyButton = document.createElement('button');
             keyButton.className = 'key';
-            keyButton.textContent = displayForCode(code);
-            keyButton.classList.add(code);
-            if (/^(Key[A-Z]|Digit[0-9])$/.test(code)) {
+            keyButton.classList.add(codeForLabel(label));
+
+            if (label === FN_LABEL) {
+                keyButton.textContent = 'Fn';
+                keyButton.classList.add('fn');
+                const setFn = (on) => {
+                    fnActive = on;
+                    relabelKeys(root._keys);
+                    for (const b of fnButtons) b.classList.toggle('active', fnActive);
+                };
+                keyButton.addEventListener('mousedown', (e) => { e.preventDefault(); setFn(true); });
+                keyButton.addEventListener('mouseup', (e) => { e.preventDefault(); setFn(false); });
+                keyButton.addEventListener('mouseleave', () => setFn(false));
+                keyButton.addEventListener('touchstart', (e) => { e.preventDefault(); setFn(true); }, { passive: false });
+                keyButton.addEventListener('touchend', (e) => { e.preventDefault(); setFn(false); }, { passive: false });
+                keyButton.addEventListener('touchcancel', () => setFn(false));
+                fnButtons.push(keyButton);
+                rowDiv.appendChild(keyButton);
+                return;
+            }
+
+            keyButton.textContent = displayForLabel(label);
+            keyButton._label = label;
+            keyButton._code = codeForLabel(label);
+            if (fnLabels.hasOwnProperty(label)) {
+                keyButton.classList.add('fn-latch');
+            }
+            if (/^(Key[A-Z]|Digit[0-9])$/.test(keyButton._code)) {
                 keyButton.classList.add('letter');
             }
 
-            // Add mouse event listeners
-            keyButton.onmousedown = (e) => {
-                e.preventDefault();
-                listenPress(code, keyButton);
-            };
+            keyButton.onmousedown = (e) => { e.preventDefault(); listenPress(keyButton); };
+            keyButton.onmouseup = (e) => { e.preventDefault(); releaseButton(keyButton); };
+            keyButton.onmouseleave = () => releaseButton(keyButton);
+            keyButton.addEventListener('touchstart', (e) => { e.preventDefault(); listenPress(keyButton); }, { passive: false });
+            keyButton.addEventListener('touchend', (e) => { e.preventDefault(); releaseButton(keyButton); }, { passive: false });
+            keyButton.addEventListener('touchcancel', () => releaseButton(keyButton));
 
-            keyButton.onmouseup = (e) => {
-                e.preventDefault();
-                releaseButton(keyButton, code);
-            };
-            keyButton.onmouseleave = (e) => {
-                releaseButton(keyButton, code);
-            };
-
-            // Add touch event listeners (mobile)
-            keyButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                listenPress(code, keyButton);
-            }, { passive: false });
-
-            keyButton.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                releaseButton(keyButton, code);
-            }, { passive: false });
-            keyButton.addEventListener('touchcancel', (e) => {
-                releaseButton(keyButton, code);
-            });
-
+            (root._keys = root._keys || []).push({ button: keyButton, label });
             rowDiv.appendChild(keyButton);
         });
 
         rowDiv.style.height = (100 / labels.length) + "%";
-        container.appendChild(rowDiv);
+        root.appendChild(rowDiv);
     });
+
+    return root;
 }
 
 const VirtualKeyboard = (() => {
@@ -213,8 +241,6 @@ const VirtualKeyboard = (() => {
     function init(callback, parentEl) {
         onKeyCallback = callback;
 
-        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
         toggleBtn = document.createElement("button");
         toggleBtn.id = "kb-toggle";
         toggleBtn.textContent = "Show Keyboard";
@@ -227,12 +253,7 @@ const VirtualKeyboard = (() => {
         (parentEl || document.body).appendChild(toggleBtn);
         (parentEl || document.body).appendChild(container);
 
-        createKeyboard('virtual-keyboard', keyboardLayoutCodes);
-
-        /*if (!isMobile) {
-            toggleBtn.style.display = "none";
-            return;
-        }*/
+        container.appendChild(createKeyboard(keyboardLayoutCodes));
 
         isVisible = true;
         container.style.display = "flex";

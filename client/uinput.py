@@ -23,6 +23,7 @@ MODIFIERS = {
     "AltLeft": EV_KEY.KEY_LEFTALT,
     "MetaLeft": EV_KEY.KEY_LEFTMETA,
     "CapsLock": EV_KEY.KEY_CAPSLOCK,
+    "AltRight": EV_KEY.KEY_RIGHTALT,
 }
 
 NAVIGATION = {
@@ -40,6 +41,7 @@ NAVIGATION = {
     "End": EV_KEY.KEY_END,
     "PageUp": EV_KEY.KEY_PAGEUP,
     "PageDown": EV_KEY.KEY_PAGEDOWN,
+    "PrintScreen": EV_KEY.KEY_SYSRQ,
 }
 
 FUNCTION_KEYS = {
