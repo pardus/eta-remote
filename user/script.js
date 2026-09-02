@@ -121,4 +121,8 @@ connectBtn.addEventListener("click", () => {
     else connect();
 });
 
+VirtualKeyboard.init((action, { code }) => {
+    send("key", { key: code, code, action });
+});
+
 connect();
