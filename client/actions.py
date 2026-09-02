@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import sys
 import subprocess
 import base64
@@ -31,9 +32,11 @@ def run():
         if not line:
             continue
         message = base64.b64decode(line.encode()).decode()
-        print(message)
         handler.handle(message)
 
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except:
+        sys.exit(1)
