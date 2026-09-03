@@ -5,6 +5,7 @@ import os
 import sys
 import signal
 import json
+import asyncio
 
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
@@ -45,13 +46,12 @@ class RemoteControl:
         self.httpd.serve_forever()
 
     def _run_server(self):
-        import asyncio
         import server
         asyncio.run(server.main())
 
     def _run_client(self):
         ws = WebSocketClient(self.address, PipeUInputHandler().handle)
-        ws.run()
+        asyncio.run(ws.run())
 
     def _spawn(self, target):
         pid = os.fork()
