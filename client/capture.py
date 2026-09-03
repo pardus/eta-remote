@@ -28,6 +28,7 @@ def image_diff_patch_json(previous, current):
         buffer,
         format="JPEG",
         optimize=True,
+        quality=80,
     )
 
     encoded_pixels = base64.b64encode(
