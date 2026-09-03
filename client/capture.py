@@ -5,6 +5,8 @@ from io import BytesIO
 
 from PIL import Image, ImageChops, ImageGrab
 
+SPEED = 60
+
 img_width = 0
 img_height = 0
 
@@ -74,7 +76,7 @@ def main(handler=None):
 
             previous_image = current_image
 
-            time.sleep(len(patch_json) / 1000000)
+            time.sleep(len(patch_json) / (921600*SPEED))
 
     except KeyboardInterrupt:
         print("\nStopped.")

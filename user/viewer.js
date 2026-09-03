@@ -20,8 +20,8 @@ let offsetY = 0;
 function resizeCanvas() {
     const devicePixelRatio = window.devicePixelRatio || 1;
 
-    const windowWidth = capture.offsetWidth;
-    const windowHeight = capture.offsetHeight;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
 
     /*
      * Preserve aspect ratio and show the complete captured screen.
@@ -46,9 +46,8 @@ function resizeCanvas() {
     canvas.width = Math.round(windowWidth * devicePixelRatio);
     canvas.height = Math.round(windowHeight * devicePixelRatio);
 
-    canvas.style.width = `${canvas.width}px`;
-    canvas.style.height = `${canvas.height}px`;
-
+    canvas.style.width = `${windowWidth}px`;
+    canvas.style.height = `${windowHeight}px`;
 
     /*
      * Coordinates after this point use CSS pixels.
