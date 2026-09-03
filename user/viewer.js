@@ -1,6 +1,5 @@
 const canvas = document.getElementById("screen");
 const context = canvas.getContext("2d");
-const status = document.getElementById("status");
 
 /*
  * Original capture resolution.
@@ -47,8 +46,9 @@ function resizeCanvas() {
     canvas.width = Math.round(windowWidth * devicePixelRatio);
     canvas.height = Math.round(windowHeight * devicePixelRatio);
 
-    canvas.style.width = `${windowWidth}px`;
-    canvas.style.height = `${windowHeight}px`;
+    canvas.style.width = `${canvas.width}px`;
+    canvas.style.height = `${canvas.height}px`;
+
 
     /*
      * Coordinates after this point use CSS pixels.
@@ -71,76 +71,73 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
 
-/*
- * Connect to the Python WebSocket server.
- */
-const websocket = new WebSocket(
-    "ws://127.0.0.1:8765/room1.screen"
-);
-
-websocket.onopen = function () {
-    console.log("WebSocket connected");
-
-    status.textContent = "Connected";
-
-    setTimeout(function () {
-        status.style.display = "none";
-    }, 1500);
-};
-
-websocket.onerror = function (error) {
-    console.error("WebSocket error:", error);
-
-    status.style.display = "block";
-    status.textContent = "WebSocket error";
-};
-
-websocket.onclose = function (event) {
-    console.log("WebSocket closed:", event);
-
-    status.style.display = "block";
-    status.textContent = "Disconnected";
-};
+let websocket = null;
 
 
-/*
- * Receive a patch from Python.
- */
-websocket.onmessage = function (event) {
-    let patch;
+window.addEventListener("load", function(){
 
-    try {
-        patch = JSON.parse(event.data);
-        if (!patch.pixels) {
+    /*
+     * Connect to the Python WebSocket server.
+     */
+    websocket = new WebSocket(
+        "ws://"+window.location.hostname+":8765/room1.screen"
+    );
+
+    websocket.onopen = function () {
+        console.log("WebSocket connected");
+
+
+    };
+
+    websocket.onerror = function (error) {
+        console.error("WebSocket error:", error);
+
+    };
+
+    websocket.onclose = function (event) {
+        console.log("WebSocket closed:", event);
+
+    };
+
+
+    /*
+     * Receive a patch from Python.
+     */
+    websocket.onmessage = function (event) {
+        let patch;
+
+        try {
+            patch = JSON.parse(event.data);
+            if (!patch.pixels) {
+                return;
+            }
+
+        } catch (error) {
+            console.error("Invalid JSON:", event.data);
             return;
         }
 
-    } catch (error) {
-        console.error("Invalid JSON:", event.data);
-        return;
-    }
+        console.log("Patch received: ", patch.pixels.length);
 
-    console.log("Received patch:", patch);
+        /*
+         * If the server includes the source resolution,
+         * use it automatically.
+         */
+        if (patch.screen_width && patch.screen_height) {
+            const w = Number(patch.screen_width);
+            const h = Number(patch.screen_height);
+            if (w != sourceWidth || h != sourceHeight){
+                sourceWidth = w;
+                sourceHeight = h;
+                resizeCanvas();
+                console.log(sourceWidth, sourceHeight);
+            }
 
-    /*
-     * If the server includes the source resolution,
-     * use it automatically.
-     */
-    if (patch.screen_width && patch.screen_height) {
-        const w = Number(patch.screen_width);
-        const h = Number(patch.screen_height);
-        if (w != sourceWidth || h != sourceHeight){
-            sourceWidth = w;
-            sourceHeight = h;
-            resizeCanvas();
-            console.log(sourceWidth, sourceHeight);
         }
 
-    }
-
-    drawPatch(patch);
-};
-
+        drawPatch(patch);
+    };
+});
 
 /*
  * Draw one received image patch.

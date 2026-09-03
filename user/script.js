@@ -1,35 +1,25 @@
 "use strict";
 
 const capture = document.getElementById("capture");
-const connectBtn = document.getElementById("connectBtn");
-const roomEl = document.getElementById("room");
-const statusEl = document.getElementById("status");
+
 
 const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
 
 let ws = null;
 
-function setStatus(text) {
-    statusEl.textContent = text;
-}
 
 function connect() {
-    ws = new WebSocket(roomEl.value);
+    ws = new WebSocket("ws://"+window.location.hostname+":8765/room1");
 
     ws.onopen = () => {
-        setStatus("Connected");
-        connectBtn.textContent = "Disconnect";
         capture.focus();
         send("connect", properties());
     };
 
     ws.onclose = () => {
-        setStatus("Disconnected");
-        connectBtn.textContent = "Connect";
         ws = null;
     };
 
-    ws.onerror = () => setStatus("Error");
 }
 
 function send(type, data) {
@@ -115,14 +105,10 @@ for (const action of ["keydown", "keyup"]) {
 // Prevent context menu on long-press
 capture.addEventListener("contextmenu", (e) => e.preventDefault());
 
-// Connect / disconnect toggle
-connectBtn.addEventListener("click", () => {
-    if (ws && ws.readyState === WebSocket.OPEN) ws.close();
-    else connect();
-});
-
 VirtualKeyboard.init((action, { code }) => {
     send("key", { key: code, code, action });
 });
 
-connect();
+window.addEventListener("load", function(){
+    connect();
+});
