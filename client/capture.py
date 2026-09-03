@@ -16,6 +16,7 @@ SCREEN_HEIGHT = screen_geometry.height
 
 
 def capture_screen():
+    print("Capture")
     raw = root.get_image(
         0,
         0,
@@ -67,6 +68,8 @@ def image_diff_patch_json(previous, current):
         "y": y1,
         "width": patch.width,
         "height": patch.height,
+        "screen_width": SCREEN_WIDTH,
+        "screen_height": SCREEN_HEIGHT,
         "format": "JPEG",
         "pixels": encoded_pixels,
     }

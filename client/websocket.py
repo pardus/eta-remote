@@ -31,12 +31,13 @@ class WebSocketClient:
                 asyncio.to_thread(capture_main, capture_handler)
             )
 
-            try:
-                while True:
+            while True:
+                try:
                     message = await queue.get()
+                    print("send:", len(message))
                     await websocket.send(message)
-            finally:
-                capture_task.cancel()
+                except:
+                    pass
 
     async def run(self):
         await asyncio.gather(

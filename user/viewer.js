@@ -7,10 +7,10 @@ const status = document.getElementById("status");
 
  * Change these values to match the actual captured screen size.
  */
-let sourceWidth = 2433;
-let sourceHeight = 1080;
+let sourceWidth = 800;
+let sourceHeight = 600;
 
-let scale = 1;
+let scale = 1.0;
 let offsetX = 0;
 let offsetY = 0;
 
@@ -111,6 +111,10 @@ websocket.onmessage = function (event) {
 
     try {
         patch = JSON.parse(event.data);
+        if (!patch.pixels) {
+            return;
+        }
+
     } catch (error) {
         console.error("Invalid JSON:", event.data);
         return;
@@ -123,10 +127,15 @@ websocket.onmessage = function (event) {
      * use it automatically.
      */
     if (patch.screen_width && patch.screen_height) {
-        sourceWidth = Number(patch.screen_width);
-        sourceHeight = Number(patch.screen_height);
+        const w = Number(patch.screen_width);
+        const h = Number(patch.screen_height);
+        if (w != sourceWidth || h != sourceHeight){
+            sourceWidth = w;
+            sourceHeight = h;
+            resizeCanvas();
+            console.log(sourceWidth, sourceHeight);
+        }
 
-        resizeCanvas();
     }
 
     drawPatch(patch);
@@ -137,10 +146,6 @@ websocket.onmessage = function (event) {
  * Draw one received image patch.
  */
 function drawPatch(patch) {
-    if (!patch.pixels) {
-        console.error("No pixels field found:", patch);
-        return;
-    }
 
     const x = Number(patch.x);
     const y = Number(patch.y);
