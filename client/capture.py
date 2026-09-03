@@ -54,13 +54,13 @@ def image_diff_patch_json(previous, current):
 def main(handler=None):
     global img_width
     global img_height
-    previous_image = ImageGrab.grab().convert("RGB")
+    previous_image = ImageGrab.grab().resize((1280, 720))
     img_width = previous_image.width
     img_height = previous_image.height
 
     try:
         while True:
-            current_image = ImageGrab.grab().convert("RGB")
+            current_image = ImageGrab.grab().resize((1280, 720))
 
             patch_json = image_diff_patch_json(
                 previous_image,
@@ -73,7 +73,7 @@ def main(handler=None):
 
             previous_image = current_image
 
-            time.sleep(0.05)
+            time.sleep(len(patch_json) / 1000000)
 
     except KeyboardInterrupt:
         print("\nStopped.")
