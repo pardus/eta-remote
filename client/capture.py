@@ -3,41 +3,12 @@ import json
 import time
 from io import BytesIO
 
-from PIL import Image, ImageChops
-from Xlib import X, display
+from PIL import Image, ImageChops, ImageGrab
 
-
-display_connection = display.Display()
-root = display_connection.screen().root
-
-screen_geometry = root.get_geometry()
-SCREEN_WIDTH = screen_geometry.width
-SCREEN_HEIGHT = screen_geometry.height
-
-
-def capture_screen():
-    print("Capture")
-    raw = root.get_image(
-        0,
-        0,
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        X.ZPixmap,
-        0xFFFFFFFF,
-    )
-
-    return Image.frombytes(
-        "RGB",
-        (SCREEN_WIDTH, SCREEN_HEIGHT),
-        raw.data,
-        "raw",
-        "BGRX",
-    )
-
+img_width = 0
+img_height = 0
 
 def image_diff_patch_json(previous, current):
-    previous = previous.convert("RGB")
-    current = current.convert("RGB")
 
     if previous.size != current.size:
         raise ValueError("Images must have the same dimensions")
@@ -68,8 +39,8 @@ def image_diff_patch_json(previous, current):
         "y": y1,
         "width": patch.width,
         "height": patch.height,
-        "screen_width": SCREEN_WIDTH,
-        "screen_height": SCREEN_HEIGHT,
+        "screen_width": img_width,
+        "screen_height": img_height,
         "format": "JPEG",
         "pixels": encoded_pixels,
     }
@@ -81,11 +52,15 @@ def image_diff_patch_json(previous, current):
 
 
 def main(handler=None):
-    previous_image = capture_screen()
+    global img_width
+    global img_height
+    previous_image = ImageGrab.grab().convert("RGB")
+    img_width = previous_image.width
+    img_height = previous_image.height
 
     try:
         while True:
-            current_image = capture_screen()
+            current_image = ImageGrab.grab().convert("RGB")
 
             patch_json = image_diff_patch_json(
                 previous_image,
