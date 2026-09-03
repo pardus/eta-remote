@@ -15,7 +15,7 @@ class WebSocketClient:
                 self.handler(message)
 
     async def streamer(self):
-        async with connect(self.address) as websocket:
+        async with connect(self.address+".screen") as websocket:
             loop = asyncio.get_running_loop()
             queue = asyncio.Queue()
 
@@ -36,8 +36,8 @@ class WebSocketClient:
                     message = await queue.get()
                     print("send:", len(message))
                     await websocket.send(message)
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
 
     async def run(self):
         await asyncio.gather(

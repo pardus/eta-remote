@@ -21,8 +21,8 @@ let offsetY = 0;
 function resizeCanvas() {
     const devicePixelRatio = window.devicePixelRatio || 1;
 
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+    const windowWidth = capture.offsetWidth;
+    const windowHeight = capture.offsetHeight;
 
     /*
      * Preserve aspect ratio and show the complete captured screen.
@@ -75,7 +75,7 @@ resizeCanvas();
  * Connect to the Python WebSocket server.
  */
 const websocket = new WebSocket(
-    "ws://127.0.0.1:8765/room1"
+    "ws://127.0.0.1:8765/room1.screen"
 );
 
 websocket.onopen = function () {
