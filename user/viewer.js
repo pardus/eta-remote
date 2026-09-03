@@ -34,20 +34,18 @@ function resizeCanvas() {
     const displayedWidth = sourceWidth * scale;
     const displayedHeight = sourceHeight * scale;
 
-    /*
-     * Center the captured screen.
-     */
-    offsetX = (windowWidth - displayedWidth) / 2;
-    offsetY = (windowHeight - displayedHeight) / 2;
 
     /*
      * Use a high-resolution canvas internally.
      */
-    canvas.width = Math.round(windowWidth * devicePixelRatio);
-    canvas.height = Math.round(windowHeight * devicePixelRatio);
+    canvas.width = Math.round(displayedWidth * devicePixelRatio);
+    canvas.height = Math.round(displayedHeight * devicePixelRatio);
 
-    canvas.style.width = `${windowWidth}px`;
-    canvas.style.height = `${windowHeight}px`;
+    canvas.style.width = `${displayedWidth}px`;
+    canvas.style.height = `${displayedHeight}px`;
+
+    capture.style.width = `${displayedWidth}px`;
+    capture.style.height = `${displayedHeight}px`;
 
     /*
      * Coordinates after this point use CSS pixels.
@@ -165,8 +163,8 @@ function drawPatch(patch) {
          * Convert original capture coordinates to
          * displayed browser coordinates.
          */
-        const drawX = offsetX + x * scale;
-        const drawY = offsetY + y * scale;
+        const drawX = x * scale;
+        const drawY = y * scale;
         const drawWidth = width * scale;
         const drawHeight = height * scale;
 

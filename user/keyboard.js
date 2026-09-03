@@ -307,7 +307,7 @@ const VirtualKeyboard = (() => {
     }
 
     function init(callback, parentEl) {
-        if(!isMobileDevice) return;
+        //if(!isMobileDevice) return;
         onKeyCallback = callback;
 
         toggleBtn = document.createElement('button');
