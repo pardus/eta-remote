@@ -54,16 +54,22 @@ def image_diff_patch_json(previous, current):
     )
 
 
+def image_grab():
+    img = ImageGrab.grab()
+    if img.width > 1920:
+        return img.resize((1920, 1080), resample=Image.Resampling.NEAREST)
+    return img
+
 def main(handler=None):
     global img_width
     global img_height
-    previous_image = ImageGrab.grab().resize((1280, 720))
+    previous_image = image_grab()
     img_width = previous_image.width
     img_height = previous_image.height
 
     try:
         while True:
-            current_image = ImageGrab.grab().resize((1280, 720))
+            current_image = image_grab()
 
             patch_json = image_diff_patch_json(
                 previous_image,
