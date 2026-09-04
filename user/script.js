@@ -102,11 +102,19 @@ window.addEventListener("resize", () => {
 for (const action of ["keydown", "keyup"]) {
     capture.addEventListener(action, (e) => {
         send("key", {key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
+        e.preventDefault();
+        return false;
     });
 }
 
 // Prevent context menu on long-press
 capture.addEventListener("contextmenu", (e) => e.preventDefault());
+
+document.onkeydown = function (event) {
+     event.preventDefault();
+     return false;
+};
+
 
 VirtualKeyboard.init((action, { code }) => {
     send("key", { key: code, code, action });
