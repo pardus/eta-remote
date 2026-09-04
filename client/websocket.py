@@ -3,6 +3,11 @@ from websockets.asyncio.client import connect
 
 from capture import main as capture_main, request_full
 
+class context:
+    def __init__(self):
+        self.allow = False
+        self.websocket = None
+        self.message = ""
 
 class WebSocketClient:
     def __init__(self, address, handler=print, control=print):
@@ -10,12 +15,16 @@ class WebSocketClient:
         self.handler = handler
         self.control = control
 
-    async def client(self, websocket):
-        async for message in websocket:
-            if self.control(message):
+    async def client(self, ctx):
+        async for message in ctx.websocket:
+            ctx.message = message
+            if self.control(ctx):
+                if "request_full" in message:
+                    request_full()
+                    continue
                 self.handler(message)
 
-    async def streamer(self, websocket):
+    async def streamer(self, ctx):
         loop = asyncio.get_running_loop()
         queue = asyncio.Queue()
 
@@ -35,15 +44,19 @@ class WebSocketClient:
             try:
                 message = await queue.get()
                 #print("send:", len(message))
-                await websocket.send(message)
+                ctx.message = message
+                if self.control(ctx):
+                    await ctx.websocket.send(message)
             except Exception as e:
                 print(e)
 
     async def run(self):
         async with connect(self.address) as websocket:
+            ctx = context()
+            ctx.websocket = websocket
             await asyncio.gather(
-                self.client(websocket),
-                self.streamer(websocket),
+                self.client(ctx),
+                self.streamer(ctx),
             )
 
 

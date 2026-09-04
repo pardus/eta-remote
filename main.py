@@ -45,10 +45,16 @@ class RemoteControl:
         print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
         self.httpd.serve_forever()
 
-    def control(self, message):
-        data = json.loads(message)
-        if "type" in data:
-            print(data.get("type"), data.get("id"))
+    def control(self, ctx):
+        """control and filter websocket context"""
+        try:
+            data = json.loads(ctx.message)
+            if "type" in data:
+                print(data.get("type"), data.get("id"))
+        except Exception as e:
+            print(e)
+            return False
+        return True
 
     def _run_server(self):
         import server
