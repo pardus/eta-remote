@@ -61,6 +61,7 @@ function resizeCanvas() {
 
     context.fillStyle = "#111";
     context.fillRect(0, 0, windowWidth, windowHeight);
+    send("request_full");
 }
 
 window.addEventListener("resize", resizeCanvas);

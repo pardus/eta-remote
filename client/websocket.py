@@ -1,7 +1,7 @@
 import asyncio
 from websockets.asyncio.client import connect
 
-from capture import main as capture_main
+from capture import main as capture_main, request_full
 
 
 class WebSocketClient:
@@ -12,6 +12,8 @@ class WebSocketClient:
     async def client(self):
         async with connect(self.address) as websocket:
             async for message in websocket:
+                if "request_full" in message:
+                    request_full()
                 self.handler(message)
 
     async def streamer(self):

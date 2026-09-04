@@ -40,7 +40,7 @@ async def handler(websocket):
                 return_exceptions=True,
             )
 
-    except ConnectionClosed:
+    except:
         pass
 
     finally:

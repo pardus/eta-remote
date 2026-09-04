@@ -60,7 +60,13 @@ def image_grab():
         return img.resize((1920, 1080), resample=Image.Resampling.NEAREST)
     return img
 
+req_full = False
+def request_full():
+    global req_full
+    req_full = True
+
 def main(handler=None):
+    global req_full
     global img_width
     global img_height
     previous_image = image_grab()
@@ -70,6 +76,9 @@ def main(handler=None):
     try:
         while True:
             current_image = image_grab()
+            if req_full:
+                previous_image = Image.new('RGB', (img_width, img_height), color='black')
+                req_full = False
 
             patch_json = image_diff_patch_json(
                 previous_image,
