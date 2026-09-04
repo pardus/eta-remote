@@ -33,7 +33,7 @@ async def handler(websocket):
             recipients = clients - {websocket}
             message = json.loads(message)
             message["id"] = client_id
-            message = json.dumps(message, indent=2)
+            message = json.dumps(message)
 
             await asyncio.gather(
                 *(client.send(message) for client in recipients),

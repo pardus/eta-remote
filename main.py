@@ -6,17 +6,19 @@ import sys
 import signal
 import json
 import asyncio
+import threading
 
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-for sub in ("client", "server"):
+for sub in ("client", "server", "gui"):
     sys.path.insert(0, os.path.join(BASE_DIR, sub))
 
 from websocket import WebSocketClient
 from main import PipeUInputHandler
 from keymap import build_keymap
 
+from MainWindow import MainWindow
 
 class RemoteControl:
     def __init__(self, address="ws://localhost:8765/room1", port=8000, user_dir=None):
@@ -45,24 +47,18 @@ class RemoteControl:
         print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
         self.httpd.serve_forever()
 
-    def control(self, ctx):
-        """control and filter websocket context"""
-        try:
-            data = json.loads(ctx.message)
-            if "type" in data:
-                print(data.get("type"), data.get("id"))
-        except Exception as e:
-            print(e)
-            return False
-        return True
 
     def _run_server(self):
         import server
         asyncio.run(server.main())
 
     def _run_client(self):
-        ws = WebSocketClient(self.address, PipeUInputHandler().handle, self.control)
-        asyncio.run(ws.run())
+        window = MainWindow()
+        def _run():
+            ws = WebSocketClient(self.address, PipeUInputHandler().handle, window.control)
+            asyncio.run(ws.run())
+        threading.Thread(target=_run).start()
+        window.run()
 
     def _spawn(self, target):
         pid = os.fork()
