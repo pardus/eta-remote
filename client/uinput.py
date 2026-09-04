@@ -99,12 +99,14 @@ class UInputHandler:
             (EV_ABS.ABS_MT_TRACKING_ID, libevdev.InputAbsInfo(minimum=0, maximum=TRACKING_ID_MAX)),
             (EV_ABS.ABS_MT_POSITION_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
             (EV_ABS.ABS_MT_POSITION_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
+            (EV_ABS.ABS_MT_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
         ])
 
         self.abs_mouse = _create_device("remote-pointer", [
             (INPUT_PROP_POINTER, None),
             (EV_ABS.ABS_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
             (EV_ABS.ABS_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
+            (EV_ABS.ABS_MT_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
             (EV_KEY.BTN_LEFT, None),
             (EV_KEY.BTN_RIGHT, None),
             (EV_KEY.BTN_MIDDLE, None),
@@ -171,6 +173,7 @@ class UInputHandler:
             identifier = int(t.get("identifier", 0)) & TRACKING_ID_MAX
             x = self._scale_x(t.get("x", 0), source_w)
             y = self._scale_y(t.get("y", 0), source_h)
+            f = t.get("f", 512)
 
             if action == "touchstart":
                 slot = self._alloc_slot(identifier)
@@ -181,6 +184,7 @@ class UInputHandler:
                     InputEvent(EV_ABS.ABS_MT_TRACKING_ID, identifier),
                     InputEvent(EV_ABS.ABS_MT_POSITION_X, x),
                     InputEvent(EV_ABS.ABS_MT_POSITION_Y, y),
+                    InputEvent(EV_ABS.ABS_MT_PRESSURE, f),
                 ]
             elif action == "touchmove":
                 slot = self._slot_of.get(identifier)
@@ -190,6 +194,7 @@ class UInputHandler:
                     InputEvent(EV_ABS.ABS_MT_SLOT, slot),
                     InputEvent(EV_ABS.ABS_MT_POSITION_X, x),
                     InputEvent(EV_ABS.ABS_MT_POSITION_Y, y),
+                    InputEvent(EV_ABS.ABS_MT_PRESSURE, f),
                 ]
             elif action == "touchend":
                 slot = self._slot_of.pop(identifier, None)
@@ -198,6 +203,7 @@ class UInputHandler:
                 events += [
                     InputEvent(EV_ABS.ABS_MT_SLOT, slot),
                     InputEvent(EV_ABS.ABS_MT_TRACKING_ID, -1),
+                    InputEvent(EV_ABS.ABS_MT_PRESSURE, 0),
                 ]
 
         if not touches:
@@ -219,7 +225,9 @@ class UInputHandler:
             InputEvent(EV_KEY.BTN_TOOL_FINGER, 1),
             InputEvent(EV_ABS.ABS_X, first_x),
             InputEvent(EV_ABS.ABS_Y, first_y),
+            InputEvent(EV_ABS.ABS_PRESSURE, f),
         ]
+        print(events)
         self._send(self.touch, events)
 
     def _handle_mouse(self, data):

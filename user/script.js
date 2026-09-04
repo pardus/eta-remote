@@ -48,7 +48,7 @@ function coords(e) {
         y: parseInt(e.clientY - rect.top),
         h: parseInt(rect.height),
         w: parseInt(rect.width),
-        f: parseInt(1024 * e.force),
+        f: parseInt(1023 * e.force),
     };
 }
 
