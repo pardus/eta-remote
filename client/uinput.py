@@ -100,6 +100,7 @@ class UInputHandler:
             (EV_ABS.ABS_MT_POSITION_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
             (EV_ABS.ABS_MT_POSITION_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
             (EV_ABS.ABS_MT_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
+            (EV_ABS.ABS_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
         ])
 
         self.abs_mouse = _create_device("remote-pointer", [
