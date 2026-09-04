@@ -69,39 +69,16 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
 
-let websocket = null;
-
 
 window.addEventListener("load", function(){
 
-    /*
-     * Connect to the Python WebSocket server.
-     */
-    websocket = new WebSocket(
-        "ws://"+window.location.hostname+":8765/room1.screen"
-    );
-
-    websocket.onopen = function () {
-        console.log("WebSocket connected");
-
-
-    };
-
-    websocket.onerror = function (error) {
-        console.error("WebSocket error:", error);
-
-    };
-
-    websocket.onclose = function (event) {
-        console.log("WebSocket closed:", event);
-
-    };
-
-
+    if(!ws){
+        connect();
+    }
     /*
      * Receive a patch from Python.
      */
-    websocket.onmessage = function (event) {
+    ws.onmessage = function (event) {
         let patch;
 
         try {

@@ -45,12 +45,17 @@ class RemoteControl:
         print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
         self.httpd.serve_forever()
 
+    def control(self, message):
+        data = json.loads(message)
+        if "type" in data:
+            print(data.get("type"), data.get("id"))
+
     def _run_server(self):
         import server
         asyncio.run(server.main())
 
     def _run_client(self):
-        ws = WebSocketClient(self.address, PipeUInputHandler().handle)
+        ws = WebSocketClient(self.address, PipeUInputHandler().handle, self.control)
         asyncio.run(ws.run())
 
     def _spawn(self, target):

@@ -9,6 +9,9 @@ let ws = null;
 
 
 function connect() {
+    if(ws){
+        return;
+    }
     ws = new WebSocket("ws://"+window.location.hostname+":8765/room1");
 
     ws.onopen = () => {
