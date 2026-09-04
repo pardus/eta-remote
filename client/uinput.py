@@ -8,6 +8,14 @@ SCREEN_WIDTH = int(os.environ.get("REMOTE_SCREEN_WIDTH", 3840))
 SCREEN_HEIGHT = int(os.environ.get("REMOTE_SCREEN_HEIGHT", 2160))
 MAX_TOUCHES = int(os.environ.get("REMOTE_MAX_TOUCHES", 11))
 TRACKING_ID_MAX = 0xFFFF
+PRESSURE_MAX = 1023
+
+# linux/input-event-codes.h MT_TOOL_* values for ABS_MT_TOOL_TYPE
+MT_TOOL_FINGER = 0
+MT_TOOL_PEN = 1
+
+PRESSURE_INFO = libevdev.InputAbsInfo(minimum=0, maximum=PRESSURE_MAX)
+TOOL_INFO = libevdev.InputAbsInfo(minimum=MT_TOOL_FINGER, maximum=MT_TOOL_PEN)
 
 KEYS = {}
 
@@ -93,21 +101,24 @@ class UInputHandler:
             (INPUT_PROP_DIRECT, None),
             (EV_KEY.BTN_TOUCH, None),
             (EV_KEY.BTN_TOOL_FINGER, None),
+            (EV_KEY.BTN_TOOL_PEN, None),
+            (EV_KEY.BTN_STYLUS, None),
             (EV_ABS.ABS_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
             (EV_ABS.ABS_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
             (EV_ABS.ABS_MT_SLOT, libevdev.InputAbsInfo(minimum=0, maximum=MAX_TOUCHES - 1)),
             (EV_ABS.ABS_MT_TRACKING_ID, libevdev.InputAbsInfo(minimum=0, maximum=TRACKING_ID_MAX)),
             (EV_ABS.ABS_MT_POSITION_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
             (EV_ABS.ABS_MT_POSITION_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
-            (EV_ABS.ABS_MT_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
-            (EV_ABS.ABS_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
+            (EV_ABS.ABS_MT_PRESSURE, PRESSURE_INFO),
+            (EV_ABS.ABS_PRESSURE, PRESSURE_INFO),
+            (EV_ABS.ABS_MT_TOOL_TYPE, TOOL_INFO),
         ])
 
         self.abs_mouse = _create_device("remote-pointer", [
             (INPUT_PROP_POINTER, None),
             (EV_ABS.ABS_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
             (EV_ABS.ABS_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
-            (EV_ABS.ABS_MT_PRESSURE, libevdev.InputAbsInfo(minimum=0, maximum=1023)),
+            (EV_ABS.ABS_MT_PRESSURE, PRESSURE_INFO),
             (EV_KEY.BTN_LEFT, None),
             (EV_KEY.BTN_RIGHT, None),
             (EV_KEY.BTN_MIDDLE, None),
@@ -174,7 +185,7 @@ class UInputHandler:
             identifier = int(t.get("identifier", 0)) & TRACKING_ID_MAX
             x = self._scale_x(t.get("x", 0), source_w)
             y = self._scale_y(t.get("y", 0), source_h)
-            f = t.get("f", 512)
+            f = max(0, min(int(t.get("f", 512)), PRESSURE_MAX))
 
             if action == "touchstart":
                 slot = self._alloc_slot(identifier)
@@ -183,6 +194,7 @@ class UInputHandler:
                 events += [
                     InputEvent(EV_ABS.ABS_MT_SLOT, slot),
                     InputEvent(EV_ABS.ABS_MT_TRACKING_ID, identifier),
+                    InputEvent(EV_ABS.ABS_MT_TOOL_TYPE, MT_TOOL_PEN),
                     InputEvent(EV_ABS.ABS_MT_POSITION_X, x),
                     InputEvent(EV_ABS.ABS_MT_POSITION_Y, y),
                     InputEvent(EV_ABS.ABS_MT_PRESSURE, f),
@@ -211,6 +223,9 @@ class UInputHandler:
             return
 
         primary = touches[0]
+        primary_w = primary.get("w", SCREEN_WIDTH)
+        primary_h = primary.get("h", SCREEN_HEIGHT)
+        primary_f = max(0, min(int(primary.get("f", 512)), PRESSURE_MAX))
         if action == "touchend" and not self._slot_of:
             events += [
                 InputEvent(EV_KEY.BTN_TOUCH, 0),
@@ -219,16 +234,15 @@ class UInputHandler:
             self._send(self.touch, events)
             return
 
-        first_x = self._scale_x(primary.get("x", 0), source_w)
-        first_y = self._scale_y(primary.get("y", 0), source_h)
+        first_x = self._scale_x(primary.get("x", 0), primary_w)
+        first_y = self._scale_y(primary.get("y", 0), primary_h)
         events += [
             InputEvent(EV_KEY.BTN_TOUCH, 1),
             InputEvent(EV_KEY.BTN_TOOL_FINGER, 1),
             InputEvent(EV_ABS.ABS_X, first_x),
             InputEvent(EV_ABS.ABS_Y, first_y),
-            InputEvent(EV_ABS.ABS_PRESSURE, f),
+            InputEvent(EV_ABS.ABS_PRESSURE, primary_f),
         ]
-        print(events)
         self._send(self.touch, events)
 
     def _handle_mouse(self, data):
@@ -279,7 +293,6 @@ class UInputHandler:
             key = key[3:].lower()
         if key.startswith("Digit"):
             key = key[5:]
-        print(key)
         code = KEYS.get(key)
         if code is None:
             return
