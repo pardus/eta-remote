@@ -47,6 +47,7 @@ body {
   flex-shrink: 0;
   cursor: pointer;
   padding: 6px;
+  width: 100vw;
 }
 
 #virtual-keyboard {

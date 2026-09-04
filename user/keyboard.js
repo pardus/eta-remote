@@ -307,7 +307,7 @@ const VirtualKeyboard = (() => {
     }
 
     function init(callback, parentEl) {
-        //if(!isMobileDevice) return;
+        if(!isMobileDevice) return;
         onKeyCallback = callback;
 
         toggleBtn = document.createElement('button');
@@ -320,14 +320,16 @@ const VirtualKeyboard = (() => {
         container.style.display = 'none';
 
         const host = parentEl || document.body;
-        host.appendChild(toggleBtn);
-        host.appendChild(container);
+        const keyboard = document.createElement('div');
+        keyboard.style.width = '100vw';
+        keyboard.appendChild(toggleBtn);
+        keyboard.appendChild(container);
+        host.appendChild(keyboard);
 
         container.appendChild(createKeyboard(keyboardLayoutCodes));
 
-        isVisible = true;
-        container.style.display = 'flex';
-        toggleBtn.textContent = 'Hide Keyboard';
+        keyboard.style.position = 'absolute';
+        keyboard.style.bottom = '0px';
     }
 
     return { init, toggle };
