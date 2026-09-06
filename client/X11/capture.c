@@ -99,14 +99,5 @@ int createimage(Display *dsp, struct shmimage *image, int width, int height) {
 
 void getrootwindow(Display *dsp, struct shmimage *image) {
   XShmGetImage(dsp, XDefaultRootWindow(dsp), image->ximage, 0, 0, AllPlanes);
-  // This is how you access the image's BGRA packed pixels
-  // Lets set the alpha channel of each pixel to 0xff
-  int x, y;
-  unsigned int *p = image->data;
-  for (y = 0; y < image->ximage->height; ++y) {
-    for (x = 0; x < image->ximage->width; ++x) {
-      *p++ |= 0xff000000;
-    }
-  }
 }
 
