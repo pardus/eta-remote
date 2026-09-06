@@ -44,14 +44,20 @@ body {
 }
 
 #virtual-keyboard {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 40vh;
   flex-direction: column;
   flex-shrink: 0;
   background: #333;
-  height: 40vh;
   padding: 4px;
   gap: 2px;
   user-select: none;
   -webkit-user-select: none;
+  z-index: 50;
 }
 
 #virtual-keyboard .layer {

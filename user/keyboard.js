@@ -296,8 +296,6 @@ const VirtualKeyboard = (() => {
     let isVisible = false;
     let container = null;
 
-    const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
-
     function visible() {
         return isVisible;
     }
@@ -315,16 +313,9 @@ const VirtualKeyboard = (() => {
         container.id = 'virtual-keyboard';
         container.style.display = 'none';
 
-        const host = parentEl || document.body;
-        const keyboard = document.createElement('div');
-        keyboard.style.width = '100vw';
-        keyboard.appendChild(container);
-        host.appendChild(keyboard);
+        (parentEl || document.body).appendChild(container);
 
         container.appendChild(createKeyboard(keyboardLayoutCodes));
-
-        keyboard.style.position = 'absolute';
-        keyboard.style.bottom = '0px';
     }
 
     return { init, toggle, visible };
