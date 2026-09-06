@@ -1,9 +1,19 @@
+import os
 import base64
 import json
 import time
 from io import BytesIO
 
 from PIL import Image, ImageChops, ImageGrab
+
+if "DISPLAY" in os.environ and "WAYLAND_DISPLAY" not in os.environ:
+    from X11.capture import grab_rgb, display_close
+else:
+    def grab_rgb():
+        ImageGrab.grab()
+
+    def display_close():
+        pass
 
 SPEED = 60
 
@@ -55,7 +65,7 @@ def image_diff_patch_json(previous, current):
 
 
 def image_grab():
-    img = ImageGrab.grab()
+    img = grab_rgb()
     if img.width > 1920:
         return img.resize((1920, 1080), resample=Image.Resampling.NEAREST)
     return img
@@ -97,7 +107,7 @@ def main(handler=None):
         print("\nStopped.")
 
     finally:
-        display_connection.close()
+        display_close()
 
 
 if __name__ == "__main__":
