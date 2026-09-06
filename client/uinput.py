@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import json
 import os
-import libevdev
-from libevdev import InputEvent, EV_SYN, EV_ABS, EV_REL, EV_KEY, INPUT_PROP_DIRECT, INPUT_PROP_POINTER
+from evdev import UInput, AbsInfo
+from evdev import ecodes as E
 
 SCREEN_WIDTH = int(os.environ.get("REMOTE_SCREEN_WIDTH", 3840))
 SCREEN_HEIGHT = int(os.environ.get("REMOTE_SCREEN_HEIGHT", 2160))
@@ -14,61 +14,65 @@ PRESSURE_MAX = 1023
 MT_TOOL_FINGER = 0
 MT_TOOL_PEN = 1
 
-PRESSURE_INFO = libevdev.InputAbsInfo(minimum=0, maximum=PRESSURE_MAX)
-TOOL_INFO = libevdev.InputAbsInfo(minimum=MT_TOOL_FINGER, maximum=MT_TOOL_PEN)
+NO_FUZZ = 0
+NO_FLAT = 0
+NO_RESOLUTION = 0
+
+PRESSURE_INFO = AbsInfo(0, 0, PRESSURE_MAX, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+TOOL_INFO = AbsInfo(0, MT_TOOL_FINGER, MT_TOOL_PEN, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
 
 KEYS = {}
 
 for i in range(10):
-    KEYS[str(i)] = getattr(EV_KEY, f"KEY_{i}")
+    KEYS[str(i)] = getattr(E, f"KEY_{i}")
 
 for c in "abcdefghijklmnopqrstuvwxyz":
-    KEYS[c] = getattr(EV_KEY, f"KEY_{c.upper()}")
+    KEYS[c] = getattr(E, f"KEY_{c.upper()}")
 
 MODIFIERS = {
-    "ShiftLeft": EV_KEY.KEY_LEFTSHIFT,
-    "ControlLeft": EV_KEY.KEY_LEFTCTRL,
-    "AltLeft": EV_KEY.KEY_LEFTALT,
-    "MetaLeft": EV_KEY.KEY_LEFTMETA,
-    "CapsLock": EV_KEY.KEY_CAPSLOCK,
-    "AltRight": EV_KEY.KEY_RIGHTALT,
+    "ShiftLeft": E.KEY_LEFTSHIFT,
+    "ControlLeft": E.KEY_LEFTCTRL,
+    "AltLeft": E.KEY_LEFTALT,
+    "MetaLeft": E.KEY_LEFTMETA,
+    "CapsLock": E.KEY_CAPSLOCK,
+    "AltRight": E.KEY_RIGHTALT,
 }
 
 NAVIGATION = {
-    "Enter": EV_KEY.KEY_ENTER,
-    "Backspace": EV_KEY.KEY_BACKSPACE,
-    "Tab": EV_KEY.KEY_TAB,
-    "Escape": EV_KEY.KEY_ESC,
-    "Space": EV_KEY.KEY_SPACE,
-    "Delete": EV_KEY.KEY_DELETE,
-    "ArrowUp": EV_KEY.KEY_UP,
-    "ArrowDown": EV_KEY.KEY_DOWN,
-    "ArrowLeft": EV_KEY.KEY_LEFT,
-    "ArrowRight": EV_KEY.KEY_RIGHT,
-    "Home": EV_KEY.KEY_HOME,
-    "End": EV_KEY.KEY_END,
-    "PageUp": EV_KEY.KEY_PAGEUP,
-    "PageDown": EV_KEY.KEY_PAGEDOWN,
-    "PrintScreen": EV_KEY.KEY_SYSRQ,
+    "Enter": E.KEY_ENTER,
+    "Backspace": E.KEY_BACKSPACE,
+    "Tab": E.KEY_TAB,
+    "Escape": E.KEY_ESC,
+    "Space": E.KEY_SPACE,
+    "Delete": E.KEY_DELETE,
+    "ArrowUp": E.KEY_UP,
+    "ArrowDown": E.KEY_DOWN,
+    "ArrowLeft": E.KEY_LEFT,
+    "ArrowRight": E.KEY_RIGHT,
+    "Home": E.KEY_HOME,
+    "End": E.KEY_END,
+    "PageUp": E.KEY_PAGEUP,
+    "PageDown": E.KEY_PAGEDOWN,
+    "PrintScreen": E.KEY_SYSRQ,
 }
 
 FUNCTION_KEYS = {
-    f"F{i}": getattr(EV_KEY, f"KEY_F{i}")
+    f"F{i}": getattr(E, f"KEY_F{i}")
     for i in range(1, 13)
 }
 
 PUNCTUATION = {
-    "Minus": EV_KEY.KEY_MINUS,
-    "Equal": EV_KEY.KEY_EQUAL,
-    "BracketLeft": EV_KEY.KEY_LEFTBRACE,
-    "BracketRight": EV_KEY.KEY_RIGHTBRACE,
-    "Backslash": EV_KEY.KEY_BACKSLASH,
-    "Backquote": EV_KEY.KEY_GRAVE,
-    "Semicolon": EV_KEY.KEY_SEMICOLON,
-    "Quote": EV_KEY.KEY_APOSTROPHE,
-    "Comma": EV_KEY.KEY_COMMA,
-    "Period": EV_KEY.KEY_DOT,
-    "Slash": EV_KEY.KEY_SLASH,
+    "Minus": E.KEY_MINUS,
+    "Equal": E.KEY_EQUAL,
+    "BracketLeft": E.KEY_LEFTBRACE,
+    "BracketRight": E.KEY_RIGHTBRACE,
+    "Backslash": E.KEY_BACKSLASH,
+    "Backquote": E.KEY_GRAVE,
+    "Semicolon": E.KEY_SEMICOLON,
+    "Quote": E.KEY_APOSTROPHE,
+    "Comma": E.KEY_COMMA,
+    "Period": E.KEY_DOT,
+    "Slash": E.KEY_SLASH,
 }
 
 KEYS.update(MODIFIERS)
@@ -77,67 +81,100 @@ KEYS.update(FUNCTION_KEYS)
 KEYS.update(PUNCTUATION)
 
 MOUSE_BUTTONS = [
-    EV_KEY.BTN_LEFT,
-    EV_KEY.BTN_MIDDLE,
-    EV_KEY.BTN_RIGHT,
+    E.BTN_LEFT,
+    E.BTN_MIDDLE,
+    E.BTN_RIGHT,
 ]
 
+ABS_SCREEN = {E.ABS_X, E.ABS_Y, E.ABS_MT_POSITION_X, E.ABS_MT_POSITION_Y}
+ABS_TOOL = {E.ABS_MT_TOOL_TYPE}
+ABS_PRESSURE = {E.ABS_MT_PRESSURE, E.ABS_PRESSURE}
 
-def _create_device(name, capabilities):
-    device = libevdev.Device()
-    device.name = name
-    for event, info in capabilities:
-        if info:
-            device.enable(event, info)
-        else:
-            device.enable(event)
-    return device.create_uinput_device()
+
+def _axis_info(axis):
+    if axis in ABS_SCREEN:
+        maximum = SCREEN_DIMENSIONS.get(axis)
+        return AbsInfo(0, 0, maximum, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+    if axis in ABS_TOOL:
+        return TOOL_INFO
+    if axis in ABS_PRESSURE:
+        return PRESSURE_INFO
+    if axis == E.ABS_MT_SLOT:
+        return AbsInfo(0, 0, MAX_TOUCHES - 1, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+    if axis == E.ABS_MT_TRACKING_ID:
+        return AbsInfo(0, 0, TRACKING_ID_MAX, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+    raise ValueError(f"unknown axis {axis}")
+
+
+SCREEN_DIMENSIONS = {
+    E.ABS_X: SCREEN_WIDTH,
+    E.ABS_Y: SCREEN_HEIGHT,
+    E.ABS_MT_POSITION_X: SCREEN_WIDTH,
+    E.ABS_MT_POSITION_Y: SCREEN_HEIGHT,
+}
+
+
+def _create_device(name, capabilities, props=()):
+    events = {}
+    for etype, code in capabilities:
+        events.setdefault(etype, []).append(code)
+    return UInput(events=events, name=name, input_props=list(props))
 
 
 class UInputHandler:
 
     def __init__(self):
-        self.touch = _create_device("remote-touch", [
-            (INPUT_PROP_DIRECT, None),
-            (EV_KEY.BTN_TOUCH, None),
-            (EV_KEY.BTN_TOOL_FINGER, None),
-            (EV_KEY.BTN_TOOL_PEN, None),
-            (EV_KEY.BTN_STYLUS, None),
-            (EV_ABS.ABS_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
-            (EV_ABS.ABS_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
-            (EV_ABS.ABS_MT_SLOT, libevdev.InputAbsInfo(minimum=0, maximum=MAX_TOUCHES - 1)),
-            (EV_ABS.ABS_MT_TRACKING_ID, libevdev.InputAbsInfo(minimum=0, maximum=TRACKING_ID_MAX)),
-            (EV_ABS.ABS_MT_POSITION_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
-            (EV_ABS.ABS_MT_POSITION_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
-            (EV_ABS.ABS_MT_PRESSURE, PRESSURE_INFO),
-            (EV_ABS.ABS_PRESSURE, PRESSURE_INFO),
-            (EV_ABS.ABS_MT_TOOL_TYPE, TOOL_INFO),
-        ])
+        self.touch = _create_device(
+            "remote-touch",
+            [
+                (E.EV_KEY, E.BTN_TOUCH),
+                (E.EV_KEY, E.BTN_TOOL_FINGER),
+                (E.EV_KEY, E.BTN_TOOL_PEN),
+                (E.EV_KEY, E.BTN_STYLUS),
+                (E.EV_ABS, (E.ABS_X, _axis_info(E.ABS_X))),
+                (E.EV_ABS, (E.ABS_Y, _axis_info(E.ABS_Y))),
+                (E.EV_ABS, (E.ABS_MT_SLOT, _axis_info(E.ABS_MT_SLOT))),
+                (E.EV_ABS, (E.ABS_MT_TRACKING_ID, _axis_info(E.ABS_MT_TRACKING_ID))),
+                (E.EV_ABS, (E.ABS_MT_POSITION_X, _axis_info(E.ABS_MT_POSITION_X))),
+                (E.EV_ABS, (E.ABS_MT_POSITION_Y, _axis_info(E.ABS_MT_POSITION_Y))),
+                (E.EV_ABS, (E.ABS_MT_PRESSURE, PRESSURE_INFO)),
+                (E.EV_ABS, (E.ABS_PRESSURE, PRESSURE_INFO)),
+                (E.EV_ABS, (E.ABS_MT_TOOL_TYPE, TOOL_INFO)),
+            ],
+            props=[E.INPUT_PROP_DIRECT],
+        )
 
-        self.abs_mouse = _create_device("remote-pointer", [
-            (INPUT_PROP_POINTER, None),
-            (EV_ABS.ABS_X, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_WIDTH)),
-            (EV_ABS.ABS_Y, libevdev.InputAbsInfo(minimum=0, maximum=SCREEN_HEIGHT)),
-            (EV_ABS.ABS_MT_PRESSURE, PRESSURE_INFO),
-            (EV_KEY.BTN_LEFT, None),
-            (EV_KEY.BTN_RIGHT, None),
-            (EV_KEY.BTN_MIDDLE, None),
-        ])
+        self.abs_mouse = _create_device(
+            "remote-pointer",
+            [
+                (E.EV_ABS, (E.ABS_X, _axis_info(E.ABS_X))),
+                (E.EV_ABS, (E.ABS_Y, _axis_info(E.ABS_Y))),
+                (E.EV_ABS, (E.ABS_MT_PRESSURE, PRESSURE_INFO)),
+                (E.EV_KEY, E.BTN_LEFT),
+                (E.EV_KEY, E.BTN_RIGHT),
+                (E.EV_KEY, E.BTN_MIDDLE),
+            ],
+            props=[E.INPUT_PROP_POINTER],
+        )
 
-        self.mouse = _create_device("remote-mouse", [
-            (INPUT_PROP_POINTER, None),
-            (EV_REL.REL_X, None),
-            (EV_REL.REL_Y, None),
-            (EV_REL.REL_WHEEL, None),
-            (EV_REL.REL_HWHEEL, None),
-            (EV_KEY.BTN_LEFT, None),
-            (EV_KEY.BTN_RIGHT, None),
-            (EV_KEY.BTN_MIDDLE, None),
-        ])
+        self.mouse = _create_device(
+            "remote-mouse",
+            [
+                (E.EV_REL, E.REL_X),
+                (E.EV_REL, E.REL_Y),
+                (E.EV_REL, E.REL_WHEEL),
+                (E.EV_REL, E.REL_HWHEEL),
+                (E.EV_KEY, E.BTN_LEFT),
+                (E.EV_KEY, E.BTN_RIGHT),
+                (E.EV_KEY, E.BTN_MIDDLE),
+            ],
+            props=[E.INPUT_PROP_POINTER],
+        )
 
-        self.keyboard = _create_device("remote-keyboard", [
-            (event, None) for event in set(KEYS.values())
-        ])
+        self.keyboard = _create_device(
+            "remote-keyboard",
+            [(E.EV_KEY, event) for event in set(KEYS.values())],
+        )
 
         self._slot_of = {}
 
@@ -148,8 +185,9 @@ class UInputHandler:
         return int(y * SCREEN_HEIGHT / source_height)
 
     def _send(self, device, events):
-        events.append(InputEvent(EV_SYN.SYN_REPORT, value=0))
-        device.send_events(events)
+        for etype, code, value in events:
+            device.write(etype, code, value)
+        device.syn()
 
     def handle(self, message):
         data = json.loads(message)
@@ -192,31 +230,31 @@ class UInputHandler:
                 if slot is None:
                     continue
                 events += [
-                    InputEvent(EV_ABS.ABS_MT_SLOT, slot),
-                    InputEvent(EV_ABS.ABS_MT_TRACKING_ID, identifier),
-                    InputEvent(EV_ABS.ABS_MT_TOOL_TYPE, MT_TOOL_PEN),
-                    InputEvent(EV_ABS.ABS_MT_POSITION_X, x),
-                    InputEvent(EV_ABS.ABS_MT_POSITION_Y, y),
-                    InputEvent(EV_ABS.ABS_MT_PRESSURE, f),
+                    (E.EV_ABS, E.ABS_MT_SLOT, slot),
+                    (E.EV_ABS, E.ABS_MT_TRACKING_ID, identifier),
+                    (E.EV_ABS, E.ABS_MT_TOOL_TYPE, MT_TOOL_PEN),
+                    (E.EV_ABS, E.ABS_MT_POSITION_X, x),
+                    (E.EV_ABS, E.ABS_MT_POSITION_Y, y),
+                    (E.EV_ABS, E.ABS_MT_PRESSURE, f),
                 ]
             elif action == "touchmove":
                 slot = self._slot_of.get(identifier)
                 if slot is None:
                     continue
                 events += [
-                    InputEvent(EV_ABS.ABS_MT_SLOT, slot),
-                    InputEvent(EV_ABS.ABS_MT_POSITION_X, x),
-                    InputEvent(EV_ABS.ABS_MT_POSITION_Y, y),
-                    InputEvent(EV_ABS.ABS_MT_PRESSURE, f),
+                    (E.EV_ABS, E.ABS_MT_SLOT, slot),
+                    (E.EV_ABS, E.ABS_MT_POSITION_X, x),
+                    (E.EV_ABS, E.ABS_MT_POSITION_Y, y),
+                    (E.EV_ABS, E.ABS_MT_PRESSURE, f),
                 ]
             elif action == "touchend":
                 slot = self._slot_of.pop(identifier, None)
                 if slot is None:
                     continue
                 events += [
-                    InputEvent(EV_ABS.ABS_MT_SLOT, slot),
-                    InputEvent(EV_ABS.ABS_MT_TRACKING_ID, -1),
-                    InputEvent(EV_ABS.ABS_MT_PRESSURE, 0),
+                    (E.EV_ABS, E.ABS_MT_SLOT, slot),
+                    (E.EV_ABS, E.ABS_MT_TRACKING_ID, -1),
+                    (E.EV_ABS, E.ABS_MT_PRESSURE, 0),
                 ]
 
         if not touches:
@@ -228,8 +266,8 @@ class UInputHandler:
         primary_f = max(0, min(int(primary.get("f", 512)), PRESSURE_MAX))
         if action == "touchend" and not self._slot_of:
             events += [
-                InputEvent(EV_KEY.BTN_TOUCH, 0),
-                InputEvent(EV_KEY.BTN_TOOL_FINGER, 0),
+                (E.EV_KEY, E.BTN_TOUCH, 0),
+                (E.EV_KEY, E.BTN_TOOL_FINGER, 0),
             ]
             self._send(self.touch, events)
             return
@@ -237,11 +275,11 @@ class UInputHandler:
         first_x = self._scale_x(primary.get("x", 0), primary_w)
         first_y = self._scale_y(primary.get("y", 0), primary_h)
         events += [
-            InputEvent(EV_KEY.BTN_TOUCH, 1),
-            InputEvent(EV_KEY.BTN_TOOL_FINGER, 1),
-            InputEvent(EV_ABS.ABS_X, first_x),
-            InputEvent(EV_ABS.ABS_Y, first_y),
-            InputEvent(EV_ABS.ABS_PRESSURE, primary_f),
+            (E.EV_KEY, E.BTN_TOUCH, 1),
+            (E.EV_KEY, E.BTN_TOOL_FINGER, 1),
+            (E.EV_ABS, E.ABS_X, first_x),
+            (E.EV_ABS, E.ABS_Y, first_y),
+            (E.EV_ABS, E.ABS_PRESSURE, primary_f),
         ]
         self._send(self.touch, events)
 
@@ -253,11 +291,11 @@ class UInputHandler:
 
         if action == "move":
             events = [
-                InputEvent(EV_ABS.ABS_X, self._scale_x(data["x"], source_w)),
-                InputEvent(EV_ABS.ABS_Y, self._scale_y(data["y"], source_h)),
+                (E.EV_ABS, E.ABS_X, self._scale_x(data["x"], source_w)),
+                (E.EV_ABS, E.ABS_Y, self._scale_y(data["y"], source_h)),
             ]
         else:
-            events = [InputEvent(button, 1 if action == "down" else 0)]
+            events = [(E.EV_KEY, button, 1 if action == "down" else 0)]
 
         self._send(self.abs_mouse, events)
 
@@ -267,11 +305,11 @@ class UInputHandler:
 
         if action == "move":
             events = [
-                InputEvent(EV_REL.REL_X, data.get("rel_x", 0)),
-                InputEvent(EV_REL.REL_Y, data.get("rel_y", 0)),
+                (E.EV_REL, E.REL_X, data.get("rel_x", 0)),
+                (E.EV_REL, E.REL_Y, data.get("rel_y", 0)),
             ]
         else:
-            events = [InputEvent(button, 1 if action == "down" else 0)]
+            events = [(E.EV_KEY, button, 1 if action == "down" else 0)]
 
         self._send(self.mouse, events)
 
@@ -281,9 +319,9 @@ class UInputHandler:
         events = []
 
         if delta_y:
-            events.append(InputEvent(EV_REL.REL_WHEEL, int(-delta_y / 100)))
+            events.append((E.EV_REL, E.REL_WHEEL, int(-delta_y / 100)))
         if delta_x:
-            events.append(InputEvent(EV_REL.REL_HWHEEL, int(delta_x / 100)))
+            events.append((E.EV_REL, E.REL_HWHEEL, int(delta_x / 100)))
 
         self._send(self.mouse, events)
 
@@ -298,4 +336,4 @@ class UInputHandler:
             return
 
         value = 1 if data["action"] == "down" else 0
-        self._send(self.keyboard, [InputEvent(code, value)])
+        self._send(self.keyboard, [(E.EV_KEY, code, value)])
