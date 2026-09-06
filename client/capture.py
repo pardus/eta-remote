@@ -67,7 +67,7 @@ def image_diff_patch_json(previous, current):
 def image_grab():
     img = grab_rgb()
     if img.width > 1920:
-        return img.resize((1920, 1080), resample=Image.Resampling.NEAREST)
+        return img.resize((1920, 1080), resample=Image.Resampling.NEAREST, reducing_gap=2.0)
     return img
 
 req_full = False
