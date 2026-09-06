@@ -294,26 +294,22 @@ function createKeyboard(labels) {
 
 const VirtualKeyboard = (() => {
     let isVisible = false;
-    let toggleBtn = null;
     let container = null;
 
     const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
+
+    function visible() {
+        return isVisible;
+    }
 
     function toggle() {
         if (!container) return;
         isVisible = !isVisible;
         container.style.display = isVisible ? 'flex' : 'none';
-        toggleBtn.textContent = isVisible ? 'Hide Keyboard' : 'Show Keyboard';
     }
 
     function init(callback, parentEl) {
-        if(!isMobileDevice) return;
         onKeyCallback = callback;
-
-        toggleBtn = document.createElement('button');
-        toggleBtn.id = 'kb-toggle';
-        toggleBtn.textContent = 'Show Keyboard';
-        toggleBtn.addEventListener('click', toggle);
 
         container = document.createElement('div');
         container.id = 'virtual-keyboard';
@@ -322,7 +318,6 @@ const VirtualKeyboard = (() => {
         const host = parentEl || document.body;
         const keyboard = document.createElement('div');
         keyboard.style.width = '100vw';
-        keyboard.appendChild(toggleBtn);
         keyboard.appendChild(container);
         host.appendChild(keyboard);
 
@@ -332,5 +327,5 @@ const VirtualKeyboard = (() => {
         keyboard.style.bottom = '0px';
     }
 
-    return { init, toggle };
+    return { init, toggle, visible };
 })();

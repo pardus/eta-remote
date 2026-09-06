@@ -43,13 +43,6 @@ body {
   outline: none;
 }
 
-#kb-toggle {
-  flex-shrink: 0;
-  cursor: pointer;
-  padding: 6px;
-  width: 100vw;
-}
-
 #virtual-keyboard {
   flex-direction: column;
   flex-shrink: 0;
@@ -99,4 +92,71 @@ body {
 
 #virtual-keyboard .letter {
   min-width: 5%;
+}
+
+#floating-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+#fc-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #333;
+  color: #fff;
+  font-size: 24px;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+  touch-action: none;
+}
+
+#fc-toggle.dragging {
+  cursor: grabbing;
+}
+
+#fc-toggle:active {
+  transform: scale(0.95);
+}
+
+#fc-toggle:active {
+  transform: scale(0.95);
+}
+
+#fc-menu {
+  display: none;
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  flex-direction: column;
+  gap: 8px;
+  background: #222;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  min-width: 120px;
+}
+
+#fc-menu.show {
+  display: flex;
+}
+
+#fc-menu button {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #444;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+#fc-menu button:active {
+  background: #4aa3ff;
 }
