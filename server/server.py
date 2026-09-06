@@ -48,6 +48,14 @@ async def handler(websocket):
 
         if not clients:
             rooms.pop(path, None)
+        else:
+            message = {"type": "disconnect", "id": client_id}
+            message = json.dumps(message)
+
+            await asyncio.gather(
+                *(client.send(message) for client in clients),
+                return_exceptions=True,
+            )
 
         print(f"Client left {path}; id={client_id} clients={len(clients)}")
 

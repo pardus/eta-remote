@@ -124,6 +124,10 @@ def _create_device(name, capabilities, props=()):
 class UInputHandler:
 
     def __init__(self):
+        self._devices = []
+        self._init_devices()
+
+    def _init_devices(self):
         self.touch = _create_device(
             "remote-touch",
             [
@@ -176,6 +180,7 @@ class UInputHandler:
             [(E.EV_KEY, event) for event in set(KEYS.values())],
         )
 
+        self._devices = [self.touch, self.abs_mouse, self.mouse, self.keyboard]
         self._slot_of = {}
 
     def _scale_x(self, x, source_width):
@@ -203,6 +208,17 @@ class UInputHandler:
             self._handle_mouse_rel(data)
         elif event_type == "key":
             self._handle_key(data)
+        elif event_type == "disconnect":
+            self._handle_disconnect()
+
+    def _handle_disconnect(self):
+        for device in self._devices:
+            try:
+                device.close()
+            except Exception:
+                pass
+        self._devices = []
+        self._init_devices()
 
     def _alloc_slot(self, tracking_id):
         used = set(self._slot_of.values())
