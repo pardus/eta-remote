@@ -36,6 +36,15 @@ def image_diff_patch_json(previous, current):
     x1, y1, x2, y2 = bounding_box
     patch = current.crop(bounding_box)
 
+    scale = img_width / 1920
+    if scale > 1:
+        patch.resize(
+            (int(patch.width*scale), int(patch.height*scale)),
+            resample=Image.Resampling.NEAREST,
+            reducing_gap=2.0
+        )
+
+
     buffer = BytesIO()
 
     patch.save(
@@ -66,11 +75,6 @@ def image_diff_patch_json(previous, current):
     )
 
 
-def image_grab():
-    img = grab_rgb()
-    if img.width > 1920:
-        return img.resize((1920, 1080), resample=Image.Resampling.NEAREST, reducing_gap=2.0)
-    return img
 
 req_full = False
 def request_full():
@@ -91,13 +95,13 @@ def main(handler=None):
     global req_full
     global img_width
     global img_height
-    previous_image = image_grab()
+    previous_image = grab_rgb()
     img_width = previous_image.width
     img_height = previous_image.height
 
     try:
         while True:
-            current_image = image_grab()
+            current_image = grab_rgb()
             if req_full:
                 previous_image = Image.new('RGB', (img_width, img_height), color='black')
                 req_full = False
