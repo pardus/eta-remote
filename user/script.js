@@ -101,7 +101,7 @@ window.addEventListener("resize", () => {
 
 // Keyboard events
 for (const action of ["keydown", "keyup"]) {
-    capture.addEventListener(action, (e) => {
+    document.addEventListener(action, (e) => {
         send("key", {key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
         e.preventDefault();
         return false;
