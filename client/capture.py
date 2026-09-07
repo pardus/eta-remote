@@ -2,6 +2,7 @@ import os
 import base64
 import json
 import time
+import traceback
 from io import BytesIO
 
 from PIL import Image, ImageChops, ImageGrab
@@ -105,6 +106,8 @@ def main(handler=None):
 
     except KeyboardInterrupt:
         print("\nStopped.")
+    except:
+        print(traceback.format_exc())
 
     finally:
         display_close()

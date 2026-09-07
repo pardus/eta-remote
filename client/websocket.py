@@ -1,6 +1,8 @@
 import asyncio
 from websockets.asyncio.client import connect
 
+import traceback
+
 from capture import main as capture_main, request_full
 
 class context:
@@ -43,12 +45,12 @@ class WebSocketClient:
         while True:
             try:
                 message = await queue.get()
-                #print("send:", len(message))
                 ctx.message = message
                 if self.control(ctx):
+                    print("send:", len(message))
                     await ctx.websocket.send(ctx.message)
-            except Exception as e:
-                print(e)
+            except:
+                print(traceback.format_exc())
 
     async def run(self):
         async with connect(self.address) as websocket:

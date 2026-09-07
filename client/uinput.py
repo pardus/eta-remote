@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import os
+import traceback
 from evdev import UInput, AbsInfo
 from evdev import ecodes as E
 
@@ -215,8 +216,8 @@ class UInputHandler:
         for device in self._devices:
             try:
                 device.close()
-            except Exception:
-                pass
+            except:
+                print(traceback.format_exc())
         self._devices = []
         self._init_devices()
 

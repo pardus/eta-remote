@@ -4,6 +4,8 @@ import asyncio
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
+import traceback
+
 import uuid
 import zlib
 import json
@@ -56,8 +58,8 @@ async def handler(websocket):
                 return_exceptions=True,
             )
 
-    except Exception as e:
-        print(e)
+    except:
+        print(traceback.format_exc())
 
     finally:
         clients.discard(client)

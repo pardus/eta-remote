@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 
+import traceback
 
 # --- JS KeyboardEvent.code to xkb key name ----------------------------------
 # xkb names are evdev identifiers used by xkbcomp (e.g. AD01 = Q key).
@@ -119,7 +120,8 @@ def _xkb_dump():
             capture_output=True, text=True, timeout=10,
         )
         return proc.stdout
-    except Exception:
+    except:
+        print(traceback.format_exc())
         return ""
 
 
