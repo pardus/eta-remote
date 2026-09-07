@@ -79,8 +79,13 @@ def request_full():
 
 def set_quality(quality):
     global QUALITY
-    print("quality", quality)
-    QUALITY = int(quality)
+    q = int(quality)
+    if q > 80:
+        q = 80
+    if q < 10:
+        q = 10
+    QUALITY = q
+    request_full()
 
 def main(handler=None):
     global req_full
