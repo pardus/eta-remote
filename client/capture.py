@@ -17,6 +17,7 @@ else:
         pass
 
 SPEED = 60
+QUALITY = 70
 
 img_width = 0
 img_height = 0
@@ -41,7 +42,7 @@ def image_diff_patch_json(previous, current):
         buffer,
         format="JPEG",
         optimize=True,
-        quality=80,
+        quality=QUALITY,
     )
 
     encoded_pixels = base64.b64encode(
@@ -75,6 +76,11 @@ req_full = False
 def request_full():
     global req_full
     req_full = True
+
+def set_quality(quality):
+    global QUALITY
+    print("quality", quality)
+    QUALITY = int(quality)
 
 def main(handler=None):
     global req_full

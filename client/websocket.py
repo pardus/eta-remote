@@ -1,9 +1,10 @@
+import json
 import asyncio
 from websockets.asyncio.client import connect
 
 import traceback
 
-from capture import main as capture_main, request_full
+from capture import main as capture_main, request_full, set_quality
 
 class context:
     def __init__(self):
@@ -23,8 +24,11 @@ class WebSocketClient:
             if self.control(ctx):
                 if "request_full" in message:
                     request_full()
-                    continue
-                self.handler(message)
+                elif "quality" in message:
+                    data = json.loads(message)
+                    set_quality(data.get("quality", 80))
+                else:
+                    self.handler(message)
 
     async def streamer(self, ctx):
         loop = asyncio.get_running_loop()
