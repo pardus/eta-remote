@@ -46,7 +46,7 @@ class WebSocketClient:
                 #print("send:", len(message))
                 ctx.message = message
                 if self.control(ctx):
-                    await ctx.websocket.send(message)
+                    await ctx.websocket.send(ctx.message)
             except Exception as e:
                 print(e)
 

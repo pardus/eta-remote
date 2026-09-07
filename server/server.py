@@ -19,45 +19,61 @@ def get_uid():
     # hex string
     return str(hex(uid))[2:]
 
+class Client:
+    def __init__(self):
+        self.websocket = None
+        self.id = None
+
 async def handler(websocket):
     path = websocket.request.path
     clients = rooms.setdefault(path, set())
-    client_id = get_uid()
+    client = Client()
+    client.id = get_uid()
+    client.websocket = websocket
 
-    clients.add(websocket)
-    print(f"Client joined {path}; id={client_id}; clients={len(clients)}")
+    clients.add(client)
+    print(f"Client joined {path}; id={client.id}; clients={len(clients)}")
 
     try:
         async for message in websocket:
             # Forward the message to every other client in this room
-            recipients = clients - {websocket}
             message = json.loads(message)
-            message["id"] = client_id
+            message["id"] = client.id
+
+            if "target" in message:
+                recipients = set()
+                for client in clients:
+                    for target in message.get("target", []):
+                        if target == client.id:
+                            recipients.add(client)
+            else:
+                recipients = clients - {client}
+
             message = json.dumps(message)
 
             await asyncio.gather(
-                *(client.send(message) for client in recipients),
+                *(client.websocket.send(message) for client in recipients),
                 return_exceptions=True,
             )
 
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
     finally:
-        clients.discard(websocket)
+        clients.discard(client)
 
         if not clients:
             rooms.pop(path, None)
         else:
-            message = {"type": "disconnect", "id": client_id}
+            message = {"type": "disconnect", "id": client.id}
             message = json.dumps(message)
 
             await asyncio.gather(
-                *(client.send(message) for client in clients),
+                *(client.websocket.send(message) for client in clients),
                 return_exceptions=True,
             )
 
-        print(f"Client left {path}; id={client_id} clients={len(clients)}")
+        print(f"Client left {path}; id={client.id} clients={len(clients)}")
 
 
 async def main():
