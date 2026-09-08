@@ -8,12 +8,23 @@ deps = [
 lib= library(
     'capture',
     ['src/client/X11/capture.c'],
+    install: true,
     dependencies: deps,
-    install_dir:  get_option('prefix') / 'share/eta/eta-remote/client/X11'
+    install_dir:  get_option('datadir') / 'eta/eta-remote/client/X11'
 )
 
 install_subdir(
     'src',
-    install_dir: get_option('prefix') / 'share/eta/eta-remote',
+    install_dir: get_option('datadir') / 'eta/eta-remote',
     strip_directory: true
+)
+
+install_data(
+    'data/eta-remote.desktop',
+    install_dir: get_option('sysconfdir') / 'xdg/autostart'
+)
+
+install_data(
+    'data/org.pardus.eta-remote.uinput.policy',
+    install_dir: get_option('datadir') / 'polkit-1/actions'
 )

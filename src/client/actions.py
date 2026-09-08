@@ -12,7 +12,7 @@ class PipeUInputHandler:
     def __init__(self):
         action_file = os.path.dirname(__file__)+"/actions.py"
         self.worker = subprocess.Popen(
-            ["pkexec", "python3", action_file],
+            ["pkexec", sys.executable, action_file],
             stdin=subprocess.PIPE,
         )
 
