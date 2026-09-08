@@ -1,11 +1,6 @@
 const canvas = document.getElementById("screen");
 const context = canvas.getContext("2d");
 
-/*
- * Original capture resolution.
-
- * Change these values to match the actual captured screen size.
- */
 let sourceWidth = 800;
 let sourceHeight = 600;
 
@@ -13,17 +8,13 @@ let scale = 1.0;
 let offsetX = 0;
 let offsetY = 0;
 
+let pendingPatches = null;
+let busy = false;
 
-/*
- * Resize the canvas to fit the browser window.
- */
 function resizeCanvas() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
 
-    /*
-     * Preserve aspect ratio and show the complete captured screen.
-     */
     scale = Math.min(
         windowWidth / sourceWidth,
         windowHeight / sourceHeight
@@ -32,10 +23,6 @@ function resizeCanvas() {
     const displayedWidth = sourceWidth * scale;
     const displayedHeight = sourceHeight * scale;
 
-
-    /*
-     * Use a high-resolution canvas internally.
-     */
     canvas.width = Math.round(displayedWidth);
     canvas.height = Math.round(displayedHeight);
 
@@ -62,9 +49,7 @@ window.addEventListener("load", function(){
     if(!ws){
         connect();
     }
-    /*
-     * Receive a patch from Python.
-     */
+
     ws.onmessage = function (event) {
         let patch;
 
@@ -73,18 +58,11 @@ window.addEventListener("load", function(){
             if (!patch.pixels) {
                 return;
             }
-
         } catch (error) {
             console.error("Invalid JSON:", event.data);
             return;
         }
 
-        console.log("Patch received: ", patch.pixels.length);
-
-        /*
-         * If the server includes the source resolution,
-         * use it automatically.
-         */
         if (patch.screen_width && patch.screen_height) {
             const w = Number(patch.screen_width);
             const h = Number(patch.screen_height);
@@ -94,18 +72,26 @@ window.addEventListener("load", function(){
                 resizeCanvas();
                 console.log(sourceWidth, sourceHeight);
             }
-
         }
 
-        drawPatch(patch);
+        pendingPatches = patch;
+        processNext();
     };
 });
 
-/*
- * Draw one received image patch.
- */
-function drawPatch(patch) {
+function patchSrc(patch) {
+    let format = String(patch.format || "jpeg").toLowerCase();
+    if (format === "jpg") {
+        format = "jpeg";
+    }
+    const pixels = String(patch.pixels).replace(
+        /^data:image\/[^;]+;base64,/,
+        ""
+    );
+    return `data:image/${format};base64,${pixels}`;
+}
 
+async function decodePatch(patch) {
     const x = Number(patch.x);
     const y = Number(patch.y);
     const width = Number(patch.width);
@@ -117,49 +103,75 @@ function drawPatch(patch) {
         !Number.isFinite(width) ||
         !Number.isFinite(height)
     ) {
-        console.error("Invalid patch dimensions:", patch);
+        throw new Error("Invalid patch dimensions");
+    }
+
+    let bitmap;
+    if (typeof createImageBitmap === "function") {
+        const response = await fetch(patchSrc(patch));
+        bitmap = await createImageBitmap(await response.blob());
+    } else {
+        bitmap = await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () => reject(new Error("Could not decode image patch"));
+            image.src = patchSrc(patch);
+        });
+    }
+
+    return {
+        bitmap,
+        drawX: x * scale,
+        drawY: y * scale,
+        drawWidth: width * scale,
+        drawHeight: height * scale
+    };
+}
+
+async function processNext() {
+    if (busy) {
         return;
     }
 
-    const image = new Image();
+    busy = true;
 
-    image.onload = function () {
-        /*
-         * Convert original capture coordinates to
-         * displayed browser coordinates.
-         */
-        const drawX = x * scale;
-        const drawY = y * scale;
-        const drawWidth = width * scale;
-        const drawHeight = height * scale;
+    const patch = pendingPatches;
+    pendingPatches = null;
 
-        context.drawImage(
-            image,
-            drawX,
-            drawY,
-            drawWidth,
-            drawHeight
-        );
-    };
-
-    image.onerror = function () {
-        console.error("Could not decode image patch");
-    };
-
-    let format = String(patch.format || "jpeg").toLowerCase();
-
-    if (format === "jpg") {
-        format = "jpeg";
+    if (!patch) {
+        busy = false;
+        return;
     }
 
-    /*
-     * Remove the prefix if pixels already contains
-     * something like data:image/jpeg;base64,...
-     */
-    const pixels = String(patch.pixels).replace(
-        /^data:image\/[^;]+;base64,/,
-        ""
-    );
+    try {
+        const item = await decodePatch(patch);
 
-    image.src = `data:image/${format};base64,${pixels}`;
+        if (pendingPatches) {
+            if (item.bitmap.close) {
+                item.bitmap.close();
+            }
+        } else {
+            context.drawImage(
+                item.bitmap,
+                item.drawX,
+                item.drawY,
+                item.drawWidth,
+                item.drawHeight
+            );
+            if (item.bitmap.close) {
+                item.bitmap.close();
+            }
+        }
+    } catch (error) {
+        console.error("Patch draw error:", error.message);
+    }
+
+    busy = false;
+
+    processNext();
+}
+
+function drawPatch(patch) {
+    pendingPatches = patch;
+    processNext();
 }
