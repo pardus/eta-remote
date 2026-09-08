@@ -18,8 +18,6 @@ let offsetY = 0;
  * Resize the canvas to fit the browser window.
  */
 function resizeCanvas() {
-    const devicePixelRatio = window.devicePixelRatio || 1;
-
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
 
@@ -38,8 +36,8 @@ function resizeCanvas() {
     /*
      * Use a high-resolution canvas internally.
      */
-    canvas.width = Math.round(displayedWidth * devicePixelRatio);
-    canvas.height = Math.round(displayedHeight * devicePixelRatio);
+    canvas.width = Math.round(displayedWidth);
+    canvas.height = Math.round(displayedHeight);
 
     canvas.style.width = `${displayedWidth}px`;
     canvas.style.height = `${displayedHeight}px`;
@@ -47,17 +45,6 @@ function resizeCanvas() {
     capture.style.width = `${displayedWidth}px`;
     capture.style.height = `${displayedHeight}px`;
 
-    /*
-     * Coordinates after this point use CSS pixels.
-     */
-    context.setTransform(
-        devicePixelRatio,
-        0,
-        0,
-        devicePixelRatio,
-        0,
-        0
-    );
 
     context.fillStyle = "#111";
     context.fillRect(0, 0, windowWidth, windowHeight);
