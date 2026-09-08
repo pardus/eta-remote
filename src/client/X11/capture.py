@@ -5,6 +5,9 @@ from PIL import Image
 
 # Load the shared library
 _lib_path = os.path.join(os.path.dirname(__file__), "libcapture.so")
+if not os.path.isfile(_lib_path):
+    # from source
+    _lib_path = os.path.join(os.getcwd(), "build", "libcapture.so")
 _lib = ctypes.CDLL(_lib_path)
 
 # X11 types
