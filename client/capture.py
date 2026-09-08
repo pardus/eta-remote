@@ -31,18 +31,25 @@ def image_diff_patch_json(previous, current):
     bounding_box = difference.getbbox()
 
     if bounding_box is None:
-        return "null"
+        return None
 
     x1, y1, x2, y2 = bounding_box
     patch = current.crop(bounding_box)
 
     scale = img_width / 1920
-    if scale > 1:
-        patch.resize(
-            (int(patch.width*scale), int(patch.height*scale)),
-            resample=Image.Resampling.NEAREST,
-            reducing_gap=2.0
-        )
+    if int(scale) <= 1:
+        scale = 1
+    else:
+        new_w = int(patch.width/scale)
+        new_h = int(patch.height/scale)
+        if new_w > 0 and new_h > 0:
+            patch = patch.resize(
+                (new_w, new_h),
+                resample=Image.Resampling.NEAREST,
+                reducing_gap=2.0
+            )
+        else:
+            return None
 
 
     buffer = BytesIO()
@@ -59,12 +66,12 @@ def image_diff_patch_json(previous, current):
     ).decode("ascii")
 
     result = {
-        "x": x1,
-        "y": y1,
+        "x": x1/scale,
+        "y": y1/scale,
         "width": patch.width,
         "height": patch.height,
-        "screen_width": img_width,
-        "screen_height": img_height,
+        "screen_width": img_width/scale,
+        "screen_height": img_height/scale,
         "format": "JPEG",
         "pixels": encoded_pixels,
     }
@@ -111,13 +118,13 @@ def main(handler=None):
                 current_image,
             )
 
-            if patch_json != "null":
+            if patch_json != None:
                 if handler:
                     handler(patch_json)
 
             previous_image = current_image
 
-            time.sleep(len(patch_json) / (921600*SPEED))
+            time.sleep(len(str(patch_json)) / (921600*SPEED))
 
     except KeyboardInterrupt:
         print("\nStopped.")

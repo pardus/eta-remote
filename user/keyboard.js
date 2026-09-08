@@ -1,322 +1,171 @@
 "use strict";
 
-// - Layout ---------------------------------
-// Each entry is a display label; the JS KeyboardEvent.code is resolved via
-// labelToCode so the client EV_KEY lookup works directly.
-
-const keyboardLayoutCodes = [
-    ['Esc', '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\''],
-    ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'],
-    ['Ctrl', 'Super', 'Alt', 'Space', 'Fn', 'Altgr', 'Enter'],
-];
-
-// - Key-code mapping ----------------------------
-// Hard-coded display label to JS KeyboardEvent.code.  Used to translate the
-// labels above into the codes expected by the browser.
-
-const labelToCode = {
-    // Modifiers & special keys
-    'Esc':      'Escape',
-    'CapsLock': 'CapsLock',
-    'Shift':    'ShiftLeft',
-    'Ctrl':     'ControlLeft',
-    'Super':    'MetaLeft',
-    'Alt':      'AltLeft',
-    'Altgr':    'AltRight',
-    'Space':    'Space',
-    'Enter':    'Enter',
-    'Tab':      'Tab',
-    'Backspace':'Backspace',
-
-    // Top row – number keys
-    '`': 'Backquote',
-    '1': 'Digit1',  '2': 'Digit2',  '3': 'Digit3',  '4': 'Digit4',  '5': 'Digit5',
-    '6': 'Digit6',  '7': 'Digit7',  '8': 'Digit8',  '9': 'Digit9',  '0': 'Digit0',
-    '-': 'Minus',
-    '=': 'Equal',
-
-    // QWERTY letter row
-    'Q': 'KeyQ',  'W': 'KeyW',  'E': 'KeyE',  'R': 'KeyR',  'T': 'KeyT',
-    'Y': 'KeyY',  'U': 'KeyU',  'I': 'KeyI',  'O': 'KeyO',  'P': 'KeyP',
-    '[': 'BracketLeft',
-    ']': 'BracketRight',
-    '\\':'Backslash',
-
-    // Home row
-    'A': 'KeyA',  'S': 'KeyS',  'D': 'KeyD',  'F': 'KeyF',  'G': 'KeyG',
-    'H': 'KeyH',  'J': 'KeyJ',  'K': 'KeyK',  'L': 'KeyL',
-    ';': 'Semicolon',
-    "'": 'Quote',
-
-    // Bottom row
-    'Z': 'KeyZ',  'X': 'KeyX',  'C': 'KeyC',  'V': 'KeyV',  'B': 'KeyB',
-    'N': 'KeyN',  'M': 'KeyM',
-    ',': 'Comma',
-    '.': 'Period',
-    '/': 'Slash',
-
-    // Navigation
-    'Home': 'Home',
-    'End':  'End',
-    'PgUp': 'PageUp',
-    'PgDn': 'PageDown',
-    'Up':   'ArrowUp',
-    'Down': 'ArrowDown',
-    'Left': 'ArrowLeft',
-    'Right':'ArrowRight',
-    'Del':  'Delete',
-    'PrtSc':'PrintScreen',
-
-    // Function keys
-    'F1':  'F1',   'F2':  'F2',   'F3':  'F3',   'F4':  'F4',
-    'F5':  'F5',   'F6':  'F6',   'F7':  'F7',   'F8':  'F8',
-    'F9':  'F9',   'F10': 'F10',  'F11': 'F11',  'F12': 'F12',
-};
-
-// When Fn is held, these keys are remapped to the mapped label.
-const fnLabels = {
-    '1': 'F1',  '2': 'F2',  '3': 'F3',  '4': 'F4',  '5': 'F5',
-    '6': 'F6',  '7': 'F7',  '8': 'F8',  '9': 'F9',  '0': 'F10',
-    '-': 'F11', '=': 'F12',
-    'Q': 'Home',  'W': 'Up',     'E': 'End',
-    'A': 'Left',  'S': 'Down',   'D': 'Right',
-    'R': 'PgUp',  'F': 'PgDn',
-    'Backspace': 'Delete',
-    'T': 'Tab', 'G': 'CapsLock',
-};
-
-// - Friendly display text per code ---------------------
-// Maps JS KeyboardEvent.code to short label shown on the virtual-key button.
-// Overwritten at runtime with server-side labels from /keymap.json.
-
-const keyDisplay = {
-    'Escape':      'Esc',
-    'Backquote':   '`',
-    'Minus':       '-',
-    'Equal':       '=',
-    'Backspace':   '⌫',
-    'Tab':         'Tab',
-    'BracketLeft': '[',
-    'BracketRight':']',
-    'Backslash':   '\\',
-    'Home':        'Home',
-    'CapsLock':    'CapsLock',
-    'Semicolon':   ';',
-    'Quote':       "'",
-    'Enter':       'Enter',
-    'PageUp':      'PgUp',
-    'ShiftLeft':   'Shift',
-    'Comma':       ',',
-    'Period':      '.',
-    'Slash':       '/',
-    'End':         'End',
-    'ArrowUp':     '▲',
-    'PageDown':    'PgDn',
-    'ControlLeft': 'Ctrl',
-    'MetaLeft':    '⌘',
-    'AltLeft':     'Alt',
-    'Space':       'Space',
-    'AltRight':    'AltGr',
-    'ArrowLeft':   '◀',
-    'ArrowDown':   '▼',
-    'ArrowRight':  '▶',
-    'Delete':      'Del',
-    'PrintScreen': 'PrtSc',
-};
-
-// - Server keymap integration ------------------------
-// The server generates /keymap.json from the live X11 layout.  We store it
-// here and merge its labels into keyDisplay so the virtual keyboard reflects
-// the actual system layout (e.g. Turkishğ instead of English;).
-
-let _serverKeymap = null;
-
-fetch('/keymap.json')
-    .then(r => r.json())
-    .then(map => {
-        _serverKeymap = map;
-
-        for (const [code, label] of Object.entries(map)) {
-            keyDisplay[code] = label;
-        }
-
-        // Re-render buttons that were already created before the fetch.
-        document.querySelectorAll('.key').forEach(btn => {
-            if (btn._code && keyDisplay[btn._code]) {
-                btn.textContent = keyDisplay[btn._code];
-            }
-        });
-    });
-
-// - Label / code helpers ---------------------------
-
-function codeForLabel(label) {
-    if (labelToCode.hasOwnProperty(label)) {
-        return labelToCode[label];
-    }
-    // Reverse-lookup in the server keymap for non-ASCII labels (e.g. ğ, ş).
-    if (_serverKeymap) {
-        for (const [code, lbl] of Object.entries(_serverKeymap)) {
-            if (lbl === label) return code;
-        }
-    }
-    return label;
-}
-
-function displayForLabel(label) {
-    const code = codeForLabel(label);
-    if (keyDisplay.hasOwnProperty(code)) {
-        return keyDisplay[code];
-    }
-    // Fallback: extract the letter/digit from codes like "KeyQ" to "Q".
-    if (code.startsWith('Key') && code.length === 4)  return code[3];
-    if (code.startsWith('Digit') && code.length === 6) return code[5];
-    return code;
-}
-
-// - Key press tracking ---------------------------
-
-let onKeyCallback = null;
-const pressedButtons = new Set();
-
-function sendKey(action, code) {
-    if (!onKeyCallback) return;
-    const display = keyDisplay.hasOwnProperty(code) ? keyDisplay[code] : code;
-    onKeyCallback(action, { key: display, code, display });
-}
-
-function isButtonDown(keyButton) {
-    return pressedButtons.has(keyButton);
-}
-
-function listenPress(keyButton) {
-    if (isButtonDown(keyButton)) return;
-    pressedButtons.add(keyButton);
-    keyButton.classList.add('active');
-    sendKey('down', keyButton._code);
-}
-
-function releaseButton(keyButton) {
-    if (!isButtonDown(keyButton)) return;
-    pressedButtons.delete(keyButton);
-    keyButton.classList.remove('active');
-    sendKey('up', keyButton._code);
-}
-
-// - Fn modifier -------------------------------
-
-const FN_LABEL = 'Fn';
-let fnActive = false;
-
-function relabelKeys(keys) {
-    for (const k of keys) {
-        const label = fnActive && fnLabels.hasOwnProperty(k.label)
-            ? fnLabels[k.label]
-            : k.label;
-        k.button.textContent = displayForLabel(label);
-        k.button._code = codeForLabel(label);
-    }
-}
-
-// - Keyboard DOM builder --------------------------
-
-function createKeyboard(labels) {
-    const root = document.createElement('div');
-    root.className = 'layer';
-
-    const fnButtons = [];
-
-    labels.forEach(row => {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'row';
-
-        row.forEach(label => {
-            const btn = document.createElement('button');
-            btn.className = 'key';
-            btn.classList.add(codeForLabel(label));
-
-            // Fn key gets special handling.
-            if (label === FN_LABEL) {
-                btn.textContent = 'Fn';
-                btn.classList.add('fn');
-
-                const setFn = (on) => {
-                    fnActive = on;
-                    relabelKeys(root._keys);
-                    for (const b of fnButtons) b.classList.toggle('active', fnActive);
-                };
-
-                btn.addEventListener('mousedown',  (e) => { e.preventDefault(); setFn(true); });
-                btn.addEventListener('mouseup',     (e) => { e.preventDefault(); setFn(false); });
-                btn.addEventListener('mouseleave',  ()   => setFn(false));
-                btn.addEventListener('touchstart',  (e) => { e.preventDefault(); setFn(true); },  { passive: false });
-                btn.addEventListener('touchend',    (e) => { e.preventDefault(); setFn(false); }, { passive: false });
-                btn.addEventListener('touchcancel', ()   => setFn(false));
-
-                fnButtons.push(btn);
-                rowDiv.appendChild(btn);
-                return;
-            }
-
-            // Regular key setup.
-            btn.textContent = displayForLabel(label);
-            btn._label = label;
-            btn._code  = codeForLabel(label);
-
-            if (fnLabels.hasOwnProperty(label)) {
-                btn.classList.add('fn-latch');
-            }
-            if (/^(Key[A-Z]|Digit[0-9])$/.test(btn._code)) {
-                btn.classList.add('letter');
-            }
-
-            btn.addEventListener('mousedown',  (e) => { e.preventDefault(); listenPress(btn); });
-            btn.addEventListener('mouseup',     (e) => { e.preventDefault(); releaseButton(btn); });
-            btn.addEventListener('mouseleave',  ()   => releaseButton(btn));
-            btn.addEventListener('touchstart',  (e) => { e.preventDefault(); listenPress(btn); },    { passive: false });
-            btn.addEventListener('touchend',    (e) => { e.preventDefault(); releaseButton(btn); },   { passive: false });
-            btn.addEventListener('touchcancel', ()   => releaseButton(btn));
-
-            (root._keys = root._keys || []).push({ button: btn, label });
-            rowDiv.appendChild(btn);
-        });
-
-        rowDiv.style.height = (100 / labels.length) + '%';
-        root.appendChild(rowDiv);
-    });
-
-    return root;
-}
-
-// - Public API -------------------------------
+// Minimal virtual keyboard.
+//
+// The layout is expressed purely in JS `KeyboardEvent.code` values
+// (e.g. "KeyQ", "Digit1", "ShiftLeft") — never display labels. Labels are
+// derived at render time from the hard-coded DISPLAY map, then overridden
+// by the live server keymap fetched from /keymap.json.
+//
+// Modifier keys (Shift, Ctrl, Super, Alt, AltGr, Caps) and Fn are toggles:
+// tap once to latch on, tap again to release. Every other key is momentary.
 
 const VirtualKeyboard = (() => {
-    let isVisible = false;
+    let onKey = null;
+    let visible = false;
     let container = null;
+    let fnActive = false;
+    let fnKeys = [];
 
-    function visible() {
-        return isVisible;
+    const serverLabels = {};
+
+    const LAYOUT = [
+        ["Escape", "Backquote", "Digit1", "Digit2", "Digit3", "Digit4", "Digit5",
+         "Digit6", "Digit7", "Digit8", "Digit9", "Digit0", "Minus", "Equal", "Backspace"],
+        ["Tab", "KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY",
+         "KeyU", "KeyI", "KeyO", "KeyP", "BracketLeft", "BracketRight", "Backslash"],
+        ["CapsLock", "KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH",
+         "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "Enter"],
+        ["ShiftLeft", "KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN",
+         "KeyM", "Comma", "Period", "Slash", "ShiftRight","Hide"],
+        ["ControlLeft", "MetaLeft", "AltLeft", "Space", "AltRight", "Fn", "ControlRight"],
+    ];
+
+    // Rendering only: nice labels for keys that aren't a plain letter/digit.
+    const DISPLAY = {
+        "Escape": "esc", "Backquote": "`", "Minus": "-", "Equal": "=",
+        "Backspace": "⌫", "Tab": "tab", "BracketLeft": "[", "BracketRight": "]",
+        "Backslash": "\\", "CapsLock": "caps", "Semicolon": ";", "Quote": "'",
+        "Enter": "⏎", "ShiftLeft": "⇧", "ShiftRight": "⇧", "ControlRight": "Ctrl",
+        "ControlLeft": "ctrl", "MetaLeft": "⌘", "AltLeft": "alt", "AltRight": "altgr",
+        "Space": "space", "ArrowLeft": "◀", "ArrowDown": "▼", "ArrowRight": "▶",
+    };
+
+    const MODIFIERS = new Set([
+        "ShiftLeft", "ShiftRight", "ControlLeft", "MetaLeft", "AltLeft", "AltRight", 
+        "ControlRight"
+    ]);
+
+    // While Fn is latched, these codes act as the mapped code.
+    const FN = {
+        "Digit1": "F1", "Digit2": "F2", "Digit3": "F3", "Digit4": "F4", "Digit5": "F5",
+        "Digit6": "F6", "Digit7": "F7", "Digit8": "F8", "Digit9": "F9", "Digit0": "F10",
+        "Minus": "F11", "Equal": "F12",
+        "KeyQ": "Home", "KeyW": "ArrowUp", "KeyE": "End",
+        "KeyA": "ArrowLeft", "KeyS": "ArrowDown", "KeyD": "ArrowRight",
+        "KeyR": "PageUp", "KeyF": "PageDown", "Backspace": "Delete",
+    };
+
+    function label(code) {
+        if (serverLabels[code] != null) return serverLabels[code];
+        if (DISPLAY[code] != null) return DISPLAY[code];
+        if (/^Key[A-Z]$/.test(code)) return code[3];
+        if (/^Digit[0-9]$/.test(code)) return code[5];
+        return code;
+    }
+
+    function send(action, code) {
+        if (onKey) onKey(action, { code });
+    }
+
+    function fresh(btn) {
+        return fnActive && FN[btn.code] ? FN[btn.code] : btn.code;
+    }
+
+    function refresh(btn) {
+        btn.textContent = label(fresh(btn));
+        btn.classList.toggle("fn", fnActive && FN[btn.code]);
+    }
+
+    // Latch: tap -> down, tap again -> up.
+    function latch(btn) {
+        btn.latched = !btn.latched;
+        btn.classList.toggle("active", btn.latched);
+        send(btn.latched ? "down" : "up", btn.code);
+    }
+
+    function setFn(on) {
+        fnActive = on;
+        fnKeys.forEach(btn => {
+            refresh(btn);
+        });
+    }
+
+    function bind(btn) {
+        if (btn.code === "Fn") {
+            btn.addEventListener("click", e => { e.preventDefault(); setFn(!fnActive); });
+            return;
+        }
+        if (MODIFIERS.has(btn.code)) {
+            btn.addEventListener("click", e => { e.preventDefault(); latch(btn); });
+            return;
+        }
+        const down = e => { e.preventDefault(); send("down", fresh(btn)); btn.classList.add("active"); };
+        const up = e => { e.preventDefault(); send("up", fresh(btn)); btn.classList.remove("active"); };
+        btn.addEventListener("mousedown", down);
+        btn.addEventListener("mouseup", up);
+        btn.addEventListener("mouseleave", up);
+        btn.addEventListener("touchstart", down, { passive: false });
+        btn.addEventListener("touchend", up, { passive: false });
+        btn.addEventListener("touchcancel", up);
+    }
+
+    function build() {
+        const layer = document.createElement("div");
+        layer.className = "layer";
+
+
+        LAYOUT.forEach((row, idx) => {
+            const rowEl = document.createElement("div");
+            rowEl.className = "row";
+
+            row.forEach(code => {
+                const btn = document.createElement("button");
+                btn.className = "key";
+                btn.code = code;
+                btn.latched = false;
+                btn.textContent = label(code);
+                if (code === "Space") btn.classList.add("Space");
+                if (/^Key[A-Z]$/.test(code)) btn.classList.add("letter");
+                if (MODIFIERS.has(code) || code === "Fn" || code == "Hide") btn.classList.add("mod");
+                bind(btn);
+                rowEl.appendChild(btn);
+                if (FN[code]) fnKeys.push(btn);
+                if (code === "Hide") {
+                    btn.addEventListener("click", e => { e.preventDefault(); toggle(); });
+                }
+
+            });
+
+            rowEl.style.height = 100 / LAYOUT.length + "%";
+            layer.appendChild(rowEl);
+        });
+
+        return layer;
+    }
+
+    function init(callback, parentEl) {
+        onKey = callback;
+        container = document.createElement("div");
+        container.id = "virtual-keyboard";
+        container.style.display = "none";
+        (parentEl || document.body).appendChild(container);
+        container.appendChild(build());
     }
 
     function toggle() {
         if (!container) return;
-        isVisible = !isVisible;
-        container.style.display = isVisible ? 'flex' : 'none';
+        visible = !visible;
+        container.style.display = visible ? "flex" : "none";
     }
 
-    function init(callback, parentEl) {
-        onKeyCallback = callback;
+    fetch("/keymap.json")
+        .then(r => r.json())
+        .then(map => {
+            Object.assign(serverLabels, map);
+            container && container.querySelectorAll(".key").forEach(btn => refresh(btn));
+        })
+        .catch(() => {});
 
-        container = document.createElement('div');
-        container.id = 'virtual-keyboard';
-        container.style.display = 'none';
-
-        (parentEl || document.body).appendChild(container);
-
-        container.appendChild(createKeyboard(keyboardLayoutCodes));
-    }
-
-    return { init, toggle, visible };
+    return { init, toggle, get visible() { return visible; } };
 })();
