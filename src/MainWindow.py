@@ -62,7 +62,7 @@ class MainWindow(Gtk.Window):
 
         self.start_btn = Gtk.Button(label="  Start  ")
         self.start_btn.get_style_context().add_class("start-btn")
-        self.start_btn.connect("clicked", self._on_start)
+        self.start_btn.connect("clicked", self.on_start)
 
         self.stop_btn = Gtk.Button(label="  Stop  ")
         self.stop_btn.get_style_context().add_class("stop-btn")
@@ -94,7 +94,7 @@ class MainWindow(Gtk.Window):
         menu.append(Gtk.SeparatorMenuItem())
 
         start_item = Gtk.MenuItem(label="Start")
-        start_item.connect("activate", lambda _: self._on_start(None))
+        start_item.connect("activate", lambda _: self.on_start(None))
         menu.append(start_item)
 
         stop_item = Gtk.MenuItem(label="Stop")
@@ -121,7 +121,7 @@ class MainWindow(Gtk.Window):
         self.hide()
         return True
 
-    def _on_start(self, _btn):
+    def on_start(self, _btn):
         if self.pid == 0:
             process = subprocess.Popen(
                 [sys.executable, f"{BASE_DIR}/__main__.py"],

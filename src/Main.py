@@ -44,6 +44,8 @@ class Application(Gtk.Application):
         if "autostart" in self.args.keys():
             if not self.window.settings.get_boolean("autostart"):
                 self.quit()
+            else:
+                self.window.on_start(self.window)
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
