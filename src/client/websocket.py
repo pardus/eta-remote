@@ -5,6 +5,7 @@ from websockets.asyncio.client import connect
 import traceback
 
 from capture import main as capture_main, request_full, set_quality
+from pulse import main as pulse_main
 
 class context:
     def __init__(self):
@@ -44,6 +45,11 @@ class WebSocketClient:
         # Run the unmodified blocking library function in a worker thread.
         capture_task = asyncio.create_task(
             asyncio.to_thread(capture_main, capture_handler)
+        )
+
+        # Capture audio in another worker thread, feeding the same queue.
+        audio_task = asyncio.create_task(
+            asyncio.to_thread(pulse_main, capture_handler)
         )
 
         while True:
