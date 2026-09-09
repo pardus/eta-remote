@@ -4,6 +4,8 @@ import traceback
 
 gi.require_version("Gtk", "3.0")
 
+from file import handle_file
+
 from gi.repository import Gtk, GLib, Gio
 
 class MainWindow(Gtk.Window):
@@ -36,17 +38,23 @@ class MainWindow(Gtk.Window):
                 self._client_id = client_id
                 if self.settings.get_boolean("auto-allow"):
                     GLib.idle_add(self.allows.append, self._client_id)
-                    return True
-                self.show_all()
+                else:
+                    self.show_all()
             elif type == "disconnect":
-                self.allows.remove(client_id)
+                if client_id in self.allows:
+                    self.allows.remove(client_id)
 
             data["target"] = self.allows
             ctx.message = json.dumps(data)
         except:
             print(traceback.format_exc())
             return False
-        return client_id == None or client_id in self.allows
+        allowed =  client_id == None or client_id in self.allows
+        if not allowed:
+            return False
+        if type == "file":
+            handle_file(data)
+        return allowed
 
     def run(self):
         Gtk.main()
