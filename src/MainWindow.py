@@ -69,6 +69,7 @@ class MainWindow(Gtk.Window):
         self.add(outer)
         self.connect("delete-event", self._on_delete_event)
         self._setup_status_icon()
+        self._refresh_addr_box()
 
     def _make_qr(self, data):
         import io

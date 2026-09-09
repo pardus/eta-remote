@@ -8,6 +8,10 @@ import json
 import asyncio
 import threading
 
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib
+
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +31,7 @@ class RemoteControl:
         self.user_dir = user_dir or os.path.join(BASE_DIR, "user")
         self.httpd = None
         self.threads = []
+        self.window = None
 
     def _serve_http(self):
         user_dir = self.user_dir
@@ -47,37 +52,38 @@ class RemoteControl:
         print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
         self.httpd.serve_forever()
 
-
     def _run_server(self):
         import server
         asyncio.run(server.main())
 
-    def _run_client(self):
-        window = MainWindow()
-        def _run():
-            ws = WebSocketClient(self.address, PipeUInputHandler().handle, window.control)
-            asyncio.run(ws.run())
-        threading.Thread(target=_run).start()
-        window.run()
+    def _run_client_asyncio(self):
+        ws = WebSocketClient(self.address, PipeUInputHandler().handle, self.window.control)
+        asyncio.run(ws.run())
+
+    def _run_client_gtk(self):
+        self.window.run()
 
     def _spawn(self, target):
-        pid = os.fork()
-        if pid == 0:
-            target()
-            sys.exit(0)
-        self.threads.append(pid)
+        t = threading.Thread(target=target, daemon=True)
+        t.start()
+        self.threads.append(t)
+
+    def _shutdown(self, *_args):
+        self.stop()
+        return GLib.SOURCE_REMOVE
 
     def start(self):
+        self.window = MainWindow()
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._shutdown)
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self._shutdown)
         self._spawn(self._run_server)
         self._spawn(self._serve_http)
-        self._spawn(self._run_client)
+        self._spawn(self._run_client_asyncio)
+        self._run_client_gtk()
 
     def stop(self):
-        for pid in self.threads:
-            try:
-                os.kill(pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+        if self.httpd:
+            self.httpd.shutdown()
+        if self.window:
+            Gtk.main_quit()
         self.threads.clear()
-
-
