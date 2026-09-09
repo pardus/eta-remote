@@ -9,10 +9,10 @@ FFMPEG_CMD = [
     "-fflags", "nobuffer",
     "-flags", "low_delay",
     "-ac", "1",
-    "-ar", "44100",
-    "-c:a", "pcm_u32le",
+    "-ar", "16000",
+    "-c:a", "pcm_s8",
     "-application", "lowdelay",
-    "-f", "u32le",
+    "-f", "s8",
     "pipe:1"
  ]
 

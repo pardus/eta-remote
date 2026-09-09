@@ -1,9 +1,10 @@
 "use strict";
 
 let audioCtx = null;
-let muted = false;
+let muted = true;
 let nextTime = 0;
 const audioQueue = [];
+const SAMPLE_RATE = 16000;
 
 function initAudio() {
     if (!audioCtx) {
@@ -11,16 +12,15 @@ function initAudio() {
     }
 }
 
-function decodeU32Le(b64) {
+function decodeS8(b64) {
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);
     }
-    const samples = new Uint32Array(bytes.buffer);
-    const out = new Float32Array(samples.length);
-    for (let i = 0; i < samples.length; i++) {
-        out[i] = (samples[i] / 0xffffffff) * 2 - 1;
+    const out = new Float32Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) {
+        out[i] = bytes[i] < 128 ? bytes[i] / 127 : (bytes[i] - 256) / 127;
     }
     return out;
 }
@@ -47,8 +47,8 @@ function handleAudio(data) {
         return;
     }
 
-    const samples = decodeU32Le(data);
-    const buffer = audioCtx.createBuffer(1, samples.length, audioCtx.sampleRate);
+    const samples = decodeS8(data);
+    const buffer = audioCtx.createBuffer(1, samples.length, SAMPLE_RATE);
     buffer.copyToChannel(samples, 0);
 
     audioQueue.push(buffer);
