@@ -4,6 +4,8 @@
 ```sh
 meson setup build
 ninja -C build
-python3 -m src
+glib-compile-schemas ./data
+python3 -m src # for headless
+python3 src/MainWindow.py # for gui
 ```
 

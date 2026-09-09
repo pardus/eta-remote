@@ -20,11 +20,21 @@ install_subdir(
 )
 
 install_data(
-    'data/eta-remote.desktop',
+    'data/eta-remote-autostart.desktop',
     install_dir: get_option('sysconfdir') / 'xdg/autostart'
+)
+
+install_data(
+    'data/eta-remote.desktop',
+    install_dir: get_option('datadir') / 'applications'
 )
 
 install_data(
     'data/org.pardus.eta-remote.uinput.policy',
     install_dir: get_option('datadir') / 'polkit-1/actions'
+)
+
+install_data(
+    'data/org.pardus.eta-remote.gschema.xml',
+    install_dir: get_option('datadir') / 'glib-2.0/schemas'
 )

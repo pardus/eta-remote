@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="tr.org.pardus.eta-remote" path="/tr/org/pardus/eta-remote/">
+    <key name="autostart" type="b">
+      <default>false</default>
+      <summary>Autostart on boot</summary>
+      <description>Start the remote control server automatically on login</description>
+    </key>
+  </schema>
+</schemalist>

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Eta Remote
+Comment=Remote control application for etap
+Exec=/usr/bin/python3 /usr/share/eta/eta-remote/MainWindow.py autostart
+Terminal=false
+X-GNOME-Autostart-enabled=true

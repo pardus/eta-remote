@@ -11,15 +11,19 @@ import subprocess
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
+if os.path.isfile(f"{BASE_DIR}/../data/gschemas.compiled"):
+    os.environ["GSETTINGS_SCHEMA_DIR"] = f"{BASE_DIR}/../data/"
+
 from remote import RemoteControl
 
 class MainWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Remote Control")
-        self.set_default_size(360, 240)
+        self.set_default_size(360, 280)
         self.set_resizable(False)
 
         self.pid = 0
+        self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         outer.get_style_context().add_class("window")
@@ -43,9 +47,20 @@ class MainWindow(Gtk.Window):
         self.status_label.set_margin_top(16)
         outer.pack_start(self.status_label, False, False, 0)
 
+        autostart_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        autostart_box.set_halign(Gtk.Align.CENTER)
+        autostart_box.set_margin_top(16)
+        autostart_label = Gtk.Label(label="Autostart on boot")
+        self.autostart_switch = Gtk.Switch()
+        self.autostart_switch.set_active(self.settings.get_boolean("autostart"))
+        self.autostart_switch.connect("state-set", self._on_autostart_toggled)
+        autostart_box.pack_start(autostart_label, False, False, 0)
+        autostart_box.pack_start(self.autostart_switch, False, False, 4)
+        outer.pack_start(autostart_box, False, False, 0)
+
         btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         btn_box.set_halign(Gtk.Align.CENTER)
-        btn_box.set_margin_top(24)
+        btn_box.set_margin_top(16)
 
         self.start_btn = Gtk.Button(label="  Start  ")
         self.start_btn.get_style_context().add_class("start-btn")
@@ -125,11 +140,19 @@ class MainWindow(Gtk.Window):
         self.status_label.set_text("Status: Stopped")
         self.tray.set_tooltip_text("Remote Control")
 
+    def _on_autostart_toggled(self, _switch, state):
+        self.settings.set_boolean("autostart", state)
+        return True
+
     def run(self):
-        self.show_all()
         Gtk.main()
 
 if __name__ == "__main__":
     main = MainWindow()
+    if "autostart" in sys.argv:
+        if not main.settings.get_boolean("autostart"):
+            sys.exit(0)
+    if "show" in sys.argv:
+        main.show_all()
     main.run()
 
