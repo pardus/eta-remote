@@ -1,4 +1,4 @@
-const CHUNK_SIZE = 64 * 1024;
+const CHUNK_SIZE = 1024*1024*4; // 4Mb chunk size
 
 const progressEl = document.getElementById("file-progress");
 const progressBar = document.getElementById("file-progress-bar");

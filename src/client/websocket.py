@@ -73,7 +73,7 @@ class WebSocketClient:
         await asyncio.gather(capture_task, audio_task, sender_task_1, sender_task_2)
 
     async def run(self):
-        async with connect(self.address) as websocket:
+        async with connect(self.address, max_size=None) as websocket:
             ctx = context()
             ctx.websocket = websocket
             await asyncio.gather(
