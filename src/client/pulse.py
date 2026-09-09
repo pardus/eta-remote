@@ -5,7 +5,7 @@ import subprocess
 FFMPEG_CMD = [
     "ffmpeg",
     "-f", "pulse",
-    "-i", "amogus.monitor",
+    "-i", "default.monitor",
     "-fflags", "nobuffer",
     "-flags", "low_delay",
     "-ac", "1",
