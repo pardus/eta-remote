@@ -49,12 +49,17 @@ class MainWindow(Gtk.Window):
         except:
             print(traceback.format_exc())
             return False
+
         allowed =  client_id == None or client_id in self.allows
+
         if not allowed:
             return False
         if type == "file":
             handle_file(data)
-        return allowed
+        else:
+            return True
+
+        return False
 
     def run(self):
         Gtk.main()

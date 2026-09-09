@@ -1,5 +1,9 @@
 const CHUNK_SIZE = 64 * 1024;
 
+const progressEl = document.getElementById("file-progress");
+const progressBar = document.getElementById("file-progress-bar");
+const progressText = document.getElementById("file-progress-text");
+
 capture.addEventListener("dragover", (e) => e.preventDefault());
 
 capture.addEventListener("drop", (e) => {
@@ -13,6 +17,8 @@ capture.addEventListener("drop", (e) => {
 function sendFile(file) {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
     let chunkIndex = 0;
+
+    progressEl.classList.remove("hidden");
 
     function readAndSendChunk() {
         const start = chunkIndex * CHUNK_SIZE;
@@ -31,8 +37,13 @@ function sendFile(file) {
                 data: base64
             });
             chunkIndex++;
+            const pct = Math.round((chunkIndex / totalChunks) * 100);
+            progressBar.style.width = pct + "%";
+            progressText.textContent = pct + "%";
             if (chunkIndex < totalChunks) {
                 readAndSendChunk();
+            } else {
+                setTimeout(() => progressEl.classList.add("hidden"), 300);
             }
         };
         reader.readAsDataURL(slice);

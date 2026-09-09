@@ -4,21 +4,22 @@ from gi.repository import GLib
 
 import base64 as b64
 
-file_chunks = {}
+Downloads = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+open_files = {}
 
 def handle_file(data):
-    global file_chunks
     name = data.get("name")
     chunk = data.get("chunk", 0)
     total_chunks = data.get("totalChunks", 1)
     file_data = b64.b64decode(data.get("data", ""))
 
-    if name not in file_chunks:
-        file_chunks[name] = bytearray()
-    file_chunks[name].extend(file_data)
+    path = f"{Downloads}/{name}"
+
+    if chunk == 0:
+        open_files[name] = open(path, "wb")
+
+    open_files[name].write(file_data)
 
     if chunk + 1 == total_chunks:
-        downloads = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD)
-        with open(f"{downloads}/{name}", "wb") as f:
-            f.write(file_chunks[name])
-        del file_chunks[name]
+        open_files[name].close()
+        del open_files[name]
