@@ -8,9 +8,6 @@ let scale = 1.0;
 let offsetX = 0;
 let offsetY = 0;
 
-let pendingPatches = null;
-let busy = false;
-
 function resizeCanvas() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -64,23 +61,10 @@ function handlePatch(message) {
         }
     }
 
-    pendingPatches = message;
-    processNext();
+    drawPatch(message);
 }
 
-function patchSrc(patch) {
-    let format = String(patch.format || "jpeg").toLowerCase();
-    if (format === "jpg") {
-        format = "jpeg";
-    }
-    const pixels = String(patch.pixels).replace(
-        /^data:image\/[^;]+;base64,/,
-        ""
-    );
-    return `data:image/${format};base64,${pixels}`;
-}
-
-async function decodePatch(patch) {
+function drawPatch(patch) {
     const x = Number(patch.x);
     const y = Number(patch.y);
     const width = Number(patch.width);
@@ -92,75 +76,41 @@ async function decodePatch(patch) {
         !Number.isFinite(width) ||
         !Number.isFinite(height)
     ) {
-        throw new Error("Invalid patch dimensions");
+        console.error("Invalid patch dimensions:", patch);
+        return;
     }
 
-    let bitmap;
-    if (typeof createImageBitmap === "function") {
-        const response = await fetch(patchSrc(patch));
-        bitmap = await createImageBitmap(await response.blob());
-    } else {
-        bitmap = await new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = () => resolve(image);
-            image.onerror = () => reject(new Error("Could not decode image patch"));
-            image.src = patchSrc(patch);
-        });
-    }
+    const image = new Image();
 
-    return {
-        bitmap,
-        drawX: x * scale,
-        drawY: y * scale,
-        drawWidth: width * scale,
-        drawHeight: height * scale
+    image.onload = function () {
+        const drawX = x * scale;
+        const drawY = y * scale;
+        const drawWidth = width * scale;
+        const drawHeight = height * scale;
+
+        context.drawImage(
+            image,
+            drawX,
+            drawY,
+            drawWidth,
+            drawHeight
+        );
     };
-}
 
-async function processNext() {
-    if (busy) {
-        return;
+    image.onerror = function () {
+        console.error("Could not decode image patch");
+    };
+
+    let format = String(patch.format || "jpeg").toLowerCase();
+
+    if (format === "jpg") {
+        format = "jpeg";
     }
 
-    busy = true;
+    const pixels = String(patch.pixels).replace(
+        /^data:image\/[^;]+;base64,/,
+        ""
+    );
 
-    const patch = pendingPatches;
-    pendingPatches = null;
-
-    if (!patch) {
-        busy = false;
-        return;
-    }
-
-    try {
-        const item = await decodePatch(patch);
-
-        if (pendingPatches) {
-            if (item.bitmap.close) {
-                item.bitmap.close();
-            }
-        } else {
-            context.drawImage(
-                item.bitmap,
-                item.drawX,
-                item.drawY,
-                item.drawWidth,
-                item.drawHeight
-            );
-            if (item.bitmap.close) {
-                item.bitmap.close();
-            }
-        }
-    } catch (error) {
-        console.error("Patch draw error:", error.message);
-    }
-
-    busy = false;
-
-    processNext();
-}
-
-function drawPatch(patch) {
-    pendingPatches = patch;
-    processNext();
+    image.src = `data:image/${format};base64,${pixels}`;
 }
