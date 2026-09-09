@@ -14,16 +14,14 @@ sys.path.insert(0, BASE_DIR)
 if os.path.isfile(f"{BASE_DIR}/../data/gschemas.compiled"):
     os.environ["GSETTINGS_SCHEMA_DIR"] = f"{BASE_DIR}/../data/"
 
-from remote import RemoteControl
-
 class MainWindow(Gtk.Window):
-    def __init__(self):
-        super().__init__(title="Remote Control")
+    def __init__(self, app):
+        super().__init__(title="Remote Control", application=app)
         self.set_default_size(360, 280)
         self.set_resizable(False)
 
-        self.pid = 0
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
+        self.pid = 0
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         outer.get_style_context().add_class("window")
@@ -76,7 +74,7 @@ class MainWindow(Gtk.Window):
         outer.pack_start(btn_box, False, False, 0)
 
         self.add(outer)
-        self.connect("destroy", self._on_destroy)
+        self.connect("delete-event", self._on_delete_event)
         self._setup_status_icon()
 
     def _setup_status_icon(self):
@@ -89,6 +87,12 @@ class MainWindow(Gtk.Window):
     def _on_tray_menu(self, _icon, button, time):
         menu = Gtk.Menu()
 
+        show_item = Gtk.MenuItem(label="Show")
+        show_item.connect("activate", lambda _: self.show_and_present())
+        menu.append(show_item)
+
+        menu.append(Gtk.SeparatorMenuItem())
+
         start_item = Gtk.MenuItem(label="Start")
         start_item.connect("activate", lambda _: self._on_start(None))
         menu.append(start_item)
@@ -100,21 +104,22 @@ class MainWindow(Gtk.Window):
         menu.append(Gtk.SeparatorMenuItem())
 
         quit_item = Gtk.MenuItem(label="Quit")
-        quit_item.connect("activate", lambda _: self._on_destroy(None))
+        quit_item.connect("activate", lambda _: self.get_application().quit())
         menu.append(quit_item)
 
         menu.show_all()
         menu.popup_at_pointer(None)
 
-    def _on_tray_activate(self, _icon):
-        if self.get_visible():
-            self.hide()
-        else:
-            self.show_all()
+    def show_and_present(self):
+        self.show_all()
+        self.present()
 
-    def _on_destroy(self, _widget):
-        self._on_stop(_widget)
-        Gtk.main_quit()
+    def _on_tray_activate(self, _icon):
+        self.show_and_present()
+
+    def _on_delete_event(self, _widget, _event):
+        self.hide()
+        return True
 
     def _on_start(self, _btn):
         if self.pid == 0:
@@ -143,16 +148,4 @@ class MainWindow(Gtk.Window):
     def _on_autostart_toggled(self, _switch, state):
         self.settings.set_boolean("autostart", state)
         return True
-
-    def run(self):
-        Gtk.main()
-
-if __name__ == "__main__":
-    main = MainWindow()
-    if "autostart" in sys.argv:
-        if not main.settings.get_boolean("autostart"):
-            sys.exit(0)
-    if "show" in sys.argv:
-        main.show_all()
-    main.run()
 
