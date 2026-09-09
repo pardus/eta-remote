@@ -79,7 +79,7 @@ class MainWindow(Gtk.Window):
 
     def _setup_status_icon(self):
         self.tray = Gtk.StatusIcon()
-        self.tray.set_from_icon_name("network-transmit-receive")
+        self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
         self.tray.set_tooltip_text("Remote Control")
         self.tray.connect("popup-menu", self._on_tray_menu)
         self.tray.connect("activate", self._on_tray_activate)
@@ -132,6 +132,7 @@ class MainWindow(Gtk.Window):
         self.stop_btn.set_sensitive(True)
         self.status_label.set_text("Status: Running")
         self.tray.set_tooltip_text("Remote Control - Running")
+        self.tray.set_from_icon_name("tr.org.pardus.eta-remote-started")
 
     def _on_stop(self, _btn):
         if self.pid != 0:
@@ -144,6 +145,7 @@ class MainWindow(Gtk.Window):
         self.stop_btn.set_sensitive(False)
         self.status_label.set_text("Status: Stopped")
         self.tray.set_tooltip_text("Remote Control")
+        self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
 
     def _on_autostart_toggled(self, _switch, state):
         self.settings.set_boolean("autostart", state)

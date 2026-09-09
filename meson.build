@@ -38,3 +38,18 @@ install_data(
     'data/org.pardus.eta-remote.gschema.xml',
     install_dir: get_option('datadir') / 'glib-2.0/schemas'
 )
+
+install_data(
+    'data/icons/tr.org.pardus.eta-remote.svg',
+    install_dir: get_option('datadir') / 'icons/hicolor/scalable/apps'
+)
+
+install_data(
+    'data/icons/tr.org.pardus.eta-remote-started.svg',
+    install_dir: get_option('datadir') / 'icons/hicolor/scalable/apps'
+)
+
+install_data(
+    'data/icons/tr.org.pardus.eta-remote-stopped.svg',
+    install_dir: get_option('datadir') / 'icons/hicolor/scalable/apps'
+)

@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Eta Remote
-Icon=
+Icon=tr.org.pardus.eta-remote
 Comment=Remote control application for etap
-Exec=/usr/bin/python3 /usr/share/eta/eta-remote/MainWindow.py --show
+Exec=/usr/bin/python3 /usr/share/eta/eta-remote/Main.py --show
 Terminal=false
 
