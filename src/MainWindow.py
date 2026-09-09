@@ -3,10 +3,13 @@ import os
 import signal
 import gi
 gi.require_version("Gtk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
 
-from gi.repository import Gtk, Gdk, GLib, Gio
+from gi.repository import Gtk, Gdk, GLib, Gio, GdkPixbuf
 
 import subprocess
+
+import utils
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -17,31 +20,23 @@ if os.path.isfile(f"{BASE_DIR}/../data/gschemas.compiled"):
 class MainWindow(Gtk.Window):
     def __init__(self, app):
         super().__init__(title="Remote Control", application=app)
-        self.set_default_size(360, 280)
+        self.set_default_size(360, 320)
         self.set_resizable(False)
 
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.pid = 0
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        outer.get_style_context().add_class("window")
 
         title = Gtk.Label(label="Remote Control")
-        title.get_style_context().add_class("title")
         outer.pack_start(title, False, False, 0)
 
-        addr_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        addr_box.set_margin_top(12)
-        host_label = Gtk.Label(label=f"Address: 0.0.0.0")
-        host_label.get_style_context().add_class("address")
-        port_label = Gtk.Label(label=f"HTTP Port: 8000")
-        port_label.get_style_context().add_class("address")
-        addr_box.pack_start(host_label, False, False, 0)
-        addr_box.pack_start(port_label, False, False, 0)
-        outer.pack_start(addr_box, False, False, 0)
+        self.addr_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+        self.addr_box.set_margin_top(12)
+        outer.pack_start(self.addr_box, False, False, 0)
+
 
         self.status_label = Gtk.Label(label="Status: Stopped")
-        self.status_label.get_style_context().add_class("status")
         self.status_label.set_margin_top(16)
         outer.pack_start(self.status_label, False, False, 0)
 
@@ -61,11 +56,9 @@ class MainWindow(Gtk.Window):
         btn_box.set_margin_top(16)
 
         self.start_btn = Gtk.Button(label="  Start  ")
-        self.start_btn.get_style_context().add_class("start-btn")
         self.start_btn.connect("clicked", self.on_start)
 
         self.stop_btn = Gtk.Button(label="  Stop  ")
-        self.stop_btn.get_style_context().add_class("stop-btn")
         self.stop_btn.set_sensitive(False)
         self.stop_btn.connect("clicked", self._on_stop)
 
@@ -76,6 +69,35 @@ class MainWindow(Gtk.Window):
         self.add(outer)
         self.connect("delete-event", self._on_delete_event)
         self._setup_status_icon()
+
+    def _make_qr(self, data):
+        import io
+        import qrcode
+        qr = qrcode.QRCode(box_size=4, border=1)
+        qr.add_data(data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+        loader = GdkPixbuf.PixbufLoader.new_with_type("png")
+        loader.write(buffer.read())
+        loader.close()
+        return loader.get_pixbuf()
+
+    def _refresh_addr_box(self, *_args):
+        for child in self.addr_box.get_children():
+            self.addr_box.remove(child)
+        for ip, dev in utils.get_local_ip():
+            url = f"http://{ip}:8000"
+            qr_img = Gtk.Image.new_from_pixbuf(self._make_qr(url))
+            qr_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            qr_img.set_margin_bottom(2)
+            qr_box.pack_start(Gtk.Label(label=dev), False, False, 0)
+            qr_box.pack_start(qr_img, False, False, 0)
+            qr_box.pack_start(Gtk.Label(label=url), False, False, 0)
+            self.addr_box.pack_start(qr_box, True, True, 0)
+        self.addr_box.show_all()
 
     def _setup_status_icon(self):
         self.tray = Gtk.StatusIcon()
@@ -113,6 +135,7 @@ class MainWindow(Gtk.Window):
     def show_and_present(self):
         self.show_all()
         self.present()
+        self._refresh_addr_box()
 
     def _on_tray_activate(self, _icon):
         self.show_and_present()

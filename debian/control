@@ -10,6 +10,9 @@ Package: eta-remote
 Architecture: any
 Depends: ${misc:Depends},
          libc6,
-         python3-evdev
+         python3-evdev,
+         ffmpeg,
+         python3-qrcode,
+         python3-websockets
 Description: Remote control application for etap.
  Etap Remote control.
