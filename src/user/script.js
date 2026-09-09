@@ -9,7 +9,7 @@ const isApple = /Mac|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
 
 
 if (isWindows || isApple) {
-  warning("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux.");
+  warning("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux.", false);
 }
 
 let ws = null;
