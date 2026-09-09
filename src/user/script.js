@@ -4,6 +4,13 @@ const capture = document.getElementById("capture");
 
 
 const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
+const isWindows = /Win/i.test(window.navigator.userAgent);
+const isApple = /Mac|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
+
+
+if (isWindows || isApple) {
+  warning("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux.");
+}
 
 let ws = null;
 
