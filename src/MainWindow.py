@@ -137,7 +137,7 @@ class MainWindow(Gtk.Window):
     def _on_stop(self, _btn):
         if self.pid != 0:
             try:
-                os.killpg(self.pid, signal.SIGKILL)
+                os.killpg(self.pid, signal.SIGTERM)
             except ProcessLookupError:
                 pass
             self.pid = 0
