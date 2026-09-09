@@ -61,7 +61,7 @@ function addMuteButton() {
 
     const button = document.createElement("button");
     button.id = "fc-audio";
-    button.textContent = "Sound: On";
+    button.textContent = "Sound: Off";
     button.addEventListener("click", () => {
         muted = !muted;
         button.textContent = muted ? "Sound: Off" : "Sound: On";
@@ -74,26 +74,4 @@ function addMuteButton() {
 
 window.addEventListener("load", function () {
     addMuteButton();
-
-    if (!ws) {
-        return;
-    }
-
-    const existing = ws.onmessage;
-    ws.onmessage = function (event) {
-        let message;
-        try {
-            message = JSON.parse(event.data);
-        } catch (error) {
-            if (existing) existing.call(this, event);
-            return;
-        }
-
-        if (message.type === "audio" && message.data) {
-            handleAudio(message.data);
-            return;
-        }
-
-        if (existing) existing.call(this, event);
-    };
 });

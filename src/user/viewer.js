@@ -50,34 +50,23 @@ window.addEventListener("load", function(){
         connect();
     }
 
-    ws.onmessage = function (event) {
-        let patch;
-
-        try {
-            patch = JSON.parse(event.data);
-            if (!patch.pixels) {
-                return;
-            }
-        } catch (error) {
-            console.error("Invalid JSON:", event.data);
-            return;
-        }
-
-        if (patch.screen_width && patch.screen_height) {
-            const w = Number(patch.screen_width);
-            const h = Number(patch.screen_height);
-            if (w != sourceWidth || h != sourceHeight){
-                sourceWidth = w;
-                sourceHeight = h;
-                resizeCanvas();
-                console.log(sourceWidth, sourceHeight);
-            }
-        }
-
-        pendingPatches = patch;
-        processNext();
-    };
 });
+
+function handlePatch(message) {
+    if (message.screen_width && message.screen_height) {
+        const w = Number(message.screen_width);
+        const h = Number(message.screen_height);
+        if (w != sourceWidth || h != sourceHeight){
+            sourceWidth = w;
+            sourceHeight = h;
+            resizeCanvas();
+            console.log(sourceWidth, sourceHeight);
+        }
+    }
+
+    pendingPatches = message;
+    processNext();
+}
 
 function patchSrc(patch) {
     let format = String(patch.format || "jpeg").toLowerCase();

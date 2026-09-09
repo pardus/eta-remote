@@ -19,6 +19,22 @@ function connect() {
         send("connect", properties());
     };
 
+    ws.onmessage = function (event) {
+        let message;
+        try {
+            message = JSON.parse(event.data);
+        } catch (error) {
+            console.error("Invalid JSON:", event.data);
+            return;
+        }
+
+        if (message.type === "audio" && message.data) {
+            handleAudio(message.data);
+        } else if (message.pixels) {
+            handlePatch(message);
+        }
+    };
+
     ws.onclose = () => {
         ws = null;
     };
