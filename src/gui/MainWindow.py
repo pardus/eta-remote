@@ -4,13 +4,14 @@ import traceback
 
 gi.require_version("Gtk", "3.0")
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gio
 
 class MainWindow(Gtk.Window):
     def __init__(self):
         super().__init__()
         self.label=Gtk.Label()
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         button = Gtk.Button(label="Allow")
         button.connect("clicked", self._allow)
         box.pack_start(self.label, True, True, 0)
@@ -33,6 +34,9 @@ class MainWindow(Gtk.Window):
             if type == "connect":
                 GLib.idle_add(self.label.set_text, json.dumps(data, indent=4))
                 self._client_id = client_id
+                if self.settings.get_boolean("auto-allow"):
+                    GLib.idle_add(self.allows.append, self._client_id)
+                    return True
                 self.show_all()
             elif type == "disconnect":
                 self.allows.remove(client_id)

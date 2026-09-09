@@ -6,5 +6,10 @@
       <summary>Autostart on boot</summary>
       <description>Start the remote control server automatically on login</description>
     </key>
+    <key name="auto-allow" type="b">
+      <default>false</default>
+      <summary>Auto allow new connections</summary>
+      <description>Automatically allow new connections</description>
+    </key>
   </schema>
 </schemalist>

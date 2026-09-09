@@ -20,7 +20,7 @@ if os.path.isfile(f"{BASE_DIR}/../data/gschemas.compiled"):
 class MainWindow(Gtk.Window):
     def __init__(self, app):
         super().__init__(title="Remote Control", application=app)
-        self.set_default_size(360, 320)
+        self.set_default_size(360, 360)
         self.set_resizable(False)
 
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
@@ -40,16 +40,24 @@ class MainWindow(Gtk.Window):
         self.status_label.set_margin_top(16)
         outer.pack_start(self.status_label, False, False, 0)
 
-        autostart_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        autostart_box.set_halign(Gtk.Align.CENTER)
-        autostart_box.set_margin_top(16)
-        autostart_label = Gtk.Label(label="Autostart on boot")
-        self.autostart_switch = Gtk.Switch()
-        self.autostart_switch.set_active(self.settings.get_boolean("autostart"))
-        self.autostart_switch.connect("state-set", self._on_autostart_toggled)
-        autostart_box.pack_start(autostart_label, False, False, 0)
-        autostart_box.pack_start(self.autostart_switch, False, False, 4)
-        outer.pack_start(autostart_box, False, False, 0)
+
+        options = [
+            {"name": "autostart", "label":"Autostart on boot"},
+            {"name": "auto-allow", "label":"Allow all new connections"}
+        ]
+        for option in options:
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            box.set_halign(Gtk.Align.CENTER)
+            box.set_margin_top(16)
+
+            switch = Gtk.Switch()
+            switch.set_active(self.settings.get_boolean(option["name"]))
+            switch.connect("state-set", self._on_settings_toggled, option["name"])
+
+            box.pack_start(Gtk.Label(label=option["label"]), False, False, 0)
+            box.pack_start(switch, False, False, 4)
+            outer.pack_start(box, False, False, 0)
+
 
         btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         btn_box.set_halign(Gtk.Align.CENTER)
@@ -127,11 +135,15 @@ class MainWindow(Gtk.Window):
         menu.append(Gtk.SeparatorMenuItem())
 
         quit_item = Gtk.MenuItem(label="Quit")
-        quit_item.connect("activate", lambda _: self.get_application().quit())
+        quit_item.connect("activate", self._on_quit)
         menu.append(quit_item)
 
         menu.show_all()
         menu.popup_at_pointer(None)
+
+    def _on_quit(self, widget):
+        self._on_stop(widget)
+        self.get_application().quit()
 
     def show_and_present(self):
         self.show_all()
@@ -171,7 +183,7 @@ class MainWindow(Gtk.Window):
         self.tray.set_tooltip_text("Remote Control")
         self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
 
-    def _on_autostart_toggled(self, _switch, state):
-        self.settings.set_boolean("autostart", state)
+    def _on_settings_toggled(self, _switch, state, name=""):
+        self.settings.set_boolean(name, state)
         return True
 
