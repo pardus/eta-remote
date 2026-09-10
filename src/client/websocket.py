@@ -4,6 +4,9 @@ from websockets.asyncio.client import connect
 
 import traceback
 
+import threading
+lock = threading.Condition()
+
 from capture import main as capture_main, request_full, set_quality
 from pulse import main as pulse_main
 
@@ -12,6 +15,7 @@ class context:
         self.allow = False
         self.websocket = None
         self.message = ""
+        self.wait = True
 
 class WebSocketClient:
     def __init__(self, address, handler=print, control=print):
@@ -30,6 +34,9 @@ class WebSocketClient:
                     set_quality(data.get("quality", 80))
                 else:
                     self.handler(message)
+            if not ctx.wait:
+                with lock:
+                    lock.notify()
 
     async def sender(self, ctx, queue):
         while True:
@@ -47,12 +54,20 @@ class WebSocketClient:
         audio_queue = asyncio.Queue()
 
         def data_handler(message):
+            if ctx.wait:
+                with lock:
+                    lock.wait()
+            print("data")
             loop.call_soon_threadsafe(
                 data_queue.put_nowait,
                 message,
             )
 
         def audio_handler(message):
+            if ctx.wait:
+                with lock:
+                    lock.wait()
+            print("audio")
             loop.call_soon_threadsafe(
                 audio_queue.put_nowait,
                 message,

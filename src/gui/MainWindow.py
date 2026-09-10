@@ -41,6 +41,7 @@ class MainWindow(Gtk.Window):
             if type == "connect":
                 GLib.idle_add(self.label.set_text, json.dumps(data, indent=4))
                 self._client_id = client_id
+                ctx.wait = False
                 if self.settings.get_boolean("auto-allow"):
                     GLib.idle_add(self._allow, None)
                 else:
@@ -48,6 +49,7 @@ class MainWindow(Gtk.Window):
             elif type == "disconnect":
                 if client_id in self.allows:
                     self.allows.pop(client_id)
+                ctx.wait = (len(self.allows.keys()) == 0)
 
             data["target"] = []
             for cl in self.allows.keys():
