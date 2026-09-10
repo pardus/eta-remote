@@ -109,7 +109,7 @@ function initFloatingControls() {
     const fc_quality = document.getElementById("fc-quality");
     fc_quality.addEventListener("change", (e) => {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        ws.send(JSON.stringify({"quality": fc_quality.value}));
+        send("quality", {"quality": fc_quality.value});
     });
 }
 
