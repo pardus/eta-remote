@@ -18,7 +18,7 @@ FFMPEG_CMD = [
 
 empty = b'\0'*4096
 def record_audio():
-    proc = subprocess.Popen(FFMPEG_CMD,stdout=subprocess.PIPE)
+    proc = subprocess.Popen(FFMPEG_CMD,stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     while True:
         data = proc.stdout.read(4096)
         if data in empty:

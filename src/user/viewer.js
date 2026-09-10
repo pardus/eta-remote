@@ -101,16 +101,11 @@ function drawPatch(patch) {
         console.error("Could not decode image patch");
     };
 
-    let format = String(patch.format || "jpeg").toLowerCase();
-
-    if (format === "jpg") {
-        format = "jpeg";
-    }
 
     const pixels = String(patch.pixels).replace(
         /^data:image\/[^;]+;base64,/,
         ""
     );
 
-    image.src = `data:image/${format};base64,${pixels}`;
+    image.src = `data:image/jpeg;base64,${pixels}`;
 }

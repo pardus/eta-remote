@@ -64,6 +64,7 @@ function addMuteButton() {
     button.textContent = "Sound: Off";
     button.addEventListener("click", () => {
         muted = !muted;
+        send("permission", {"audio":!muted});
         button.textContent = muted ? "Sound: Off" : "Sound: On";
         if (!muted && audioCtx && audioCtx.state === "suspended") {
             audioCtx.resume();

@@ -66,13 +66,13 @@ def image_diff_patch_json(previous, current):
     ).decode("ascii")
 
     result = {
+        "type": "image",
         "x": x1/scale,
         "y": y1/scale,
         "width": patch.width,
         "height": patch.height,
         "screen_width": img_width/scale,
         "screen_height": img_height/scale,
-        "format": "JPEG",
         "pixels": encoded_pixels,
     }
 

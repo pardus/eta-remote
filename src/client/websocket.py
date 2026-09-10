@@ -37,7 +37,6 @@ class WebSocketClient:
                 message = await queue.get()
                 ctx.message = message
                 if self.control(ctx):
-                    print("send:", len(message))
                     await ctx.websocket.send(ctx.message)
             except:
                 print(traceback.format_exc())
