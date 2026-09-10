@@ -1,6 +1,9 @@
 import ctypes
 import os
 
+from Xlib import display, X
+from Xlib.ext import damage
+
 from PIL import Image
 
 # Load the shared library
@@ -67,8 +70,9 @@ _lib.createimage.restype = ctypes.c_int
 _lib.getrootwindow.argtypes = [_display_p, ctypes.POINTER(ShmImage)]
 _lib.getrootwindow.restype = None
 
-_display = None
+_display = None # from Ctypes
 _image = None
+_d = None # from XLib
 
 def grab_rgb():
     global _display
@@ -110,8 +114,31 @@ def grab_rgb():
 def display_close():
     global _display
     global _image
+    global _d
     if _display is not None and _image is not None:
         _lib.destroyimage(_display, ctypes.byref(_image))
         _lib.closedisplay(_display)
         _image = None
         _display = None
+    if _d is not None:
+        _d.close()
+        _d = None
+
+
+def _xdamage_init():
+    global _d
+    if _d is not None:
+        return
+    _d = display.Display()
+    root = _d.screen().root
+
+    _d.damage_query_version()
+
+    root.damage_create(damage.DamageReportRawRectangles)
+
+def wait_event():
+    _xdamage_init()
+    while True:
+        event = _d.next_event()
+        if event.type == _d.extension_event.DamageNotify:
+            return event

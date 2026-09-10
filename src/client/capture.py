@@ -8,13 +8,16 @@ from io import BytesIO
 from PIL import Image, ImageChops, ImageGrab
 
 if "DISPLAY" in os.environ and "WAYLAND_DISPLAY" not in os.environ:
-    from X11.capture import grab_rgb, display_close
+    from X11.capture import grab_rgb, display_close, wait_event
 else:
     def grab_rgb():
         ImageGrab.grab()
 
     def display_close():
         pass
+
+    def wait_event():
+        return None
 
 SPEED = 60
 QUALITY = 70
@@ -108,6 +111,7 @@ def main(handler=None):
 
     try:
         while True:
+            cur = time.time()
             current_image = grab_rgb()
             if req_full:
                 previous_image = Image.new('RGB', (img_width, img_height), color='black')
@@ -124,7 +128,11 @@ def main(handler=None):
 
             previous_image = current_image
 
-            time.sleep(len(str(patch_json)) / (921600*SPEED))
+            delay = len(str(patch_json)) / (921600*SPEED)
+            wait_event()
+            now = time.time()
+            if now - cur < delay:
+                time.sleep(delay - (cur - now))
 
     except KeyboardInterrupt:
         print("\nStopped.")

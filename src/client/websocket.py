@@ -57,7 +57,6 @@ class WebSocketClient:
             if ctx.wait:
                 with lock:
                     lock.wait()
-            print("data")
             loop.call_soon_threadsafe(
                 data_queue.put_nowait,
                 message,
@@ -67,7 +66,6 @@ class WebSocketClient:
             if ctx.wait:
                 with lock:
                     lock.wait()
-            print("audio")
             loop.call_soon_threadsafe(
                 audio_queue.put_nowait,
                 message,
