@@ -8,6 +8,7 @@ from MainWindow import MainWindow
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio, GLib
 
+from i18n import _
 
 class Application(Gtk.Application):
     def __init__(self, *args, **kwargs):
@@ -21,7 +22,7 @@ class Application(Gtk.Application):
             ord("a"),
             GLib.OptionFlags(0),
             GLib.OptionArg(0),
-            "Start application on autostart",
+            _("Start application in autostart mode"),
             None,
         )
 
@@ -30,7 +31,7 @@ class Application(Gtk.Application):
             ord("s"),
             GLib.OptionFlags(0),
             GLib.OptionArg(0),
-            "Start application and show window",
+            _("Start application and show window"),
             None,
         )
 

@@ -5,6 +5,8 @@ deps = [
     dependency('xext'),
 ]
 
+subdir('po')
+
 lib= library(
     'capture',
     ['src/client/X11/capture.c'],

@@ -11,6 +11,8 @@ import subprocess
 
 import utils
 
+from i18n import _
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
@@ -19,31 +21,34 @@ if os.path.isfile(f"{BASE_DIR}/../data/gschemas.compiled"):
 
 class MainWindow(Gtk.Window):
     def __init__(self, app):
-        super().__init__(title="Remote Control", application=app)
+        super().__init__(title=_("Eta Remote Control"), application=app)
         self.set_default_size(360, 360)
         self.set_resizable(False)
 
+        header = Gtk.HeaderBar()
+        self.set_titlebar(header)
+        header.set_show_close_button(True)
+        header.set_title(_("Remote Control"))
+
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.pid = 0
+        self.started = False
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-
-        title = Gtk.Label(label="Remote Control")
-        outer.pack_start(title, False, False, 0)
 
         self.addr_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
         self.addr_box.set_margin_top(12)
         outer.pack_start(self.addr_box, False, False, 0)
 
 
-        self.status_label = Gtk.Label(label="Status: Stopped")
+        self.status_label = Gtk.Label(label=_("Status: Stopped"))
         self.status_label.set_margin_top(16)
         outer.pack_start(self.status_label, False, False, 0)
 
 
         options = [
-            {"name": "autostart", "label":"Autostart on boot"},
-            {"name": "auto-allow", "label":"Allow all new connections"}
+            {"name": "autostart", "label": _("Autostart on boot")},
+            {"name": "auto-allow", "label":_("Allow all new connections")}
         ]
         for option in options:
             box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -63,16 +68,23 @@ class MainWindow(Gtk.Window):
         btn_box.set_halign(Gtk.Align.CENTER)
         btn_box.set_margin_top(16)
 
-        self.start_btn = Gtk.Button(label="  Start  ")
+        self.start_btn = Gtk.Button(label="  {}  ".format(_("Start")))
         self.start_btn.connect("clicked", self.on_start)
 
-        self.stop_btn = Gtk.Button(label="  Stop  ")
+        self.stop_btn = Gtk.Button(label="  {}  ".format(_("Stop")))
         self.stop_btn.set_sensitive(False)
         self.stop_btn.connect("clicked", self._on_stop)
 
         btn_box.pack_start(self.start_btn, True, True, 0)
         btn_box.pack_start(self.stop_btn, True, True, 0)
+
+        outer.pack_start(Gtk.Label(), True, True, 0)
         outer.pack_start(btn_box, False, False, 0)
+
+        outer.pack_start(Gtk.Label(), True, True, 0)
+        outer.pack_start(Gtk.Separator(), False, False, 0)
+        outer.pack_start(Gtk.Label(label="© TÜBİTAK BİLGEM"), False, False, 0)
+
 
         self.add(outer)
         self.connect("delete-event", self._on_delete_event)
@@ -111,30 +123,31 @@ class MainWindow(Gtk.Window):
     def _setup_status_icon(self):
         self.tray = Gtk.StatusIcon()
         self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
-        self.tray.set_tooltip_text("Remote Control")
+        self.tray.set_tooltip_text(_("Remote Control"))
         self.tray.connect("popup-menu", self._on_tray_menu)
         self.tray.connect("activate", self._on_tray_activate)
 
     def _on_tray_menu(self, _icon, button, time):
         menu = Gtk.Menu()
 
-        show_item = Gtk.MenuItem(label="Show")
+        show_item = Gtk.MenuItem(label=_("Show"))
         show_item.connect("activate", lambda _: self.show_and_present())
         menu.append(show_item)
 
         menu.append(Gtk.SeparatorMenuItem())
 
-        start_item = Gtk.MenuItem(label="Start")
-        start_item.connect("activate", lambda _: self.on_start(None))
-        menu.append(start_item)
-
-        stop_item = Gtk.MenuItem(label="Stop")
-        stop_item.connect("activate", lambda _: self._on_stop(None))
-        menu.append(stop_item)
+        if not self.started:
+            start_item = Gtk.MenuItem(label=_("Start"))
+            start_item.connect("activate", lambda _: self.on_start(None))
+            menu.append(start_item)
+        else:
+            stop_item = Gtk.MenuItem(label=_("Stop"))
+            stop_item.connect("activate", lambda _: self._on_stop(None))
+            menu.append(stop_item)
 
         menu.append(Gtk.SeparatorMenuItem())
 
-        quit_item = Gtk.MenuItem(label="Quit")
+        quit_item = Gtk.MenuItem(label=_("Quit"))
         quit_item.connect("activate", self._on_quit)
         menu.append(quit_item)
 
@@ -164,10 +177,11 @@ class MainWindow(Gtk.Window):
                 start_new_session=True,
             )
             self.pid = process.pid
+        self.started = True
         self.start_btn.set_sensitive(False)
         self.stop_btn.set_sensitive(True)
-        self.status_label.set_text("Status: Running")
-        self.tray.set_tooltip_text("Remote Control - Running")
+        self.status_label.set_text(_("Status: Running"))
+        self.tray.set_tooltip_text(_("Remote Control - Running"))
         self.tray.set_from_icon_name("tr.org.pardus.eta-remote-started")
 
     def _on_stop(self, _btn):
@@ -177,10 +191,11 @@ class MainWindow(Gtk.Window):
             except ProcessLookupError:
                 pass
             self.pid = 0
+        self.started = False
         self.start_btn.set_sensitive(True)
         self.stop_btn.set_sensitive(False)
-        self.status_label.set_text("Status: Stopped")
-        self.tray.set_tooltip_text("Remote Control")
+        self.status_label.set_text(_("Status: Stopped"))
+        self.tray.set_tooltip_text(_("Remote Control"))
         self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
 
     def _on_settings_toggled(self, _switch, state, name=""):

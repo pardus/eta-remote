@@ -1,0 +1,69 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-11 10:10+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/MainWindow.py:24
+msgid "Eta Remote Control"
+msgstr "Eta Uzaktan Kontrol"
+
+#: src/MainWindow.py:31 src/MainWindow.py:126 src/MainWindow.py:198
+msgid "Remote Control"
+msgstr "Uzaktan Kontrol"
+
+#: src/MainWindow.py:44 src/MainWindow.py:197
+msgid "Status: Stopped"
+msgstr "Durum: Durdu"
+
+#: src/MainWindow.py:50
+msgid "Autostart on boot"
+msgstr "Açılışta başlat"
+
+#: src/MainWindow.py:51
+msgid "Allow all new connections"
+msgstr "Tüm yeni bağlantıları kabul et"
+
+#: src/MainWindow.py:71 src/MainWindow.py:140
+msgid "Start"
+msgstr "Başlat"
+
+#: src/MainWindow.py:74 src/MainWindow.py:144
+msgid "Stop"
+msgstr "Durdur"
+
+#: src/MainWindow.py:133
+msgid "Show"
+msgstr "Göster"
+
+#: src/MainWindow.py:150
+msgid "Quit"
+msgstr "Çıkış"
+
+#: src/MainWindow.py:183
+msgid "Status: Running"
+msgstr "Durum: Çalışıyor"
+
+#: src/MainWindow.py:184
+msgid "Remote Control - Running"
+msgstr "Uzaktan Kontrol - Çalışıyor"
+
+#: src/Main.py:25
+msgid "Start application in autostart mode"
+msgstr "Uygulamayı başlagıçta çalışma modunda aç"
+
+#: src/Main.py:34
+msgid "Start application and show window"
+msgstr "Uygulamayı başlat ve pencereyi göster"
