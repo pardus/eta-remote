@@ -10,14 +10,7 @@ from PIL import Image, ImageChops, ImageGrab
 if "DISPLAY" in os.environ and "WAYLAND_DISPLAY" not in os.environ:
     from X11.capture import grab_rgb, display_close, wait_event
 else:
-    def grab_rgb():
-        ImageGrab.grab()
-
-    def display_close():
-        pass
-
-    def wait_event():
-        return None
+    from pillow.capture import grab_rgb, display_close, wait_event
 
 SPEED = 60
 QUALITY = 70
