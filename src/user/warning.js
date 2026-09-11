@@ -31,3 +31,23 @@ function warning(message, can_close){
 
     document.getElementById("capture").appendChild(dialog);
 }
+
+const status = document.createTextNode("");
+const status_div = document.createElement('div');
+status_div.style.color = '#ffffff';
+status_div.style.backgroundColor = '#000000A0';
+status_div.style.borderRadius = '10px';
+status_div.style.padding = '10px';
+status_div.style.font = '32px monospace';
+status_div.classList.add('center');
+status_div.appendChild(status);
+document.getElementById("capture").appendChild(status_div);
+
+function setStatus(message){
+    status.textContent = message;
+    if (message.length > 0){
+        status_div.style.display = 'block';
+    } else {
+        status_div.style.display = 'none';
+    }
+}

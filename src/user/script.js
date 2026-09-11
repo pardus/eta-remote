@@ -14,6 +14,7 @@ if (isWindows || isApple) {
 
 let ws = null;
 
+let connected = false;
 
 function connect() {
     if(ws){
@@ -23,11 +24,17 @@ function connect() {
 
     ws.onopen = () => {
         capture.focus();
+        setStatus("Waiting for accept");
+        connected = false;
         send("connect", properties());
     };
 
     ws.onmessage = function (event) {
         let message;
+        if(!connected){
+            connected = true;
+            setStatus("");
+        }
         try {
             message = JSON.parse(event.data);
         } catch (error) {
@@ -44,6 +51,8 @@ function connect() {
 
     ws.onclose = () => {
         ws = null;
+        setStatus("Connection Lost");
+        resizeCanvas();
     };
 
 }
