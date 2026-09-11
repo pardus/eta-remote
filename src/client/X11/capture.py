@@ -74,7 +74,7 @@ _display = None # from Ctypes
 _image = None
 _d = None # from XLib
 
-def grab_rgb():
+def _grab_rgb():
     global _display
     global _image
 
@@ -110,6 +110,12 @@ def grab_rgb():
         "BGRX",
     )
     return img
+
+def grab_rgb():
+    try:
+        return _grab_rgb()
+    except:
+        return Image.new('RGB', (_image.ximage.contents.width, _image.ximage.contents.height), color='black')
 
 def display_close():
     global _display
