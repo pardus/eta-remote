@@ -102,8 +102,8 @@ def main(handler=None):
     img_width = previous_image.width
     img_height = previous_image.height
 
-    try:
-        while True:
+    while True:
+        try:
             cur = time.time()
             current_image = grab_rgb()
             if req_full:
@@ -127,13 +127,16 @@ def main(handler=None):
             if now - cur < delay:
                 time.sleep(delay - (cur - now))
 
-    except KeyboardInterrupt:
-        print("\nStopped.")
-    except:
-        print(traceback.format_exc())
+        except KeyboardInterrupt:
+            print("\nStopped.")
+            break
+        except:
+            print(traceback.format_exc())
+            display_close()
+            time.sleep(3)
 
-    finally:
-        display_close()
+    display_close()
+
 
 
 if __name__ == "__main__":
