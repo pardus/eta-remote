@@ -24,8 +24,12 @@ proc = None
 def pulse_start():
     global proc
     if proc is None:
-        proc = subprocess.Popen(FFMPEG_CMD,stdout=subprocess.PIPE, start_new_session=True)
-    #proc = subprocess.Popen(FFMPEG_CMD,stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        proc = subprocess.Popen(
+            FFMPEG_CMD,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
 
 empty = b'\0'*4096
 def record_audio():
