@@ -22,7 +22,7 @@ from websocket import WebSocketClient
 from main import PipeUInputHandler
 from keymap import build_keymap
 
-from MainWindow import MainWindow
+from Control import Control
 
 class RemoteControl:
     def __init__(self, address="ws://localhost:8765/room1", port=8000, user_dir=None):
@@ -73,7 +73,7 @@ class RemoteControl:
         return GLib.SOURCE_REMOVE
 
     def start(self):
-        self.window = MainWindow()
+        self.window = Control()
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._shutdown)
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self._shutdown)
         self._spawn(self._run_server)

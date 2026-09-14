@@ -8,29 +8,22 @@ from file import handle_file
 
 from gi.repository import Gtk, GLib, Gio
 
+from NewConnection import NewConnection
+
 default_allow = [
     "image", "mouse", "key", "touch", "request_full",
     "wheel", "quality", "permission", "file"
 ]
 
-class MainWindow(Gtk.Window):
+class Control(Gtk.Window):
     def __init__(self):
         super().__init__()
-        self.label=Gtk.Label()
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
-        button = Gtk.Button(label="Allow")
-        button.connect("clicked", self._allow)
-        box.pack_start(self.label, True, True, 0)
-        box.pack_start(button, False, False, 0)
-        self._client_id = None
-        self.add(box)
         self.allows = {}
 
-    def _allow(self, widget):
-        if self._client_id:
-            self.allows[self._client_id] = default_allow.copy()
-            self.hide()
+    def _allow(self, client_id):
+        if client_id:
+            self.allows[client_id] = default_allow.copy()
 
     def control(self, ctx):
         """control and filter websocket context"""
@@ -39,13 +32,11 @@ class MainWindow(Gtk.Window):
             client_id = data.get("id")
             type = data.get("type")
             if type == "connect":
-                GLib.idle_add(self.label.set_text, json.dumps(data, indent=4))
-                self._client_id = client_id
                 ctx.wait = False
                 if self.settings.get_boolean("auto-allow"):
-                    GLib.idle_add(self._allow, None)
+                    GLib.idle_add(self._allow, client_id)
                 else:
-                    self.show_all()
+                    GLib.idle_add(lambda: NewConnection(data, self._allow).show_all())
             elif type == "disconnect":
                 if client_id in self.allows:
                     self.allows.pop(client_id)
