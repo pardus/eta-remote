@@ -153,6 +153,23 @@ VirtualKeyboard.init((action, { code }) => {
     send("key", { key: code, code, action });
 });
 
+function addInputButton() {
+    const menu = document.getElementById("fc-menu");
+    if (!menu) return;
+
+    const button = document.createElement("button");
+    button.id = "fc-input";
+    button.textContent = "Input: On";
+    let perm = true;
+    button.addEventListener("click", () => {
+        perm = !perm;
+        send("permission", {"input":perm});
+        button.textContent = perm ? "Input: On" : "Input : Off";
+    });
+    menu.appendChild(button);
+}
+
 window.addEventListener("load", function(){
+    addInputButton();
     connect();
 });
