@@ -10,10 +10,14 @@ from gi.repository import Gtk, GLib, Gio
 
 from NewConnection import NewConnection
 
-default_allow = [
-    "image", "mouse", "key", "touch", "request_full",
-    "wheel", "quality", "permission", "file"
-]
+all_permissions = {
+    "audio":["audio"],
+    "input":[
+        "mouse", "key", "touch", "wheel"
+    ],
+    "image": ["image", "request_full"],
+    "misc": ["quality", "permission", "file"]
+}
 
 class Control(Gtk.Window):
     def __init__(self):
@@ -22,8 +26,12 @@ class Control(Gtk.Window):
         self.allows = {}
 
     def _allow(self, client_id):
-        if client_id:
-            self.allows[client_id] = default_allow.copy()
+        if client_id in self.allows:
+            self.allows[client_id]["perm"] = ["image", "input"]
+            GLib.idle_add(self._update_ui)
+
+    def _update_ui(self):
+        print(json.dumps(self.allows, indent=2))
 
     def control(self, ctx):
         """control and filter websocket context"""
@@ -33,19 +41,24 @@ class Control(Gtk.Window):
             type = data.get("type")
             if type == "connect":
                 ctx.wait = False
+                self.allows[client_id] = {"perm":[], "data":data}
+                GLib.idle_add(self._update_ui)
                 if self.settings.get_boolean("auto-allow"):
                     GLib.idle_add(self._allow, client_id)
                 else:
                     GLib.idle_add(lambda: NewConnection(data, self._allow).show_all())
             elif type == "disconnect":
-                if client_id in self.allows:
+                if client_id in self.allows.keys():
                     self.allows.pop(client_id)
                 ctx.wait = (len(self.allows.keys()) == 0)
+                GLib.idle_add(self._update_ui)
 
             data["target"] = []
             for cl in self.allows.keys():
-                if type in self.allows.get(cl):
-                    data["target"].append(cl)
+                for perm in self.allows[cl].get("perm",[]) + ["misc"]:
+                    if type in all_permissions.get(perm, []):
+                        data["target"].append(cl)
+                        break
             ctx.message = json.dumps(data)
         except:
             print(traceback.format_exc())
@@ -60,13 +73,14 @@ class Control(Gtk.Window):
 
         if type == "permission":
             for perm in data.keys():
-                if perm == "type":
+                if perm not in all_permissions:
                     continue
                 if data[perm]:
-                    if perm not in self.allows[client_id]:
-                        self.allows[client_id].append(perm)
-                elif perm in self.allows[client_id]:
-                    self.allows[client_id].remove(perm)
+                    if perm not in self.allows[client_id]["perm"]:
+                        self.allows[client_id]["perm"].append(perm)
+                elif perm in self.allows[client_id]["perm"]:
+                    self.allows[client_id]["perm"].remove(perm)
+            GLib.idle_add(self._update_ui)
 
         if type == "file":
             handle_file(data)
