@@ -8,7 +8,7 @@ import threading
 lock = threading.Condition()
 
 from capture import main as capture_main, request_full, set_quality
-from pulse import main as pulse_main
+from pulse import main as pulse_main, pulse_stop, pulse_start
 
 class context:
     def __init__(self):
@@ -22,6 +22,7 @@ class WebSocketClient:
         self.address = address
         self.handler = handler
         self.control = control
+        self._wait_last = True
 
     async def client(self, ctx):
         async for message in ctx.websocket:
@@ -34,9 +35,15 @@ class WebSocketClient:
                     set_quality(data.get("quality", 80))
                 else:
                     self.handler(message)
-            if not ctx.wait:
-                with lock:
-                    lock.notify()
+            if self._wait_last != ctx.wait:
+                if not ctx.wait:
+                    with lock:
+                        self._start()
+                        lock.notify()
+                else:
+                    self._stop()
+                self._wait_last = ctx.wait
+
 
     async def sender(self, ctx, queue):
         while True:
@@ -83,6 +90,12 @@ class WebSocketClient:
         sender_task_2 = asyncio.create_task(self.sender(ctx, audio_queue))
 
         await asyncio.gather(capture_task, audio_task, sender_task_1, sender_task_2)
+
+    def _start(self):
+        pulse_start()
+
+    def _stop(self):
+        pulse_stop()
 
     async def run(self):
         async with connect(self.address, max_size=None) as websocket:
