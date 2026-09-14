@@ -24,6 +24,7 @@ class Control(Gtk.Window):
         super().__init__()
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.allows = {}
+        self.kick = None
 
     def _update_ui(self):
         print(json.dumps(self.allows, indent=2))
@@ -38,7 +39,6 @@ class Control(Gtk.Window):
             if perm in self.allows[client_id]["perm"]:
                 self.allows[client_id]["perm"].remove(perm)
         self._update_ui()
-
 
     def _connect(self, data, client_id):
         self.allows[client_id] = {"perm":[], "data":data}
@@ -59,12 +59,14 @@ class Control(Gtk.Window):
             data = json.loads(ctx.message)
             client_id = data.get("id")
             type = data.get("type")
+            if self.kick:
+                ctx.data.append({"kick":self.kick})
             if type == "connect":
                 ctx.wait = False
                 GLib.idle_add(self._connect, data, client_id)
             elif type == "disconnect":
                 ctx.wait = (len(self.allows.keys()) == 1)
-                GLib.idle_add(self._disconnect)
+                GLib.idle_add(self._disconnect, client_id)
 
             data["target"] = []
             for cl in self.allows.keys():

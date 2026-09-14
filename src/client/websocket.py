@@ -16,6 +16,7 @@ class context:
         self.websocket = None
         self.message = ""
         self.wait = True
+        self.data = []
 
 class WebSocketClient:
     def __init__(self, address, handler=print, control=print):
@@ -35,6 +36,9 @@ class WebSocketClient:
                     set_quality(data.get("quality", 80))
                 else:
                     self.handler(message)
+            for data in ctx.data:
+                await ctx.websocket.send(json.dumps(data))
+            ctx.data = []
             if self._wait_last != ctx.wait:
                 if not ctx.wait:
                     with lock:

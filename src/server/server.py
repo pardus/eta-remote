@@ -42,6 +42,12 @@ async def handler(websocket):
             message = json.loads(message)
             message["id"] = client.id
 
+            if "kick" in message:
+                for client in clients.copy():
+                    if client.id == message.get("kick", None):
+                        await client.websocket.close()
+                        clients.discard(client)
+
             if "target" in message:
                 recipients = set()
                 for client in clients:
