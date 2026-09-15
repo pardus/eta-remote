@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import asyncio
-from websockets.asyncio.server import serve
+import threading
+from websockets.sync.server import serve
 from websockets.exceptions import ConnectionClosed
 
 import traceback
@@ -11,6 +11,7 @@ import zlib
 import json
 
 rooms: dict[str, set] = {}
+rooms_lock = threading.Lock()
 
 
 def get_uid():
@@ -26,68 +27,72 @@ class Client:
         self.websocket = None
         self.id = None
 
-async def handler(websocket):
+def handler(websocket):
     path = websocket.request.path
-    clients = rooms.setdefault(path, set())
-    client = Client()
-    client.id = get_uid()
-    client.websocket = websocket
-
-    clients.add(client)
-    print(f"Client joined {path}; id={client.id}; clients={len(clients)}")
+    with rooms_lock:
+        clients = rooms.setdefault(path, set())
+        client = Client()
+        client.id = get_uid()
+        client.websocket = websocket
+        clients.add(client)
+        print(f"Client joined {path}; id={client.id}; clients={len(clients)}")
 
     try:
-        async for message in websocket:
+        for message in websocket:
             # Forward the message to every other client in this room
             message = json.loads(message)
             message["id"] = client.id
 
             if "kick" in message:
-                for client in clients.copy():
-                    if client.id == message.get("kick", None):
-                        await client.websocket.close()
-                        clients.discard(client)
+                for kicked in clients.copy():
+                    if kicked.id == message.get("kick", None):
+                        kicked.websocket.close()
+                        clients.discard(kicked)
 
             if "target" in message:
                 recipients = set()
-                for client in clients:
+                for recipient in clients:
                     for target in message.get("target", []):
-                        if target == client.id:
-                            recipients.add(client)
+                        if target == recipient.id:
+                            recipients.add(recipient)
             else:
                 recipients = clients - {client}
 
             message = json.dumps(message)
 
-            await asyncio.gather(
-                *(client.websocket.send(message) for client in recipients),
-                return_exceptions=True,
-            )
+            for recipient in recipients:
+                try:
+                    recipient.websocket.send(message)
+                except ConnectionClosed:
+                    with rooms_lock:
+                        clients.discard(recipient)
 
     except:
         print(traceback.format_exc())
 
     finally:
-        clients.discard(client)
+        with rooms_lock:
+            clients.discard(client)
 
-        if not clients:
-            rooms.pop(path, None)
-        else:
-            message = {"type": "disconnect", "id": client.id}
-            message = json.dumps(message)
+            if not clients:
+                rooms.pop(path, None)
+            else:
+                message = {"type": "disconnect", "id": client.id}
+                message = json.dumps(message)
 
-            await asyncio.gather(
-                *(client.websocket.send(message) for client in clients),
-                return_exceptions=True,
-            )
+                for remaining in clients:
+                    try:
+                        remaining.websocket.send(message)
+                    except ConnectionClosed:
+                        clients.discard(remaining)
 
-        print(f"Client left {path}; id={client.id} clients={len(clients)}")
+            print(f"Client left {path}; id={client.id} clients={len(clients)}")
 
 
-async def main():
-    async with serve(handler, "0.0.0.0", 8765, max_size=None):
-        await asyncio.Future()  # Run forever
+def main():
+    with serve(handler, "0.0.0.0", 8765, max_size=None) as server:
+        server.serve_forever()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

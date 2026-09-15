@@ -1,14 +1,15 @@
 import json
-import asyncio
-from websockets.asyncio.client import connect
+import queue
+import threading
+import time
+from websockets.sync.client import connect
 
 import traceback
 
-import threading
-lock = threading.Condition()
-
 from capture import main as capture_main, request_full, set_quality
 from pulse import main as pulse_main, pulse_stop, pulse_start
+
+lock = threading.Condition()
 
 class context:
     def __init__(self):
@@ -25,8 +26,8 @@ class WebSocketClient:
         self.control = control
         self._wait_last = True
 
-    async def client(self, ctx):
-        async for message in ctx.websocket:
+    def client(self, ctx):
+        for message in ctx.websocket:
             ctx.message = message
             if self.control(ctx):
                 if "request_full" in message:
@@ -37,7 +38,7 @@ class WebSocketClient:
                 else:
                     self.handler(message)
             for data in ctx.data:
-                await ctx.websocket.send(json.dumps(data))
+                ctx.websocket.send(json.dumps(data))
             ctx.data = []
             if self._wait_last != ctx.wait:
                 if not ctx.wait:
@@ -49,51 +50,55 @@ class WebSocketClient:
                 self._wait_last = ctx.wait
 
 
-    async def sender(self, ctx, queue):
+    def sender(self, ctx, q):
         while True:
             try:
-                message = await queue.get()
+                message = q.get()
                 ctx.message = message
                 if self.control(ctx):
-                    await ctx.websocket.send(ctx.message)
+                    ctx.websocket.send(ctx.message)
             except:
                 print(traceback.format_exc())
 
-    async def streamer(self, ctx):
-        loop = asyncio.get_running_loop()
-        data_queue = asyncio.Queue()
-        audio_queue = asyncio.Queue()
+    def streamer(self, ctx):
+        data_queue = queue.Queue()
+        audio_queue = queue.Queue()
 
         def data_handler(message):
             if ctx.wait:
                 with lock:
                     lock.wait()
-            loop.call_soon_threadsafe(
-                data_queue.put_nowait,
-                message,
-            )
+            data_queue.put(message)
 
         def audio_handler(message):
             if ctx.wait:
                 with lock:
                     lock.wait()
-            loop.call_soon_threadsafe(
-                audio_queue.put_nowait,
-                message,
-            )
+            audio_queue.put(message)
 
-        capture_task = asyncio.create_task(
-            asyncio.to_thread(capture_main, data_handler)
+        capture_thread = threading.Thread(
+            target=capture_main, args=(data_handler,), daemon=True
+        )
+        audio_thread = threading.Thread(
+            target=pulse_main, args=(audio_handler,), daemon=True
         )
 
-        audio_task = asyncio.create_task(
-            asyncio.to_thread(pulse_main, audio_handler)
+        sender_thread_1 = threading.Thread(
+            target=self.sender, args=(ctx, data_queue), daemon=True
+        )
+        sender_thread_2 = threading.Thread(
+            target=self.sender, args=(ctx, audio_queue), daemon=True
         )
 
-        sender_task_1 = asyncio.create_task(self.sender(ctx, data_queue))
-        sender_task_2 = asyncio.create_task(self.sender(ctx, audio_queue))
+        capture_thread.start()
+        audio_thread.start()
+        sender_thread_1.start()
+        sender_thread_2.start()
 
-        await asyncio.gather(capture_task, audio_task, sender_task_1, sender_task_2)
+        capture_thread.join()
+        audio_thread.join()
+        sender_thread_1.join()
+        sender_thread_2.join()
 
     def _start(self):
         pulse_start()
@@ -101,16 +106,24 @@ class WebSocketClient:
     def _stop(self):
         pulse_stop()
 
-    async def run(self):
-        async with connect(self.address, max_size=None) as websocket:
-            ctx = context()
-            ctx.websocket = websocket
-            await asyncio.gather(
-                self.client(ctx),
-                self.streamer(ctx),
-            )
+    def run(self):
+        while True:
+            try:
+                with connect(self.address, max_size=None) as websocket:
+                    ctx = context()
+                    ctx.websocket = websocket
+                    client_thread = threading.Thread(target=self.client, args=(ctx,))
+                    streamer_thread = threading.Thread(target=self.streamer, args=(ctx,))
+                    client_thread.start()
+                    streamer_thread.start()
+                    client_thread.join()
+                    streamer_thread.join()
+                return
+            except OSError:
+                print("connection failed, retrying")
+                time.sleep(1)
 
 
 if __name__ == "__main__":
     ws = WebSocketClient("ws://localhost:8765/room1")
-    asyncio.run(ws.run())
+    ws.run()

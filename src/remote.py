@@ -5,7 +5,6 @@ import os
 import sys
 import signal
 import json
-import asyncio
 import threading
 
 import gi
@@ -54,11 +53,11 @@ class RemoteControl:
 
     def _run_server(self):
         import server
-        asyncio.run(server.main())
+        server.main()
 
-    def _run_client_asyncio(self):
+    def _run_client(self):
         ws = WebSocketClient(self.address, PipeUInputHandler().handle, self.window.control)
-        asyncio.run(ws.run())
+        ws.run()
 
     def _run_client_gtk(self):
         self.window.run()
@@ -78,7 +77,7 @@ class RemoteControl:
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self._shutdown)
         self._spawn(self._run_server)
         self._spawn(self._serve_http)
-        self._spawn(self._run_client_asyncio)
+        self._spawn(self._run_client)
         self._run_client_gtk()
 
     def stop(self):
