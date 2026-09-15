@@ -96,6 +96,8 @@ class Clients(Gtk.Window):
     def _move_bottom_right(self):
         display = self.get_display()
         monitor = display.get_primary_monitor()
+        if monitor is None:
+            return
         geometry = monitor.get_geometry()
         width, height = self.get_size()
         self.move(

@@ -9,6 +9,11 @@ from PIL import Image, ImageChops, ImageGrab
 
 if "DISPLAY" in os.environ and "WAYLAND_DISPLAY" not in os.environ:
     from X11.capture import grab_rgb, display_close, wait_event
+elif "WAYLAND_DISPLAY" in os.environ:
+    try:
+        from wayland.capture import grab_rgb, display_close, wait_event
+    except Exception:
+        from pillow.capture import grab_rgb, display_close, wait_event
 else:
     from pillow.capture import grab_rgb, display_close, wait_event
 
@@ -109,6 +114,11 @@ def main(handler=None):
             if req_full:
                 previous_image = Image.new('RGB', (img_width, img_height), color='black')
                 req_full = False
+
+            if current_image.size != (img_width, img_height):
+                img_width = current_image.width
+                img_height = current_image.height
+                previous_image = Image.new('RGB', (img_width, img_height), color='black')
 
             patch_json = image_diff_patch_json(
                 previous_image,
