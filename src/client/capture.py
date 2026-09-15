@@ -7,13 +7,30 @@ from io import BytesIO
 
 from PIL import Image, ImageChops, ImageGrab
 
+
+def _mutter_running():
+    try:
+        from gi.repository import GLib, Gio
+        connection = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        if connection is None:
+            return False
+        result = connection.call_sync(
+            "org.freedesktop.DBus", "/org/freedesktop/DBus",
+            "org.freedesktop.DBus", "NameHasOwner",
+            GLib.Variant("(s)", ("org.gnome.Mutter.ScreenCast",)),
+            None, Gio.DBusCallFlags.NONE, -1, None)
+        return bool(result.unpack()[0])
+    except Exception:
+        return False
+
+
 if "DISPLAY" in os.environ and "WAYLAND_DISPLAY" not in os.environ:
     from X11.capture import grab_rgb, display_close, wait_event
 elif "WAYLAND_DISPLAY" in os.environ:
-    try:
+    if _mutter_running():
+        from gnome.capture import grab_rgb, display_close, wait_event
+    else:
         from wayland.capture import grab_rgb, display_close, wait_event
-    except Exception:
-        from pillow.capture import grab_rgb, display_close, wait_event
 else:
     from pillow.capture import grab_rgb, display_close, wait_event
 
