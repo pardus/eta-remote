@@ -120,6 +120,7 @@ class Clients(Gtk.Window):
 
         for client_id, info in self.Controller.allows.items():
             self.list_box.pack_start(self._build_row(client_id, info), False, False, 0)
+            self.list_box.pack_start(Gtk.Separator(), False, False, 0)
 
         self.list_box.show_all()
 

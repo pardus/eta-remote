@@ -51,7 +51,6 @@ class Control(Gtk.Window):
         self.allows[client_id] = {"perm":[], "data":data}
         self.clients.show_all()
         if self.settings.get_boolean("auto-allow"):
-            self.set_permission("input", client_id, True)
             self.set_permission("image", client_id, True)
         else:
             NewConnection(self, data).show_all()
