@@ -11,16 +11,19 @@ MAX_TOUCHES = int(os.environ.get("REMOTE_MAX_TOUCHES", 11))
 TRACKING_ID_MAX = 0xFFFF
 PRESSURE_MAX = 1023
 
+RESOLUTION_X = int(os.environ.get("REMOTE_SCREEN_RESOLUTION_X", 10))
+RESOLUTION_Y = int(os.environ.get("REMOTE_SCREEN_RESOLUTION_Y", 10))
+
 # linux/input-event-codes.h MT_TOOL_* values for ABS_MT_TOOL_TYPE
 MT_TOOL_FINGER = 0
-MT_TOOL_PEN = 1
 
 NO_FUZZ = 0
 NO_FLAT = 0
 NO_RESOLUTION = 0
 
 PRESSURE_INFO = AbsInfo(0, 0, PRESSURE_MAX, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
-TOOL_INFO = AbsInfo(0, MT_TOOL_FINGER, MT_TOOL_PEN, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+TOOL_INFO = AbsInfo(0, MT_TOOL_FINGER, MT_TOOL_FINGER, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+DISTANCE_INFO = AbsInfo(0, 0, 255, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
 
 KEYS = {}
 
@@ -87,19 +90,24 @@ MOUSE_BUTTONS = [
     E.BTN_RIGHT,
 ]
 
-ABS_SCREEN = {E.ABS_X, E.ABS_Y, E.ABS_MT_POSITION_X, E.ABS_MT_POSITION_Y}
 ABS_TOOL = {E.ABS_MT_TOOL_TYPE}
 ABS_PRESSURE = {E.ABS_MT_PRESSURE, E.ABS_PRESSURE}
+ABS_DISTANCE = {E.ABS_MT_DISTANCE}
 
 
 def _axis_info(axis):
-    if axis in ABS_SCREEN:
-        maximum = SCREEN_DIMENSIONS.get(axis)
-        return AbsInfo(0, 0, maximum, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
+    if axis == E.ABS_X or axis == E.ABS_MT_POSITION_X:
+        return AbsInfo(0, 0, SCREEN_DIMENSIONS[axis], NO_FUZZ, NO_FLAT,
+                       RESOLUTION_X)
+    if axis == E.ABS_Y or axis == E.ABS_MT_POSITION_Y:
+        return AbsInfo(0, 0, SCREEN_DIMENSIONS[axis], NO_FUZZ, NO_FLAT,
+                       RESOLUTION_Y)
     if axis in ABS_TOOL:
         return TOOL_INFO
     if axis in ABS_PRESSURE:
         return PRESSURE_INFO
+    if axis in ABS_DISTANCE:
+        return DISTANCE_INFO
     if axis == E.ABS_MT_SLOT:
         return AbsInfo(0, 0, MAX_TOUCHES - 1, NO_FUZZ, NO_FLAT, NO_RESOLUTION)
     if axis == E.ABS_MT_TRACKING_ID:
@@ -134,8 +142,6 @@ class UInputHandler:
             [
                 (E.EV_KEY, E.BTN_TOUCH),
                 (E.EV_KEY, E.BTN_TOOL_FINGER),
-                (E.EV_KEY, E.BTN_TOOL_PEN),
-                (E.EV_KEY, E.BTN_STYLUS),
                 (E.EV_ABS, (E.ABS_X, _axis_info(E.ABS_X))),
                 (E.EV_ABS, (E.ABS_Y, _axis_info(E.ABS_Y))),
                 (E.EV_ABS, (E.ABS_MT_SLOT, _axis_info(E.ABS_MT_SLOT))),
@@ -143,6 +149,7 @@ class UInputHandler:
                 (E.EV_ABS, (E.ABS_MT_POSITION_X, _axis_info(E.ABS_MT_POSITION_X))),
                 (E.EV_ABS, (E.ABS_MT_POSITION_Y, _axis_info(E.ABS_MT_POSITION_Y))),
                 (E.EV_ABS, (E.ABS_MT_PRESSURE, PRESSURE_INFO)),
+                (E.EV_ABS, (E.ABS_MT_DISTANCE, DISTANCE_INFO)),
                 (E.EV_ABS, (E.ABS_PRESSURE, PRESSURE_INFO)),
                 (E.EV_ABS, (E.ABS_MT_TOOL_TYPE, TOOL_INFO)),
             ],
@@ -249,7 +256,7 @@ class UInputHandler:
                 events += [
                     (E.EV_ABS, E.ABS_MT_SLOT, slot),
                     (E.EV_ABS, E.ABS_MT_TRACKING_ID, identifier),
-                    (E.EV_ABS, E.ABS_MT_TOOL_TYPE, MT_TOOL_PEN),
+                    (E.EV_ABS, E.ABS_MT_TOOL_TYPE, MT_TOOL_FINGER),
                     (E.EV_ABS, E.ABS_MT_POSITION_X, x),
                     (E.EV_ABS, E.ABS_MT_POSITION_Y, y),
                     (E.EV_ABS, E.ABS_MT_PRESSURE, f),
