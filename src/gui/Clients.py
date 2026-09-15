@@ -15,6 +15,9 @@ PERMISSION_LABELS = {
 def get_os(useragent, platform=None):
     ua = (useragent or "").lower()
     if "android" in ua:
+        match = re.search(r"android ([\d.]+)", ua)
+        if match:
+            return f"Android {match.group(1)}"
         return "Android"
     if "iphone" in ua or "ipad" in ua or "ipod" in ua:
         return "iOS"
@@ -43,6 +46,26 @@ def get_os(useragent, platform=None):
     if platform:
         return str(platform)
     return "Unknown"
+
+def get_browser(useragent):
+    ua = useragent or ""
+    browsers = [
+        ("edg/", "Edge"),
+        ("opr/", "Opera"),
+        ("opera/", "Opera"),
+        ("samsungbrowser/", "Samsung Internet"),
+        ("vivaldi/", "Vivaldi"),
+        ("firefox/", "Firefox"),
+        ("fxios/", "Firefox"),
+        ("crios/", "Chrome"),
+        ("chrome/", "Chrome"),
+        ("safari/", "Safari"),
+        ("trident/", "Internet Explorer"),
+    ]
+    for token, name in browsers:
+        if token in ua.lower():
+            return name
+    return None
 
 class Clients(Gtk.Window):
     def __init__(self, Controller):
@@ -111,16 +134,19 @@ class Clients(Gtk.Window):
         info_box.set_hexpand(True)
 
         os_name = get_os(data.get("useragent"), data.get("platform"))
+        os_name += " - "+ client_id
         os_label = Gtk.Label()
         os_label.set_markup(f"<b>{GLib.markup_escape_text(os_name)}</b>")
         os_label.set_halign(Gtk.Align.START)
 
         detail = []
+        browser = get_browser(data.get("useragent"))
+        if browser:
+            detail.append(browser)
         if data.get("mobile"):
             detail.append("Mobile")
         if data.get("language"):
             detail.append(data["language"])
-        detail.append(client_id)
         detail_label = Gtk.Label(label=" · ".join(detail))
         detail_label.set_halign(Gtk.Align.START)
 
