@@ -26,8 +26,8 @@ class Control(Gtk.Window):
         super().__init__()
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.allows = {}
-        self.kick = None
         self.clients = Clients(self)
+        self.ws = None
 
     def _update_ui(self):
         if threading.current_thread() is not threading.main_thread():
@@ -63,13 +63,12 @@ class Control(Gtk.Window):
 
     def control(self, ctx):
         """control and filter websocket context"""
+        if self.ws is None:
+            self.ws = ctx.websocket
         try:
             data = json.loads(ctx.message)
             client_id = data.get("id")
             type = data.get("type")
-            if self.kick:
-                ctx.data.append({"kick":self.kick})
-                self.kick = None
             if type == "connect":
                 ctx.wait = False
                 GLib.idle_add(self._connect, data, client_id)

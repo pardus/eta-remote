@@ -17,7 +17,6 @@ class context:
         self.websocket = None
         self.message = ""
         self.wait = True
-        self.data = []
 
 class WebSocketClient:
     def __init__(self, address, handler=print, control=print):
@@ -26,10 +25,10 @@ class WebSocketClient:
         self.control = control
         self._wait_last = True
 
-    def client(self, ctx):
-        for message in ctx.websocket:
-            ctx.message = message
-            if self.control(ctx):
+    def client(self):
+        for message in self.ctx.websocket:
+            self.ctx.message = message
+            if self.control(self.ctx):
                 if "request_full" in message:
                     request_full()
                 elif "quality" in message:
@@ -37,41 +36,38 @@ class WebSocketClient:
                     set_quality(data.get("quality", 80))
                 else:
                     self.handler(message)
-            for data in ctx.data:
-                ctx.websocket.send(json.dumps(data))
-            ctx.data = []
-            if self._wait_last != ctx.wait:
-                if not ctx.wait:
+            if self._wait_last != self.ctx.wait:
+                if not self.ctx.wait:
                     with lock:
                         self._start()
                         lock.notify()
                 else:
                     self._stop()
-                self._wait_last = ctx.wait
+                self._wait_last = self.ctx.wait
 
 
-    def sender(self, ctx, q):
+    def sender(self, q):
         while True:
             try:
                 message = q.get()
-                ctx.message = message
-                if self.control(ctx):
-                    ctx.websocket.send(ctx.message)
+                self.ctx.message = message
+                if self.control(self.ctx):
+                    self.ctx.websocket.send(self.ctx.message)
             except:
                 print(traceback.format_exc())
 
-    def streamer(self, ctx):
+    def streamer(self):
         data_queue = queue.Queue()
         audio_queue = queue.Queue()
 
         def data_handler(message):
-            if ctx.wait:
+            if self.ctx.wait:
                 with lock:
                     lock.wait()
             data_queue.put(message)
 
         def audio_handler(message):
-            if ctx.wait:
+            if self.ctx.wait:
                 with lock:
                     lock.wait()
             audio_queue.put(message)
@@ -84,10 +80,10 @@ class WebSocketClient:
         )
 
         sender_thread_1 = threading.Thread(
-            target=self.sender, args=(ctx, data_queue), daemon=True
+            target=self.sender, args=(data_queue,), daemon=True
         )
         sender_thread_2 = threading.Thread(
-            target=self.sender, args=(ctx, audio_queue), daemon=True
+            target=self.sender, args=(audio_queue,), daemon=True
         )
 
         capture_thread.start()
@@ -110,10 +106,10 @@ class WebSocketClient:
         while True:
             try:
                 with connect(self.address, max_size=None) as websocket:
-                    ctx = context()
-                    ctx.websocket = websocket
-                    client_thread = threading.Thread(target=self.client, args=(ctx,))
-                    streamer_thread = threading.Thread(target=self.streamer, args=(ctx,))
+                    self.ctx = context()
+                    self.ctx.websocket = websocket
+                    client_thread = threading.Thread(target=self.client)
+                    streamer_thread = threading.Thread(target=self.streamer)
                     client_thread.start()
                     streamer_thread.start()
                     client_thread.join()

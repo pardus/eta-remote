@@ -1,5 +1,5 @@
 import re
-
+import json
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -150,5 +150,5 @@ class Clients(Gtk.Window):
         return True
 
     def _on_kick(self, _btn, client_id):
-        self.Controller.kick = client_id
+        self.Controller.ws.send(json.dumps({"kick": client_id}))
         GLib.idle_add(self.Controller._disconnect, client_id)
