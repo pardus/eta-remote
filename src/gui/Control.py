@@ -1,5 +1,6 @@
 import gi
 import json
+import threading
 import traceback
 
 gi.require_version("Gtk", "3.0")
@@ -9,6 +10,7 @@ from file import handle_file
 from gi.repository import Gtk, GLib, Gio
 
 from NewConnection import NewConnection
+from Clients import Clients
 
 all_permissions = {
     "audio":["audio"],
@@ -25,9 +27,14 @@ class Control(Gtk.Window):
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.allows = {}
         self.kick = None
+        self.clients = Clients(self)
 
     def _update_ui(self):
+        if threading.current_thread() is not threading.main_thread():
+            GLib.idle_add(self._update_ui)
+            return
         print(json.dumps(self.allows, indent=2))
+        self.clients._update()
 
     def set_permission(self, perm, client_id, status):
         if perm not in all_permissions:
@@ -42,6 +49,7 @@ class Control(Gtk.Window):
 
     def _connect(self, data, client_id):
         self.allows[client_id] = {"perm":[], "data":data}
+        self.clients.show_all()
         if self.settings.get_boolean("auto-allow"):
             self.set_permission("input", client_id, True)
             self.set_permission("image", client_id, True)
@@ -61,6 +69,7 @@ class Control(Gtk.Window):
             type = data.get("type")
             if self.kick:
                 ctx.data.append({"kick":self.kick})
+                self.kick = None
             if type == "connect":
                 ctx.wait = False
                 GLib.idle_add(self._connect, data, client_id)
