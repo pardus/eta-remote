@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import gi
@@ -6,10 +7,12 @@ gi.require_version("Gtk", "3.0")
 
 from gi.repository import Gtk, GLib
 
+from i18n import _
+
 PERMISSION_LABELS = {
-    "input": "Input",
-    "image": "Image",
-    "audio": "Audio",
+    "input": _("Input"),
+    "image": _("Image"),
+    "audio": _("Audio"),
 }
 
 def get_os(useragent, platform=None):
@@ -45,7 +48,7 @@ def get_os(useragent, platform=None):
         return "Linux"
     if platform:
         return str(platform)
-    return "Unknown"
+    return _("Unknown")
 
 def get_browser(useragent):
     ua = useragent or ""
@@ -69,13 +72,13 @@ def get_browser(useragent):
 
 class Clients(Gtk.Window):
     def __init__(self, Controller):
-        super().__init__(title="Connected Clients")
+        super().__init__(title=_("Connected Clients"))
         self.Controller = Controller
-        self.set_default_size(400, 320)
+        self.set_default_size(420, 320)
 
         self.header = Gtk.HeaderBar()
         self.header.set_show_close_button(False)
-        self.header.set_title("Connected Clients")
+        self.header.set_title(_("Connected Clients"))
         self.set_titlebar(self.header)
         self.set_resizable(False)
 
@@ -115,11 +118,14 @@ class Clients(Gtk.Window):
             self.hide()
             return
 
-        self.header.set_subtitle(f"{len(self.Controller.allows)} connected")
+        self.header.set_subtitle(_("%d connected") % len(self.Controller.allows))
 
         for child in self.list_box.get_children():
             self.list_box.remove(child)
 
+        if "WAYLAND_DISPLAY" in os.environ:
+            self.list_box.pack_start(Gtk.Label(label=_("Warning: Wayland support is experimental and may be unstable.")), False, False, 0)
+            self.list_box.pack_start(Gtk.Separator(), False, False, 0)
         for client_id, info in self.Controller.allows.items():
             self.list_box.pack_start(self._build_row(client_id, info), False, False, 0)
             self.list_box.pack_start(Gtk.Separator(), False, False, 0)
@@ -147,7 +153,7 @@ class Clients(Gtk.Window):
         if browser:
             detail.append(browser)
         if data.get("mobile"):
-            detail.append("Mobile")
+            detail.append(_("Mobile"))
         if data.get("language"):
             detail.append(data["language"])
         detail_label = Gtk.Label(label=" · ".join(detail))
@@ -168,7 +174,7 @@ class Clients(Gtk.Window):
             toggles.pack_start(toggle_box, False, False, 0)
         row.pack_start(toggles, False, False, 0)
 
-        kick_btn = Gtk.Button(label="Kick")
+        kick_btn = Gtk.Button(label=_("Kick"))
         kick_btn.connect("clicked", self._on_kick, client_id)
         row.pack_start(kick_btn, False, False, 0)
 

@@ -4,11 +4,12 @@ import json
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GLib
 
+from i18n import _
 from Clients import get_os, get_browser, PERMISSION_LABELS
 
 class NewConnection(Gtk.Dialog):
     def __init__(self, Controller, data):
-        super().__init__(title="New Connection")
+        super().__init__(title=_("New Connection"))
         self.set_default_size(320, 300)
         self.set_resizable(False)
         self.set_modal(True)
@@ -26,7 +27,7 @@ class NewConnection(Gtk.Dialog):
         if browser:
             detail.append(browser)
         if data.get("mobile"):
-            detail.append("Mobile")
+            detail.append(_("Mobile"))
         if data.get("language"):
             detail.append(data["language"])
         detail_label = Gtk.Label(label=" · ".join(detail))
@@ -56,8 +57,8 @@ class NewConnection(Gtk.Dialog):
 
         self.get_content_area().add(box)
 
-        self.add_button("Deny", Gtk.ResponseType.REJECT)
-        self.add_button("Allow", Gtk.ResponseType.OK)
+        self.add_button(_("Deny"), Gtk.ResponseType.REJECT)
+        self.add_button(_("Allow"), Gtk.ResponseType.OK)
         self.set_default_response(Gtk.ResponseType.OK)
         self.connect("response", self._on_response, Controller, client_id)
 
