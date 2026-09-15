@@ -9,7 +9,7 @@ import traceback
 from capture import main as capture_main, request_full, set_quality
 from pulse import main as pulse_main, pulse_stop, pulse_start
 
-lock = threading.Condition()
+lock = {"data":threading.Condition(), "audio":threading.Condition()}
 
 class context:
     def __init__(self):
@@ -38,9 +38,7 @@ class WebSocketClient:
                     self.handler(message)
             if self._wait_last != self.ctx.wait:
                 if not self.ctx.wait:
-                    with lock:
-                        self._start()
-                        lock.notify()
+                    self._start()
                 else:
                     self._stop()
                 self._wait_last = self.ctx.wait
@@ -62,14 +60,16 @@ class WebSocketClient:
 
         def data_handler(message):
             if self.ctx.wait:
-                with lock:
-                    lock.wait()
+                with lock["data"]:
+                    lock["data"].wait()
+            print("image")
             data_queue.put(message)
 
         def audio_handler(message):
             if self.ctx.wait:
-                with lock:
-                    lock.wait()
+                with lock["audio"]:
+                    lock["audio"].wait()
+            print("audio")
             audio_queue.put(message)
 
         capture_thread = threading.Thread(
@@ -97,6 +97,10 @@ class WebSocketClient:
         sender_thread_2.join()
 
     def _start(self):
+        with lock["data"]:
+            lock["data"].notify()
+        with lock["audio"]:
+            lock["audio"].notify()
         pulse_start()
 
     def _stop(self):
