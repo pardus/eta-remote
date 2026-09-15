@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-11 10:10+0300\n"
+"POT-Creation-Date: 2026-09-15 17:29+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,6 +15,63 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/Main.py:25
+msgid "Start application in autostart mode"
+msgstr "Uygulamayı başlagıçta çalışma modunda aç"
+
+#: src/Main.py:34
+msgid "Start application and show window"
+msgstr "Uygulamayı başlat ve pencereyi göster"
+
+#: src/gui/NewConnection.py:12
+msgid "New Connection"
+msgstr "Yeni Bağlantı"
+
+#: src/gui/NewConnection.py:30 src/gui/Clients.py:156
+msgid "Mobile"
+msgstr "Mobil"
+
+#: src/gui/NewConnection.py:60
+msgid "Deny"
+msgstr "Reddet"
+
+#: src/gui/NewConnection.py:61
+msgid "Allow"
+msgstr "Kabul et"
+
+#: src/gui/Clients.py:13
+msgid "Input"
+msgstr "Girdi"
+
+#: src/gui/Clients.py:14
+msgid "Image"
+msgstr "Görüntü"
+
+#: src/gui/Clients.py:15
+msgid "Audio"
+msgstr "Ses"
+
+#: src/gui/Clients.py:51
+msgid "Unknown"
+msgstr "Bilinmeyen"
+
+#: src/gui/Clients.py:75 src/gui/Clients.py:81
+msgid "Connected Clients"
+msgstr "Bağlı İstemciler"
+
+#: src/gui/Clients.py:121
+#, python-format
+msgid "%d connected"
+msgstr "%d bağlandı"
+
+#: src/gui/Clients.py:127
+msgid "Warning: Wayland support is experimental and may be unstable."
+msgstr "Uyarı: Wayland desteği deneyseldir ve stabil olmayabilir."
+
+#: src/gui/Clients.py:177
+msgid "Kick"
+msgstr "Tekmele"
 
 #: src/MainWindow.py:24
 msgid "Eta Remote Control"
@@ -59,11 +116,3 @@ msgstr "Durum: Çalışıyor"
 #: src/MainWindow.py:184
 msgid "Remote Control - Running"
 msgstr "Uzaktan Kontrol - Çalışıyor"
-
-#: src/Main.py:25
-msgid "Start application in autostart mode"
-msgstr "Uygulamayı başlagıçta çalışma modunda aç"
-
-#: src/Main.py:34
-msgid "Start application and show window"
-msgstr "Uygulamayı başlat ve pencereyi göster"
