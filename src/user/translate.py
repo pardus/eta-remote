@@ -10,7 +10,8 @@ translate = get_all_translation()
 def gen_translate():
     ctx = """function _(msg){\n"""
     for key in translate.keys():
-        ctx += "    if(msg == \""+key+"\"){return \""+translate[key]+"\"};\n"
+        key = key.replace("\\", "\\\\").replace("\"", "\\\"")
+        ctx += "    if(msg == \"{}\") return \"{}\";\n".format(key, _(key))
     ctx += "    return msg;\n"
     ctx += "}\n"
     return ctx;
