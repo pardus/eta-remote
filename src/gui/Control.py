@@ -18,7 +18,7 @@ all_permissions = {
         "mouse", "key", "touch", "wheel"
     ],
     "image": ["image", "request_full"],
-    "misc": ["quality", "permission", "file"]
+    "misc": ["quality", "file"]
 }
 
 class Control(Gtk.Window):
@@ -93,11 +93,6 @@ class Control(Gtk.Window):
 
         if not allowed:
             return False
-
-        if type == "permission":
-            for perm in data.keys():
-                self.set_permission(perm, client_id, data.get(perm, False))
-            GLib.idle_add(self._update_ui)
 
         if type == "file":
             handle_file(data)

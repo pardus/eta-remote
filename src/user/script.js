@@ -14,6 +14,8 @@ if (isWindows || isApple) {
 
 let ws = null;
 
+let input_allowed = true;
+
 let connected = false;
 
 function connect() {
@@ -96,11 +98,13 @@ for (const action of TOUCH_ACTIONS) {
                 ...coords(touch),
                 identifier: touch.identifier
             }));
+            if(input_allowed){
+                send("touch", {
+                    action,
+                    touches
+                });
+            }
 
-            send("touch", {
-                action,
-                touches
-            });
         },
         { passive: false }
     );
@@ -109,14 +113,28 @@ for (const action of TOUCH_ACTIONS) {
 
 
 // Mouse events
-capture.addEventListener("mousedown", (e) => send("mouse", { ...coords(e), action: "down", button: e.button }));
-capture.addEventListener("mousemove", (e) => send("mouse", { ...coords(e), action: "move", button: e.button }));
-capture.addEventListener("mouseup", (e) => send("mouse", { ...coords(e), action: "up", button: e.button }));
+capture.addEventListener("mousedown", (e) => {
+    if(input_allowed){
+        send("mouse", { ...coords(e), action: "down", button: e.button });
+    }
+});
+capture.addEventListener("mousemove", (e) => {
+    if(input_allowed){
+        send("mouse", { ...coords(e), action: "move", button: e.button });
+    }
+});
+capture.addEventListener("mouseup", (e) => {
+    if(input_allowed){
+        send("mouse", { ...coords(e), action: "up", button: e.button });
+    }
+});
 
 // Scroll / wheel
 capture.addEventListener("wheel", (e) => {
     e.preventDefault();
-    send("wheel", { ...coords(e), dx: e.deltaX, dy: e.deltaY });
+    if(input_allowed){
+        send("wheel", { ...coords(e), dx: e.deltaX, dy: e.deltaY });
+    }
 }, { passive: false });
 
 // Screen rotate
@@ -134,7 +152,9 @@ window.addEventListener("resize", () => {
 // Keyboard events
 for (const action of ["keydown", "keyup"]) {
     document.addEventListener(action, (e) => {
-        send("key", {key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
+        if(input_allowed){
+            send("key", {key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
+        }
         e.preventDefault();
         return false;
     });
@@ -143,15 +163,13 @@ for (const action of ["keydown", "keyup"]) {
 // Prevent context menu on long-press
 capture.addEventListener("contextmenu", (e) => e.preventDefault());
 
-document.onkeydown = function (event) {
-     event.preventDefault();
-     return false;
-};
-
 
 VirtualKeyboard.init((action, { code }) => {
-    send("key", { key: code, code, action });
+    if(input_allowed){
+        send("key", { key: code, code, action });
+    }
 });
+
 
 function addInputButton() {
     const menu = document.getElementById("fc-menu");
@@ -160,11 +178,9 @@ function addInputButton() {
     const button = document.createElement("button");
     button.id = "fc-input";
     button.textContent = "Input: On";
-    let perm = true;
     button.addEventListener("click", () => {
-        perm = !perm;
-        send("permission", {"input":perm});
-        button.textContent = perm ? "Input: On" : "Input : Off";
+        input_allowed = !input_allowed;
+        button.textContent = input_allowed ? "Input: On" : "Input : Off";
     });
     menu.appendChild(button);
 }
