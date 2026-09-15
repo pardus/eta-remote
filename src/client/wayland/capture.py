@@ -50,7 +50,7 @@ def _next_request(connection, ctx, method, params, extra_options=None):
         call = GLib.Variant("(a{sv})", (args,))
     elif method == "Start":
         call = GLib.Variant(
-            "(ssa{sv})", (params, "", {"handle_token":
+            "(osa{sv})", (params, "", {"handle_token":
                                        GLib.Variant("s", handle_token)}))
     else:
         opts = {"handle_token": GLib.Variant("s", handle_token)}
@@ -62,7 +62,9 @@ def _next_request(connection, ctx, method, params, extra_options=None):
         PORTAL_NAME, SCREEN_CAST_PATH, SCREEN_CAST_IFACE, method, call,
         None, Gio.DBusCallFlags.NONE, -1, None)
 
-    request_path = str(result)
+    request_path = result.unpack()
+    if isinstance(request_path, (tuple, list)):
+        request_path = request_path[0]
 
     state = {"response": None}
 
@@ -230,7 +232,12 @@ class WaylandCapture:
             PORTAL_NAME, SCREEN_CAST_PATH, PROPERTIES_IFACE, "Get",
             GLib.Variant("(ss)", (SCREEN_CAST_IFACE, "version")),
             GLib.VariantType("(v)"), Gio.DBusCallFlags.NONE, 1000, None)
-        return int(reply[0].unpack())
+        value = reply[0]
+        if hasattr(value, "unpack"):
+            value = value.unpack()
+        if isinstance(value, tuple):
+            value = value[0] if value else 0
+        return int(value)
 
     def _wait_for_screencast(self):
         deadline = time.monotonic() + self._portal_timeout
@@ -251,58 +258,74 @@ class WaylandCapture:
 
             version = self._wait_for_screencast()
             if version is None:
+                print("eta wayland capture: ScreenCast portal not available")
                 return None
+            print(f"eta wayland capture: ScreenCast portal version {version}")
 
             code, results = _next_request(
                 self._connection, self._ctx, "CreateSession", None,
                 extra_options={"session_handle_token":
                                GLib.Variant("s", "eta_session")})
             if code != 0:
+                print(f"eta wayland capture: CreateSession rejected "
+                      f"(code {code})")
                 return None
             self._session_handle = results.get("session_handle")
             if not self._session_handle:
+                print("eta wayland capture: CreateSession returned "
+                      "no session_handle")
                 return None
 
             code, _ = _next_request(
                 self._connection, self._ctx, "SelectSources",
-                GLib.Variant("o", self._session_handle),
+                self._session_handle,
                 extra_options={
                     "types": GLib.Variant("u", 1 | 2),
                     "multiple": GLib.Variant("b", False),
                 })
             if code != 0:
+                print(f"eta wayland capture: SelectSources rejected "
+                      f"(code {code})")
                 return None
 
             code, results = _next_request(
                 self._connection, self._ctx, "Start",
-                GLib.Variant("o", self._session_handle))
+                self._session_handle)
             if code != 0:
+                print(f"eta wayland capture: Start rejected (code {code})")
                 return None
 
             streams = results.get("streams", [])
             if not streams:
+                print("eta wayland capture: Start returned no streams")
                 return None
 
             node_id = int(streams[0][0])
-            props = streams[0][1] if len(streams[0]) > 1 else {}
+            props = streams[0][2] if len(streams[0]) > 2 else {}
             serial = str(props.get("pipewire-serial") or "").strip()
 
             pw_fd = -1
-            if version >= 6:
-                try:
-                    fd_result, out_fd_list = (
-                        self._connection.call_with_unix_fd_list_sync(
-                            PORTAL_NAME, SCREEN_CAST_PATH, SCREEN_CAST_IFACE,
-                            "OpenPipeWireRemote",
-                            GLib.Variant(
-                                "(oa{sv})",
-                                (GLib.Variant("o", self._session_handle), {})),
-                            None, Gio.DBusCallFlags.NONE, -1, None, None))
-                    if out_fd_list is not None and out_fd_list.get_size() >= 1:
-                        fds = out_fd_list.steal_fds()
-                        pw_fd = fds[int(fd_result[0])]
-                except GLib.Error:
-                    pw_fd = -1
+            try:
+                fd_result, out_fd_list = (
+                    self._connection.call_with_unix_fd_list_sync(
+                        PORTAL_NAME, SCREEN_CAST_PATH, SCREEN_CAST_IFACE,
+                        "OpenPipeWireRemote",
+                        GLib.Variant(
+                            "(oa{sv})",
+                            (self._session_handle, {})),
+                        None, Gio.DBusCallFlags.NONE, -1, None, None))
+                if out_fd_list is not None:
+                    fds = out_fd_list.steal_fds()
+                    value = fd_result
+                    if hasattr(value, "unpack"):
+                        value = value.unpack()
+                    if isinstance(value, (tuple, list)):
+                        value = value[0]
+                    pw_fd = fds[int(value)]
+            except (GLib.Error, IndexError, ValueError) as e:
+                pw_fd = -1
+                print(f"eta wayland capture: OpenPipeWireRemote "
+                      f"failed: {e}")
 
             if pw_fd < 0:
                 legacy_fds = results.get("fds")
@@ -310,10 +333,15 @@ class WaylandCapture:
                     pw_fd = int(legacy_fds[0])
 
             if pw_fd < 0:
+                print("eta wayland capture: no PipeWire fd obtained")
                 return None
 
             self._backend = "portal"
-            return {"node_id": node_id, "serial": serial, "pw_fd": pw_fd}
+            return {
+                "node_id": node_id,
+                "serial": serial,
+                "pw_fd": pw_fd,
+            }
         finally:
             self._pop_ctx()
 
