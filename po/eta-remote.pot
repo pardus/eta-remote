@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-15 17:29+0300\n"
+"POT-Creation-Date: 2026-09-15 18:07+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,45 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/user/control.js:99
+msgid "Keyboard"
+msgstr ""
+
+#: src/user/control.js:111
+msgid "Fullscreen"
+msgstr ""
+
+#: src/user/audio.js:64 src/user/audio.js:67
+msgid "Sound: Off"
+msgstr ""
+
+#: src/user/audio.js:67
+msgid "Sound: On"
+msgstr ""
+
+#: src/user/script.js:12
+msgid ""
+"Notice: This application may not work as intended on your current operating "
+"system. For the best performance and compatibility, we highly recommend "
+"using Linux."
+msgstr ""
+
+#: src/user/script.js:29
+msgid "Waiting for accept"
+msgstr ""
+
+#: src/user/script.js:56
+msgid "Connection Lost"
+msgstr ""
+
+#: src/user/script.js:180 src/user/script.js:183
+msgid "Input: On"
+msgstr ""
+
+#: src/user/script.js:183
+msgid "Input : Off"
+msgstr ""
 
 #: src/Main.py:25
 msgid "Start application in autostart mode"

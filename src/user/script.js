@@ -9,7 +9,7 @@ const isApple = /Mac|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
 
 
 if (isWindows || isApple) {
-  warning("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux.", false);
+  warning(_("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux."), false);
 }
 
 let ws = null;
@@ -26,7 +26,7 @@ function connect() {
 
     ws.onopen = () => {
         capture.focus();
-        setStatus("Waiting for accept");
+        setStatus(_("Waiting for accept"));
         connected = false;
         send("connect", properties());
     };
@@ -53,7 +53,7 @@ function connect() {
 
     ws.onclose = () => {
         ws = null;
-        setStatus("Connection Lost");
+        setStatus(_("Connection Lost"));
         resizeCanvas();
     };
 
@@ -177,10 +177,10 @@ function addInputButton() {
 
     const button = document.createElement("button");
     button.id = "fc-input";
-    button.textContent = "Input: On";
+    button.textContent = _("Input: On");
     button.addEventListener("click", () => {
         input_allowed = !input_allowed;
-        button.textContent = input_allowed ? "Input: On" : "Input : Off";
+        button.textContent = input_allowed ? _("Input: On") : _("Input : Off");
     });
     menu.appendChild(button);
 }

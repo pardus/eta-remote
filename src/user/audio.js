@@ -61,10 +61,10 @@ function addMuteButton() {
 
     const button = document.createElement("button");
     button.id = "fc-audio";
-    button.textContent = "Sound: Off";
+    button.textContent = _("Sound: Off");
     button.addEventListener("click", () => {
         muted = !muted;
-        button.textContent = muted ? "Sound: Off" : "Sound: On";
+        button.textContent = muted ? _("Sound: Off") : _("Sound: On");
         if (!muted && audioCtx && audioCtx.state === "suspended") {
             audioCtx.resume();
         }

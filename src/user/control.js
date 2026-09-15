@@ -96,6 +96,8 @@ function initFloatingControls() {
         }
         menu.classList.remove("show");
     });
+    document.getElementById("fc-keyboard").textContent = _("Keyboard")
+
 
     document.getElementById("fc-fullscreen").addEventListener("click", (e) => {
         e.stopPropagation();
@@ -106,6 +108,7 @@ function initFloatingControls() {
         }
         menu.classList.remove("show");
     });
+    document.getElementById("fc-fullscreen").textContent = _("Fullscreen")
     const fc_quality = document.getElementById("fc-quality");
     fc_quality.addEventListener("change", (e) => {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
