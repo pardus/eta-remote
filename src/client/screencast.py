@@ -148,9 +148,4 @@ class PipeWireCaptureBase:
             self._pipe = None
             self._sink = None
         self._close_session()
-        if self._connection is not None:
-            try:
-                self._connection.close_sync(None)
-            except Exception:
-                pass
-            self._connection = None
+        self._connection = None

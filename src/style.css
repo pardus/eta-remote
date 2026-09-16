@@ -1,0 +1,238 @@
+/* ==========================================================================
+   Eta Remote Control - GTK stylesheet
+   Flat design, medium radius, frame-less.
+   Every color is inherited from the system theme; no color definitions.
+   ========================================================================== */
+
+/* ---------- Window & application baseline ---------- */
+window {
+    min-width: 720px;
+    min-height: 560px;
+}
+
+/* ---------- Header bar ---------- */
+headerbar {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* Tabs: flat, medium-rounded, filled accent on the active page */
+headerbar stackswitcher {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+headerbar stackswitcher button {
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-radius: 8px;
+    font-weight: normal;
+    transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+
+headerbar stackswitcher button:hover {
+    background-color: alpha(currentColor, 0.08);
+}
+
+headerbar stackswitcher button:checked {
+    font-weight: bold;
+    background-color: alpha(currentColor, 0.12);
+}
+
+/* ---------- Connect page ---------- */
+.app-header {
+    padding-bottom: 12px;
+}
+
+.app-title {
+    font-size: 1.6em;
+    font-weight: bold;
+}
+
+.app-subtitle {
+    font-size: 0.9em;
+    opacity: 0.72;
+}
+
+.qr-area {
+    padding: 8px;
+}
+
+.qr-card {
+    border-radius: 8px;
+    padding: 14px;
+}
+
+entry#url-entry {
+    border-radius: 8px;
+}
+
+.empty-label {
+    font-size: 0.95em;
+    opacity: 0.72;
+}
+
+.device-name {
+    opacity: 0.72;
+    font-size: 0.9em;
+}
+
+/* ---------- Settings ---------- */
+.settings-box {
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.setting-row {
+    border-radius: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    transition: background-color 120ms ease-out;
+}
+
+.setting-row:hover {
+    background-color: alpha(currentColor, 0.06);
+}
+
+/* ---------- Action bar (start / stop) ---------- */
+.action-bar {
+    padding-top: 10px;
+}
+
+button#start-btn,
+button#stop-btn {
+    min-width: 110px;
+    min-height: 40px;
+    padding-left: 24px;
+    padding-right: 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+button.suggested-action,
+button.destructive-action {
+    border-radius: 8px;
+    transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+/* ---------- Footer ---------- */
+.app-footer {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.footer-label {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+/* ---------- Connected clients ---------- */
+.clients-counter {
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+.client-card {
+    border-radius: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    transition: background-color 120ms ease-out;
+}
+
+.client-card:hover {
+    background-color: alpha(currentColor, 0.04);
+}
+
+.client-avatar {
+    padding-right: 4px;
+    opacity: 0.95;
+}
+
+.client-name {
+    font-size: 1.05em;
+}
+
+.client-detail {
+    opacity: 0.7;
+    font-size: 0.9em;
+}
+
+.client-id {
+    font-size: 0.85em;
+    opacity: 0.6;
+}
+
+.perm-box {
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-radius: 8px;
+    transition: background-color 120ms ease-out;
+}
+
+.perm-box:hover {
+    background-color: alpha(currentColor, 0.05);
+}
+
+.kick-btn {
+    border-radius: 8px;
+    padding: 6px;
+    transition: background-color 120ms ease-out;
+}
+
+.kick-btn:hover {
+    background-color: alpha(currentColor, 0.1);
+}
+
+/* ---------- Warning label ---------- */
+.warning-label {
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    background-color: alpha(currentColor, 0.06);
+}
+
+/* ---------- New connection dialog ---------- */
+dialog#new-connection-dialog {
+    border-radius: 8px;
+}
+
+dialog .dialog-action-area button {
+    border-radius: 8px;
+    min-width: 96px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+dialog .dialog-action-area button.suggested-action {
+    font-weight: bold;
+}
+
+/* ---------- Scrollbars ---------- */
+scrollbar slider {
+    min-width: 8px;
+    min-height: 8px;
+    border-radius: 4px;
+}
+
+scrollbar.vertical slider {
+    min-width: 8px;
+}
+
+scrollbar.horizontal slider {
+    min-height: 8px;
+}
+
+scrollbar {
+    margin: 2px;
+}

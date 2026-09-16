@@ -124,7 +124,23 @@ def main(handler=None, stop_event=None):
     global req_full
     global img_width
     global img_height
-    previous_image = grab_rgb()
+
+    while True:
+        try:
+            previous_image = grab_rgb()
+            break
+        except KeyboardInterrupt:
+            print("\nStopped.")
+            display_close()
+            return
+        except:
+            if _should_stop(stop_event):
+                display_close()
+                return
+            print(traceback.format_exc())
+            display_close()
+            time.sleep(3)
+
     img_width = previous_image.width
     img_height = previous_image.height
 
