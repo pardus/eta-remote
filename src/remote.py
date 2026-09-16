@@ -48,7 +48,8 @@ class RemoteControl:
                     self.wfile.write(body)
                     return
                 elif self.path.split("?")[0] == "/translate.js":
-                    body = gen_translate().encode()
+                    client_language = self.headers.get('Accept-Language')
+                    body = gen_translate(client_language).encode()
                     self.send_response(200)
                     self.send_header("Content-Type", "text/javascript; charset=utf-8")
                     self.send_header("Content-Length", str(len(body)))

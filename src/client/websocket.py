@@ -62,14 +62,12 @@ class WebSocketClient:
             if self.ctx.wait:
                 with lock["data"]:
                     lock["data"].wait()
-            print("image")
             data_queue.put(message)
 
         def audio_handler(message):
             if self.ctx.wait:
                 with lock["audio"]:
                     lock["audio"].wait()
-            print("audio")
             audio_queue.put(message)
 
         capture_thread = threading.Thread(
