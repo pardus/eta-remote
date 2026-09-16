@@ -73,7 +73,7 @@ async function getFilesFromItems(dt) {
 capture.addEventListener("drop", async (e) => {
     e.preventDefault();
     if (!perms.file) {
-        warning(_("File sharing is disabled"), false);
+        warning(_("File sharing is disabled"), true);
         return;
     }
     const files = await getFilesFromItems(e.dataTransfer);
