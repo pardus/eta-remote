@@ -7,6 +7,8 @@ gi.require_version("Gtk", "3.0")
 
 from file import handle_file
 
+from websockets.exceptions import ConnectionClosed
+
 from gi.repository import Gtk, GLib, Gio
 
 from NewConnection import NewConnection
@@ -27,8 +29,7 @@ class Control:
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.allows = {}
         self.clients = clients or Clients(self)
-        if self.clients.Controller is None:
-            self.clients.Controller = self
+        self.clients.Controller = self
         self.ws = None
 
     def _stack(self):
@@ -81,6 +82,8 @@ class Control:
         })
         try:
             self.ws.send(msg)
+        except ConnectionClosed:
+            self.ws = None
         except:
             print(traceback.format_exc())
 
@@ -102,8 +105,7 @@ class Control:
 
     def control(self, ctx):
         """control and filter websocket context"""
-        if self.ws is None:
-            self.ws = ctx.websocket
+        self.ws = ctx.websocket
         try:
             data = json.loads(ctx.message)
             client_id = data.get("id")
