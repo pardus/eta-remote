@@ -1,0 +1,42 @@
+.client-card {
+    border-radius: 10px;
+    margin: 4px 2px;
+    padding: 10px;
+}
+
+.client-avatar {
+    color: #8be9fd;
+}
+
+.client-name {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.client-detail {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.client-id {
+    font-size: 9px;
+    font-family: monospace;
+    opacity: 0.6;
+}
+
+.perm-box {
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+.perm-label {
+    font-size: 11px;
+}
+
+.kick-btn {
+    background-image: none;
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+

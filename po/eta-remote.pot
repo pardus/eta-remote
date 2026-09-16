@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-15 18:07+0300\n"
+"POT-Creation-Date: 2026-09-16 12:17+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,35 +25,55 @@ msgstr ""
 msgid "Fullscreen"
 msgstr ""
 
-#: src/user/audio.js:64 src/user/audio.js:67
+#: src/user/audio.js:66
+msgid "Sound: Blocked"
+msgstr ""
+
+#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
 msgid "Sound: Off"
 msgstr ""
 
-#: src/user/audio.js:67
+#: src/user/audio.js:82
 msgid "Sound: On"
 msgstr ""
 
-#: src/user/script.js:12
+#: src/user/file.js:76
+msgid "File sharing is disabled"
+msgstr ""
+
+#: src/user/script.js:11
 msgid ""
 "Notice: This application may not work as intended on your current operating "
 "system. For the best performance and compatibility, we highly recommend "
 "using Linux."
 msgstr ""
 
-#: src/user/script.js:29
+#: src/user/script.js:49
+msgid "Ping:"
+msgstr ""
+
+#: src/user/script.js:62
 msgid "Waiting for accept"
 msgstr ""
 
-#: src/user/script.js:56
+#: src/user/script.js:98
 msgid "Connection Lost"
 msgstr ""
 
-#: src/user/script.js:180 src/user/script.js:183
+#: src/user/script.js:162
+msgid "Input: Blocked"
+msgstr ""
+
+#: src/user/script.js:165 src/user/script.js:236 src/user/script.js:239
 msgid "Input: On"
 msgstr ""
 
-#: src/user/script.js:183
+#: src/user/script.js:239
 msgid "Input : Off"
+msgstr ""
+
+#: src/user/viewer.js:75
+msgid "Image disabled"
 msgstr ""
 
 #: src/Main.py:25
@@ -68,7 +88,7 @@ msgstr ""
 msgid "New Connection"
 msgstr ""
 
-#: src/gui/NewConnection.py:30 src/gui/Clients.py:156
+#: src/gui/NewConnection.py:30 src/gui/Clients.py:157
 msgid "Mobile"
 msgstr ""
 
@@ -92,67 +112,71 @@ msgstr ""
 msgid "Audio"
 msgstr ""
 
-#: src/gui/Clients.py:51
+#: src/gui/Clients.py:16
+msgid "File"
+msgstr ""
+
+#: src/gui/Clients.py:52
 msgid "Unknown"
 msgstr ""
 
-#: src/gui/Clients.py:75 src/gui/Clients.py:81
+#: src/gui/Clients.py:76 src/gui/Clients.py:82
 msgid "Connected Clients"
 msgstr ""
 
-#: src/gui/Clients.py:121
+#: src/gui/Clients.py:122
 #, python-format
 msgid "%d connected"
 msgstr ""
 
-#: src/gui/Clients.py:127
+#: src/gui/Clients.py:128
 msgid "Warning: Wayland support is experimental and may be unstable."
 msgstr ""
 
-#: src/gui/Clients.py:177
+#: src/gui/Clients.py:178
 msgid "Kick"
 msgstr ""
 
-#: src/MainWindow.py:24
+#: src/MainWindow.py:33
 msgid "Eta Remote Control"
 msgstr ""
 
-#: src/MainWindow.py:31 src/MainWindow.py:126 src/MainWindow.py:198
+#: src/MainWindow.py:40 src/MainWindow.py:136 src/MainWindow.py:208
 msgid "Remote Control"
 msgstr ""
 
-#: src/MainWindow.py:44 src/MainWindow.py:197
+#: src/MainWindow.py:53 src/MainWindow.py:207
 msgid "Status: Stopped"
 msgstr ""
 
-#: src/MainWindow.py:50
+#: src/MainWindow.py:59
 msgid "Autostart on boot"
 msgstr ""
 
-#: src/MainWindow.py:51
+#: src/MainWindow.py:60
 msgid "Allow all new connections"
 msgstr ""
 
-#: src/MainWindow.py:71 src/MainWindow.py:140
+#: src/MainWindow.py:80 src/MainWindow.py:150
 msgid "Start"
 msgstr ""
 
-#: src/MainWindow.py:74 src/MainWindow.py:144
+#: src/MainWindow.py:83 src/MainWindow.py:154
 msgid "Stop"
 msgstr ""
 
-#: src/MainWindow.py:133
+#: src/MainWindow.py:143
 msgid "Show"
 msgstr ""
 
-#: src/MainWindow.py:150
+#: src/MainWindow.py:160
 msgid "Quit"
 msgstr ""
 
-#: src/MainWindow.py:183
+#: src/MainWindow.py:193
 msgid "Status: Running"
 msgstr ""
 
-#: src/MainWindow.py:184
+#: src/MainWindow.py:194
 msgid "Remote Control - Running"
 msgstr ""
