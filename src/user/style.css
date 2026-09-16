@@ -5,43 +5,34 @@
 }
 
 body {
-  overflow: hidden;
   height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #111111;
+  background: #282a36;
 }
 
 .center {
-  margin: 0;
   position: absolute;
   top: 50%;
   left: 50%;
-  -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
 
-#controls {
-  display: flex;
-  z-index: 1;
-  flex-shrink: 0;
-  padding: 3px;
-}
-
-#controls input {
+#capture {
   flex: 1;
-  padding: 3px;
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+  outline: none;
 }
 
-#controls button {
-  cursor: pointer;
-  padding: 3px;
-}
-
-#status {
-  align-self: center;
-  white-space: nowrap;
-  padding: 3px;
+.status {
+  color: #f8f8f2;
+  background-color: #44475a;
+  border-radius: 10px;
+  padding: 10px;
+  font: 32px monospace;
 }
 
 #warning-container {
@@ -49,8 +40,6 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  width: 100%;
-  box-sizing: border-box;
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -64,9 +53,9 @@ body {
   align-items: center;
   justify-content: center;
   padding: 10px 15px;
-  background-color: #ff000057;
-  color: #ffffff;
-  text-align: center;
+  background-color: rgba(255, 85, 85, .69);
+  color: #f8f8f2;
+  text-shadow: 2px 2px 8px #000;
   pointer-events: auto;
 }
 
@@ -77,56 +66,24 @@ body {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #ffffff;
+  color: #f8f8f2;
   padding: 0 8px;
   cursor: pointer;
 }
 
-.status {
-  color: #ffffff;
-  background-color: #000000A0;
-  border-radius: 10px;
-  padding: 10px;
-  font: 32px monospace;
-}
-
-#capture {
-  flex: 1;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: crosshair;
-  outline: none;
-}
-
 #virtual-keyboard {
-  display: flex;
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100vw;
   height: 40vh;
+  display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  background: #333;
-  padding: 4px;
   gap: 2px;
+  background: #282a36;
+  padding: 4px;
   user-select: none;
-  -webkit-user-select: none;
   z-index: 50;
-}
-
-#virtual-keyboard .key.close {
-  flex: 0 0 auto;
-  min-width: 0;
-  padding: 0 12px;
-  font-size: 12px;
-  background: #444;
-  color: #bbb;
-}
-
-#virtual-keyboard .key.close:active {
-  background: #555;
 }
 
 #virtual-keyboard .layer {
@@ -141,46 +98,41 @@ body {
   gap: 2px;
 }
 
-#fc-ping {
-  color: #fff;
-}
-
 #virtual-keyboard .key {
   flex: 1;
   height: 100%;
   min-height: 26px;
   border: none;
   border-radius: 3px;
-  background: #555;
-  color: #fff;
+  background: #44475a;
+  color: #f8f8f2;
   font-size: 13px;
   cursor: pointer;
   touch-action: none;
   user-select: none;
-  -webkit-user-select: none;
 }
 
 #virtual-keyboard .key:active,
 #virtual-keyboard .key.active {
-  background: #4aa3ff;
+  background: #bd93f9;
 }
 
 #virtual-keyboard .key.Space {
   flex: 0 0 50vw;
 }
 
-#virtual-keyboard .letter {
+#virtual-keyboard .key.letter {
   min-width: 5%;
 }
 
 #virtual-keyboard .key.mod {
-  background: #444;
+  background: #6272a4;
   font-weight: 600;
 }
 
 #virtual-keyboard .key.mod.active {
-  background: #4aa3ff;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
+  background: #ff79c6;
+  box-shadow: inset 0 0 0 2px rgba(248, 248, 242, .35);
 }
 
 #file-progress {
@@ -188,15 +140,15 @@ body {
   bottom: 80px;
   right: 20px;
   width: 220px;
-  background: rgba(0, 0, 0, .75);
-  border-radius: 8px;
-  padding: 8px;
-  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 200px;
-  overflow-y: auto;
+  background: rgba(40, 42, 54, .9);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 100;
 }
 
 #file-progress.hidden {
@@ -210,9 +162,8 @@ body {
 }
 
 .file-progress-name {
-  color: #fff;
+  color: #f8f8f2;
   font-size: 11px;
-  font-family: sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -220,7 +171,7 @@ body {
 
 .file-progress-track {
   height: 8px;
-  background: #333;
+  background: #44475a;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -228,31 +179,19 @@ body {
 .file-progress-bar {
   height: 100%;
   width: 0%;
-  background: #4aa3ff;
+  background: #8be9fd;
   transition: width 0.2s;
 }
 
 .file-progress-info {
-  color: #ccc;
+  color: #f8f8f2;
   font-size: 10px;
-  font-family: sans-serif;
   text-align: right;
   white-space: nowrap;
 }
 
-#warning-container {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    z-index:9999;
-    display:flex;
-    flex-direction:column;
-    pointer-events:none;
-}
-
 .file-progress-item.done .file-progress-bar {
-  background: #4caf50;
+  background: #50fa7b;
 }
 
 #floating-controls {
@@ -267,12 +206,11 @@ body {
   height: 48px;
   border-radius: 50%;
   border: none;
-  background: #333;
-  color: #fff;
+  background: #44475a;
+  color: #f8f8f2;
   font-size: 24px;
   cursor: grab;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
   touch-action: none;
 }
 
@@ -284,22 +222,18 @@ body {
   transform: scale(0.95);
 }
 
-#fc-toggle:active {
-  transform: scale(0.95);
-}
-
 #fc-menu {
   display: none;
   position: absolute;
   bottom: 56px;
   right: 0;
+  min-width: 120px;
   flex-direction: column;
   gap: 8px;
-  background: #222;
+  background: #44475a;
   padding: 10px;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-  min-width: 120px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .5);
 }
 
 #fc-menu.show {
@@ -310,14 +244,19 @@ body {
   padding: 10px 12px;
   border: none;
   border-radius: 8px;
-  background: #444;
-  color: #fff;
+  background: #282a36;
+  color: #f8f8f2;
   font-size: 14px;
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
 }
 
-#fc-menu button:active {
-  background: #4aa3ff;
+#fc-menu button:active,
+#fc-menu button:hover {
+  background: #bd93f9;
+}
+
+#fc-ping {
+  color: #f8f8f2;
 }
