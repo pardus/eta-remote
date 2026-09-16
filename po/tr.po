@@ -116,11 +116,11 @@ msgstr "Tekmele"
 
 #: src/MainWindow.py:24
 msgid "Eta Remote Control"
-msgstr "Eta Uzaktan Kontrol"
+msgstr "Eta Uzaktan Yönetim"
 
 #: src/MainWindow.py:31 src/MainWindow.py:126 src/MainWindow.py:198
 msgid "Remote Control"
-msgstr "Uzaktan Kontrol"
+msgstr "Uzaktan Yönetim"
 
 #: src/MainWindow.py:44 src/MainWindow.py:197
 msgid "Status: Stopped"
@@ -156,4 +156,4 @@ msgstr "Durum: Çalışıyor"
 
 #: src/MainWindow.py:184
 msgid "Remote Control - Running"
-msgstr "Uzaktan Kontrol - Çalışıyor"
+msgstr "Uzaktan Yönetim - Çalışıyor"

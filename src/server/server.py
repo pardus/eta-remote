@@ -29,6 +29,7 @@ class Client:
 
 def handler(websocket):
     path = websocket.request.path
+    admin = False
     with rooms_lock:
         clients = rooms.setdefault(path, set())
         client = Client()
@@ -36,6 +37,8 @@ def handler(websocket):
         client.websocket = websocket
         clients.add(client)
         print(f"Client joined {path}; id={client.id}; clients={len(clients)}")
+        if len(clients) == 1:
+            admin = True
 
     try:
         for message in websocket:
@@ -43,7 +46,10 @@ def handler(websocket):
             message = json.loads(message)
             message["id"] = client.id
 
-            if "kick" in message:
+            if "ping" in message:
+                websocket.send(json.dumps(message))
+
+            if "kick" in message and admin:
                 for kicked in clients.copy():
                     if kicked.id == message.get("kick", None):
                         kicked.websocket.close()
