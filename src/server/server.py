@@ -49,7 +49,6 @@ def handler(websocket):
 
             if "ping" in message:
                 websocket.send(json.dumps(message))
-                continue
 
             if "kick" in message and admin:
                 for kicked in clients.copy():

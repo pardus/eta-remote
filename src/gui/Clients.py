@@ -13,6 +13,7 @@ PERMISSION_LABELS = {
     "input": _("Input"),
     "image": _("Image"),
     "audio": _("Audio"),
+    "file": _("File")
 }
 
 def get_os(useragent, platform=None):

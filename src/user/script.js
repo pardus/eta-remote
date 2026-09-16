@@ -69,6 +69,8 @@ function connect() {
                 client_id = message.id;
             }
             handlePing(message.ping);
+        } else if (message.type === "file_ack") {
+            handleFileAck(message.name, message.chunk, message.complete);
         } else if (message.type === "audio" && message.data) {
             handleAudio(message.data);
         } else if (message.pixels) {

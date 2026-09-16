@@ -18,7 +18,8 @@ all_permissions = {
         "mouse", "key", "touch", "wheel"
     ],
     "image": ["image", "request_full"],
-    "misc": ["quality", "file"]
+    "misc": ["quality"],
+    "file": ["file"]
 }
 
 class Control(Gtk.Window):
@@ -94,7 +95,14 @@ class Control(Gtk.Window):
             return False
 
         if type == "file":
-            handle_file(data)
+            def file_ack(name, chunk, complete):
+                try:
+                    ack = json.dumps({"type": "file_ack", "name": name, "chunk": chunk, "complete": complete})
+                    if self.ws:
+                        self.ws.send(ack)
+                except:
+                    print(traceback.format_exc())
+            threading.Thread(target=handle_file, args=(data, file_ack), daemon=True).start()
         else:
             return True
 
