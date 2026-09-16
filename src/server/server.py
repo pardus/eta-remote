@@ -54,6 +54,7 @@ def handler(websocket):
             if "kick" in message and admin:
                 for kicked in clients.copy():
                     if kicked.id == message.get("kick", None):
+                        print("kick", kicked.id)
                         kicked.websocket.close()
                         clients.discard(kicked)
 

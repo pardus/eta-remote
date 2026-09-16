@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 12:17+0300\n"
+"POT-Creation-Date: 2026-09-16 18:36+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,7 +90,7 @@ msgstr "Uygulamayı başlat ve pencereyi göster"
 msgid "New Connection"
 msgstr "Yeni Bağlantı"
 
-#: src/gui/NewConnection.py:30 src/gui/Clients.py:157
+#: src/gui/NewConnection.py:30 src/gui/Clients.py:174
 msgid "Mobile"
 msgstr "Mobil"
 
@@ -102,83 +102,100 @@ msgstr "Reddet"
 msgid "Allow"
 msgstr "Kabul et"
 
-#: src/gui/Clients.py:13
+#: src/gui/Clients.py:15
 msgid "Input"
 msgstr "Girdi"
 
-#: src/gui/Clients.py:14
+#: src/gui/Clients.py:16
 msgid "Image"
 msgstr "Görüntü"
 
-#: src/gui/Clients.py:15
+#: src/gui/Clients.py:17
 msgid "Audio"
 msgstr "Ses"
 
-#: src/gui/Clients.py:16
+#: src/gui/Clients.py:18
 msgid "File"
 msgstr "Dosya"
 
-#: src/gui/Clients.py:52
+#: src/gui/Clients.py:68
 msgid "Unknown"
 msgstr "Bilinmeyen"
 
-#: src/gui/Clients.py:76 src/gui/Clients.py:82
-msgid "Connected Clients"
-msgstr "Bağlı İstemciler"
+#: src/gui/Clients.py:99 src/gui/Clients.py:122
+msgid "No connected clients"
+msgstr "Bağlı istemci yok"
 
-#: src/gui/Clients.py:122
+#: src/gui/Clients.py:126
 #, python-format
 msgid "%d connected"
 msgstr "%d bağlandı"
 
-#: src/gui/Clients.py:128
+#: src/gui/Clients.py:130
 msgid "Warning: Wayland support is experimental and may be unstable."
 msgstr "Uyarı: Wayland desteği deneyseldir ve stabil olmayabilir."
 
-#: src/gui/Clients.py:178
+#: src/gui/Clients.py:214
 msgid "Kick"
 msgstr "Tekmele"
 
-#: src/MainWindow.py:33
+#: src/MainWindow.py:40 src/MainWindow.py:78
 msgid "Eta Remote Control"
 msgstr "Eta Uzaktan Yönetim"
 
-#: src/MainWindow.py:40 src/MainWindow.py:136 src/MainWindow.py:208
+#: src/MainWindow.py:54 src/MainWindow.py:247 src/MainWindow.py:302
 msgid "Remote Control"
 msgstr "Uzaktan Yönetim"
 
-#: src/MainWindow.py:53 src/MainWindow.py:207
-msgid "Status: Stopped"
-msgstr "Durum: Durdu"
+#: src/MainWindow.py:56
+msgid "Connected Clients"
+msgstr "Bağlı İstemciler"
 
-#: src/MainWindow.py:59
-msgid "Autostart on boot"
-msgstr "Açılışta başlat"
+#: src/MainWindow.py:85
+msgid "Scan a QR code with your phone or tablet to connect"
+msgstr ""
 
-#: src/MainWindow.py:60
-msgid "Allow all new connections"
-msgstr "Tüm yeni bağlantıları kabul et"
-
-#: src/MainWindow.py:80 src/MainWindow.py:150
+#: src/MainWindow.py:119 src/MainWindow.py:260
 msgid "Start"
 msgstr "Başlat"
 
-#: src/MainWindow.py:83 src/MainWindow.py:154
+#: src/MainWindow.py:123 src/MainWindow.py:264
 msgid "Stop"
 msgstr "Durdur"
 
-#: src/MainWindow.py:143
+#: src/MainWindow.py:150
+msgid "Autostart on boot"
+msgstr "Açılışta başlat"
+
+#: src/MainWindow.py:151
+msgid "Allow all new connections"
+msgstr "Tüm yeni bağlantıları kabul et"
+
+#: src/MainWindow.py:190
+msgid "No active network connection found"
+msgstr "Etkin ağ bağlantısı bulunamadı"
+
+#: src/MainWindow.py:206
+msgid "Connect to control this device remotely"
+msgstr "Bu cihazı uzaktan yönetmek için bağlanın"
+
+#: src/MainWindow.py:211
+msgid "Scan or copy this address:"
+msgstr "Bu adresi tarayın veya kopyalayın:"
+
+#: src/MainWindow.py:227
+msgid "Interface:"
+msgstr "Arayüz:"
+
+#: src/MainWindow.py:253
 msgid "Show"
 msgstr "Göster"
 
-#: src/MainWindow.py:160
+#: src/MainWindow.py:270
 msgid "Quit"
 msgstr "Çıkış"
 
-#: src/MainWindow.py:193
-msgid "Status: Running"
-msgstr "Durum: Çalışıyor"
-
-#: src/MainWindow.py:194
+#: src/MainWindow.py:299
 msgid "Remote Control - Running"
 msgstr "Uzaktan Yönetim - Çalışıyor"
+
