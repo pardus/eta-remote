@@ -7,6 +7,15 @@ gi.require_version("GdkPixbuf", "2.0")
 
 from gi.repository import Gtk, Gdk, GLib, Gio, GdkPixbuf
 
+try:
+    gi.require_version('AyatanaAppIndicator3', '0.1')
+    from gi.repository import AyatanaAppIndicator3 as appindicator
+except:
+    gi.require_version('AppIndicator3', '0.1')
+    from gi.repository import AppIndicator3 as appindicator
+
+
+
 import subprocess
 
 import utils
@@ -121,13 +130,14 @@ class MainWindow(Gtk.Window):
         self.addr_box.show_all()
 
     def _setup_status_icon(self):
-        self.tray = Gtk.StatusIcon()
-        self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
-        self.tray.set_tooltip_text(_("Remote Control"))
-        self.tray.connect("popup-menu", self._on_tray_menu)
-        self.tray.connect("activate", self._on_tray_activate)
+        self.indicator = appindicator.Indicator.new(
+            "eta-remote", "tr.org.pardus.eta-remote-stopped", appindicator.IndicatorCategory.APPLICATION_STATUS)
+        self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
+        self.indicator.set_title(_("Remote Control"))
 
-    def _on_tray_menu(self, _icon, button, time):
+        self.indicator.set_menu(self._on_tray_menu())
+
+    def _on_tray_menu(self):
         menu = Gtk.Menu()
 
         show_item = Gtk.MenuItem(label=_("Show"))
@@ -152,7 +162,7 @@ class MainWindow(Gtk.Window):
         menu.append(quit_item)
 
         menu.show_all()
-        menu.popup_at_pointer(None)
+        return menu
 
     def _on_quit(self, widget):
         self._on_stop(widget)
@@ -181,8 +191,8 @@ class MainWindow(Gtk.Window):
         self.start_btn.set_sensitive(False)
         self.stop_btn.set_sensitive(True)
         self.status_label.set_text(_("Status: Running"))
-        self.tray.set_tooltip_text(_("Remote Control - Running"))
-        self.tray.set_from_icon_name("tr.org.pardus.eta-remote-started")
+        self.indicator.set_title(_("Remote Control - Running"))
+        self.indicator.set_icon(("tr.org.pardus.eta-remote-started"))
 
     def _on_stop(self, _btn):
         if self.pid != 0:
@@ -195,8 +205,8 @@ class MainWindow(Gtk.Window):
         self.start_btn.set_sensitive(True)
         self.stop_btn.set_sensitive(False)
         self.status_label.set_text(_("Status: Stopped"))
-        self.tray.set_tooltip_text(_("Remote Control"))
-        self.tray.set_from_icon_name("tr.org.pardus.eta-remote-stopped")
+        self.indicator.set_title(_("Remote Control"))
+        self.indicator.set_icon(("tr.org.pardus.eta-remote-stopped"))
 
     def _on_settings_toggled(self, _switch, state, name=""):
         self.settings.set_boolean(name, state)

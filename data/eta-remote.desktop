@@ -1,8 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=Eta Remote
+Name=Eta Remote Control
+Name[tr]=Eta Uzaktan Yönetim
 Icon=tr.org.pardus.eta-remote
 Comment=Remote control application for etap
+Comment[tr]=Etap için uzaktan yönetim uygulaması
 Exec=/usr/bin/python3 /usr/share/eta/eta-remote/Main.py --show
 Terminal=false
-
+StartupWMClass=tr.org.pardus.eta-remote
+Categories=Utility;
