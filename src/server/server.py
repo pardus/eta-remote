@@ -7,6 +7,7 @@ from websockets.exceptions import ConnectionClosed
 import traceback
 
 import uuid
+import time
 import zlib
 import json
 
@@ -48,6 +49,7 @@ def handler(websocket):
 
             if "ping" in message:
                 websocket.send(json.dumps(message))
+                continue
 
             if "kick" in message and admin:
                 for kicked in clients.copy():

@@ -2,7 +2,6 @@
 
 const capture = document.getElementById("capture");
 
-
 const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
 const isWindows = /Win/i.test(window.navigator.userAgent);
 const isApple = /Mac|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
@@ -12,12 +11,33 @@ if (isWindows || isApple) {
   warning(_("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux."), false);
 }
 
+let client_id = null;
+
 let ws = null;
 
 let input_allowed = true;
 
 let connected = false;
 
+let wait_pong = false;
+function pingCalculator(){
+    const time_cur = performance.now();
+    if(ws && !wait_pong){
+        send("ping", {"ping": time_cur});
+        wait_pong = true;
+    }
+    setTimeout(pingCalculator, 1000); 
+}
+
+const fc_ping = document.getElementById("fc-ping");
+function handlePing(ping){
+    const time_cur = performance.now()
+    const fping = parseInt(time_cur - ping);
+    fc_ping.innerText = _("Ping:")+" " + fping;
+    wait_pong = false;
+}
+
+pingCalculator();
 function connect() {
     if(ws){
         return;
@@ -44,7 +64,12 @@ function connect() {
             return;
         }
 
-        if (message.type === "audio" && message.data) {
+        if (message.type === "ping") {
+            if(client_id == null){
+                client_id = message.id;
+            }
+            handlePing(message.ping);
+        } else if (message.type === "audio" && message.data) {
             handleAudio(message.data);
         } else if (message.pixels) {
             handlePatch(message);

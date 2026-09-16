@@ -95,6 +95,10 @@ body {
   gap: 2px;
 }
 
+#fc-ping {
+  color: #fff;
+}
+
 #virtual-keyboard .key {
   flex: 1;
   height: 100%;
