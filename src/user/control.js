@@ -114,6 +114,23 @@ function initFloatingControls() {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
         send("quality", {"quality": fc_quality.value});
     });
+
+    window.addEventListener("resize", () => {
+        const p = getPosition();
+        if(p.left == null || p.top == null){
+            return;
+        }
+        const maxX = window.innerWidth - controls.offsetWidth;
+        const maxY = window.innerHeight - controls.offsetHeight;
+        if(p.left > maxX){
+            p.left = maxX;
+            setPosition(p.left, p.top);
+        }
+        if (p.top > maxY){
+            p.top = maxY;
+            setPosition(p.left, p.top);
+        }
+    });
 }
 
 initFloatingControls();
