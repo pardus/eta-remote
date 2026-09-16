@@ -43,7 +43,7 @@ function handleAudio(data) {
     if (audioCtx.state === "suspended") {
         audioCtx.resume();
     }
-    if (muted || !audioCtx) {
+    if (muted || !audioCtx || !perms.audio) {
         return;
     }
 
@@ -53,6 +53,21 @@ function handleAudio(data) {
 
     audioQueue.push(buffer);
     scheduleNext();
+}
+
+function handleAudioPerms(enabled) {
+    audioQueue.length = 0;
+    nextTime = 0;
+    const button = document.getElementById("fc-audio");
+    if (button) {
+        button.disabled = !enabled;
+        if (!enabled) {
+            muted = true;
+            button.textContent = _("Sound: Blocked");
+        } else {
+            button.textContent = _("Sound: Off");
+        }
+    }
 }
 
 function addMuteButton() {

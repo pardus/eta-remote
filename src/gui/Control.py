@@ -47,6 +47,24 @@ class Control(Gtk.Window):
             if perm in self.allows[client_id]["perm"]:
                 self.allows[client_id]["perm"].remove(perm)
         self._update_ui()
+        self._notify_perms(client_id)
+
+    def _notify_perms(self, client_id):
+        if self.ws is None:
+            return
+        perms = self.allows.get(client_id, {}).get("perm", [])
+        msg = json.dumps({
+            "type": "perms",
+            "target": [client_id],
+            "audio": "audio" in perms,
+            "file": "file" in perms,
+            "image": "image" in perms,
+            "input": "input" in perms,
+        })
+        try:
+            self.ws.send(msg)
+        except:
+            print(traceback.format_exc())
 
     def _connect(self, data, client_id):
         self.allows[client_id] = {"perm":[], "data":data}
@@ -55,6 +73,7 @@ class Control(Gtk.Window):
             self.set_permission("image", client_id, True)
         else:
             NewConnection(self, data).show_all()
+        self._notify_perms(client_id)
 
     def _disconnect(self, client_id):
         if client_id in self.allows.keys():

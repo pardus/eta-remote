@@ -19,6 +19,19 @@ let input_allowed = true;
 
 let connected = false;
 
+let perms = { input:true, audio: true, file: true, image: true };
+
+function handlePerms(message) {
+    if (typeof message.audio === "boolean") perms.audio = message.audio;
+    if (typeof message.file === "boolean") perms.file = message.file;
+    if (typeof message.image === "boolean") perms.image = message.image;
+    if (typeof message.input === "boolean") perms.input = message.input;
+
+    if (typeof handleAudioPerms === "function") handleAudioPerms(perms.audio);
+    if (typeof handleImagePerms === "function") handleImagePerms(perms.image);
+    if (typeof handleInputPerms === "function") handleInputPerms(perms.input);
+}
+
 let wait_pong = false;
 function pingCalculator(){
     const time_cur = performance.now();
@@ -69,6 +82,8 @@ function connect() {
                 client_id = message.id;
             }
             handlePing(message.ping);
+        } else if (message.type === "perms") {
+            handlePerms(message);
         } else if (message.type === "file_ack") {
             handleFileAck(message.name, message.chunk, message.complete);
         } else if (message.type === "audio" && message.data) {
@@ -137,6 +152,20 @@ for (const action of TOUCH_ACTIONS) {
     );
 }
 
+
+function handleInputPerms(enabled) {
+    const button = document.getElementById("fc-input");
+    if (button) {
+        button.disabled = !enabled;
+        if (!enabled) {
+            input_allowed = false;
+            button.textContent = _("Input: Blocked");
+        } else {
+            input_allowed = true;
+            button.textContent = _("Input: On");
+        }
+    }
+}
 
 
 // Mouse events

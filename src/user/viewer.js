@@ -50,6 +50,7 @@ window.addEventListener("load", function(){
 });
 
 function handlePatch(message) {
+    if (!perms.image) return;
     if (message.screen_width && message.screen_height) {
         const w = Number(message.screen_width);
         const h = Number(message.screen_height);
@@ -62,6 +63,17 @@ function handlePatch(message) {
     }
 
     drawPatch(message);
+}
+
+function handleImagePerms(enabled) {
+    if (enabled) {
+        setStatus("");
+        resizeCanvas();
+    } else {
+        context.fillStyle = "#111";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        setStatus(_("Image disabled"));
+    }
 }
 
 function drawPatch(patch) {
