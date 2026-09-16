@@ -32,17 +32,6 @@ def icon(name, size=None):
         image.set_pixel_size(size)
     return image
 
-def load_css():
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clients.css")
-    if not os.path.exists(path):
-        return
-    provider = Gtk.CssProvider()
-    provider.load_from_path(path)
-    screen = Gdk.Screen.get_default()
-    Gtk.StyleContext.add_provider_for_screen(
-        screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-
 def get_os(useragent, platform=None):
     ua = (useragent or "").lower()
     if "android" in ua:
@@ -98,18 +87,18 @@ def get_browser(useragent):
             return name
     return None
 
-class Clients(Gtk.Window):
-    def __init__(self, Controller):
-        super().__init__(title=_("Connected Clients"))
-        load_css()
+class Clients(Gtk.Box):
+    def __init__(self, Controller=None):
+        super().__init__()
+        self.set_orientation(Gtk.Orientation.VERTICAL)
         self.set_name("clients-window")
+        self.set_hexpand(True)
+        self.set_vexpand(True)
         self.Controller = Controller
-        self.set_default_size(600, 300)
 
-        self.header = Gtk.HeaderBar()
-        self.header.set_show_close_button(False)
-        self.header.set_title(_("Connected Clients"))
-        self.set_titlebar(self.header)
+        self.counter = Gtk.Label(label=_("No connected clients"))
+        self.counter.set_margin_top(8)
+        self.pack_start(self.counter, False, False, 0)
 
         self.grid = Gtk.Grid()
         self.grid.set_column_spacing(0)
@@ -123,36 +112,18 @@ class Clients(Gtk.Window):
         scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrolled.add(self.grid)
 
-        self.add(scrolled)
-        self.connect("delete-event", self._on_delete_event)
-        self.connect("map", lambda _w: GLib.idle_add(self._move_bottom_right))
-
-    def _move_bottom_right(self):
-        display = self.get_display()
-        monitor = display.get_primary_monitor()
-        if monitor is None:
-            return
-        geometry = monitor.get_geometry()
-        width, height = self.get_size()
-        self.move(
-            geometry.x + geometry.width - width,
-            geometry.y + geometry.height - height,
-        )
-        return GLib.SOURCE_REMOVE
-
-    def _on_delete_event(self, _widget, _event):
-        return True
+        self.pack_start(scrolled, True, True, 0)
 
     def _update(self):
-        if not self.Controller.allows:
-            self.header.set_subtitle("")
-            self.hide()
-            return
-
-        self.header.set_subtitle(_("%d connected") % len(self.Controller.allows))
-
         for child in self.grid.get_children():
             self.grid.remove(child)
+
+        if not self.Controller.allows:
+            self.counter.set_text(_("No connected clients"))
+            self.grid.show_all()
+            return
+
+        self.counter.set_text(_("%d connected") % len(self.Controller.allows))
 
         row = 0
         if "WAYLAND_DISPLAY" in os.environ:

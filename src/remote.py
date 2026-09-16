@@ -26,7 +26,7 @@ from translate import gen_translate
 from Control import Control
 
 class RemoteControl:
-    def __init__(self, address="ws://localhost:8765/room1", port=8000, user_dir=None):
+    def __init__(self, address="ws://localhost:8765/room1", port=8000, user_dir=None, clients=None):
         self.address = address
         self.port = port
         self.user_dir = user_dir or os.path.join(BASE_DIR, "user")
@@ -35,6 +35,7 @@ class RemoteControl:
         self.window = None
         self.ws_server = None
         self.client = None
+        self.clients_box = clients
 
     def _serve_http(self):
         user_dir = self.user_dir
@@ -84,7 +85,7 @@ class RemoteControl:
         return GLib.SOURCE_REMOVE
 
     def start(self):
-        self.window = Control()
+        self.window = Control(clients=self.clients_box)
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._shutdown)
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self._shutdown)
         self._spawn(self._run_server)

@@ -22,13 +22,31 @@ all_permissions = {
     "file": ["file"]
 }
 
-class Control(Gtk.Window):
-    def __init__(self):
-        super().__init__()
+class Control:
+    def __init__(self, clients=None):
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.allows = {}
-        self.clients = Clients(self)
+        self.clients = clients or Clients(self)
+        if self.clients.Controller is None:
+            self.clients.Controller = self
         self.ws = None
+
+    def _stack(self):
+        return self.clients.get_parent()
+
+    def _show_clients(self):
+        stack = self._stack()
+        if stack is not None:
+            stack.set_visible_child(self.clients)
+        toplevel = self.clients.get_toplevel()
+        if isinstance(toplevel, Gtk.Window):
+            toplevel.show_all()
+            toplevel.present()
+
+    def _show_main(self):
+        stack = self._stack()
+        if stack is not None:
+            stack.set_visible_child_name("main")
 
     def _update_ui(self):
         if threading.current_thread() is not threading.main_thread():
@@ -68,7 +86,7 @@ class Control(Gtk.Window):
 
     def _connect(self, data, client_id):
         self.allows[client_id] = {"perm":[], "data":data}
-        self.clients.show_all()
+        self._show_clients()
         if self.settings.get_boolean("auto-allow"):
             self.set_permission("image", client_id, True)
         else:
@@ -78,6 +96,8 @@ class Control(Gtk.Window):
     def _disconnect(self, client_id):
         if client_id in self.allows.keys():
             self.allows.pop(client_id)
+        if not self.allows:
+            self._show_main()
         self._update_ui()
 
     def control(self, ctx):
