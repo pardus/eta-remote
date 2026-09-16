@@ -32,12 +32,19 @@ def pulse_start():
         )
 
 empty = b'\0'*4096
-def record_audio():
+def record_audio(stop_event=None):
     while True:
         if proc is None:
+            if stop_event is not None and stop_event.is_set():
+                return
             time.sleep(1)
             continue
-        data = proc.stdout.read(4096)
+        try:
+            data = proc.stdout.read(4096)
+        except:
+            if stop_event is not None and stop_event.is_set():
+                return
+            break
         if data in empty:
             continue
         yield data
@@ -49,8 +56,8 @@ def pulse_stop():
     os.killpg(proc.pid, signal.SIGKILL)
     proc = None
 
-def main(handler=None):
-    for data in record_audio():
+def main(handler=None, stop_event=None):
+    for data in record_audio(stop_event):
         message = json.dumps(
             {
                 "type": "audio",

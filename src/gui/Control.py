@@ -126,6 +126,3 @@ class Control(Gtk.Window):
             return True
 
         return False
-
-    def run(self):
-        Gtk.main()

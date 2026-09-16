@@ -56,5 +56,7 @@ class Application(Gtk.Application):
         return 0
 
 
-app = Application()
-app.run(sys.argv)
+if __name__ == "__main__":
+    GLib.set_prgname("tr.org.pardus.eta-remote")
+    app = Application()
+    app.run(sys.argv)

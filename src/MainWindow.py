@@ -1,6 +1,5 @@
 import sys
 import os
-import signal
 import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
@@ -16,11 +15,11 @@ except:
 
 
 
-import subprocess
-
 import utils
 
 from i18n import _
+
+from remote import RemoteControl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -40,7 +39,7 @@ class MainWindow(Gtk.Window):
         header.set_title(_("Remote Control"))
 
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
-        self.pid = 0
+        self.remote = None
         self.started = False
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -181,12 +180,9 @@ class MainWindow(Gtk.Window):
         return True
 
     def on_start(self, _btn):
-        if self.pid == 0:
-            process = subprocess.Popen(
-                [sys.executable, f"{BASE_DIR}/__main__.py"],
-                start_new_session=True,
-            )
-            self.pid = process.pid
+        if self.remote is None:
+            self.remote = RemoteControl()
+            self.remote.start()
         self.started = True
         self.start_btn.set_sensitive(False)
         self.stop_btn.set_sensitive(True)
@@ -195,12 +191,9 @@ class MainWindow(Gtk.Window):
         self.indicator.set_icon(("tr.org.pardus.eta-remote-started"))
 
     def _on_stop(self, _btn):
-        if self.pid != 0:
-            try:
-                os.killpg(self.pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass
-            self.pid = 0
+        if self.remote is not None:
+            self.remote.stop()
+            self.remote = None
         self.started = False
         self.start_btn.set_sensitive(True)
         self.stop_btn.set_sensitive(False)

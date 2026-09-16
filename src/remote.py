@@ -9,7 +9,7 @@ import threading
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GLib
+from gi.repository import GLib
 
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
@@ -33,6 +33,8 @@ class RemoteControl:
         self.httpd = None
         self.threads = []
         self.window = None
+        self.ws_server = None
+        self.client = None
 
     def _serve_http(self):
         user_dir = self.user_dir
@@ -64,14 +66,13 @@ class RemoteControl:
 
     def _run_server(self):
         import server
-        server.main()
+        with server.serve(server.handler, "0.0.0.0", 8765, max_size=None) as ws_server:
+            self.ws_server = ws_server
+            ws_server.serve_forever()
 
     def _run_client(self):
-        ws = WebSocketClient(self.address, PipeUInputHandler().handle, self.window.control)
-        ws.run()
-
-    def _run_client_gtk(self):
-        self.window.run()
+        self.client = WebSocketClient(self.address, PipeUInputHandler().handle, self.window.control)
+        self.client.run()
 
     def _spawn(self, target):
         t = threading.Thread(target=target, daemon=True)
@@ -89,11 +90,15 @@ class RemoteControl:
         self._spawn(self._run_server)
         self._spawn(self._serve_http)
         self._spawn(self._run_client)
-        self._run_client_gtk()
 
     def stop(self):
+        if self.client:
+            self.client.stop()
         if self.httpd:
             self.httpd.shutdown()
-        if self.window:
-            Gtk.main_quit()
+        if self.ws_server:
+            self.ws_server.shutdown()
+        self.ws_server = None
+        self.httpd = None
+        self.client = None
         self.threads.clear()

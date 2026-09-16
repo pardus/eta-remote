@@ -116,7 +116,11 @@ def set_quality(quality):
     QUALITY = q
     request_full()
 
-def main(handler=None):
+def _should_stop(stop_event):
+    return stop_event is not None and stop_event.is_set()
+
+
+def main(handler=None, stop_event=None):
     global req_full
     global img_width
     global img_height
@@ -124,7 +128,7 @@ def main(handler=None):
     img_width = previous_image.width
     img_height = previous_image.height
 
-    while True:
+    while not _should_stop(stop_event):
         try:
             cur = time.time()
             current_image = grab_rgb()
@@ -158,6 +162,8 @@ def main(handler=None):
             print("\nStopped.")
             break
         except:
+            if _should_stop(stop_event):
+                break
             print(traceback.format_exc())
             display_close()
             time.sleep(3)
