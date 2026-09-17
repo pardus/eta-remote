@@ -316,4 +316,3 @@ class MainWindow(Gtk.Window):
 
     def _on_settings_toggled(self, _switch, state, name):
         self.settings.set_boolean(name, state)
-        return True

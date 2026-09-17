@@ -224,7 +224,6 @@ class Clients(Gtk.Box):
             self._update()
             return
         self.Controller.set_permission(perm, client_id, state)
-        return True
 
     def _on_kick(self, _btn, client_id):
         if self.Controller.is_user_input():
