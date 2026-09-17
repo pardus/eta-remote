@@ -142,7 +142,7 @@ def _parse_symbols(text):
         syms = [s.strip() for s in sm.group(1).split(",")]
         syms = [s for s in syms if s and s != "VoidSymbol"]
         if syms:
-            result[name] = syms[0]
+            result[name] = syms
     return result
 
 
@@ -167,7 +167,10 @@ def build_keymap():
     keymap = {}
     for code, xkb in CODE_TO_XKB.items():
         symbol = syms.get(xkb)
-        keymap[code] = _keysym_to_text(symbol) if symbol else code
+        keymap[code] = []
+        for sym in symbol:
+            key = _keysym_to_text(sym) if sym else code
+            keymap[code].append(key)
     return keymap
 
 

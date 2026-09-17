@@ -15,6 +15,7 @@ const VirtualKeyboard = (() => {
     let visible = false;
     let container = null;
     let fnActive = false;
+    let latches = {};
     let fnKeys = [];
 
     const serverLabels = {};
@@ -57,7 +58,13 @@ const VirtualKeyboard = (() => {
     };
 
     function label(code) {
-        if (serverLabels[code] != null) return serverLabels[code];
+        let n = 0;
+        if (latches["ShiftLeft"] || latches["ShiftRight"]) n += 1;
+        if (latches["AltRight"]) n += 2;
+        if (serverLabels[code] != null){
+            if (serverLabels[code].length <= n) n=0;
+            return serverLabels[code][n];
+        }
         if (DISPLAY[code] != null) return DISPLAY[code];
         if (/^Key[A-Z]$/.test(code)) return code[3];
         if (/^Digit[0-9]$/.test(code)) return code[5];
@@ -80,8 +87,10 @@ const VirtualKeyboard = (() => {
     // Latch: tap -> down, tap again -> up.
     function latch(btn) {
         btn.latched = !btn.latched;
+        latches[btn.code] = btn.latched;
         btn.classList.toggle("active", btn.latched);
         send(btn.latched ? "down" : "up", btn.code);
+        container.querySelectorAll(".key").forEach(btn => refresh(btn));
     }
 
     function setFn(on) {
