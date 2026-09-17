@@ -59,6 +59,7 @@ class Control:
 
     def set_permission(self, perm, client_id, status, force=False):
         if (time.time() - self.allows[client_id]["time"] < 1) and not force:
+            self._update_ui()
             return
         if perm not in all_permissions:
             return
@@ -131,7 +132,7 @@ class Control:
             print(traceback.format_exc())
             return False
 
-        if client_id in self.allows.keys():
+        if client_id in self.allows.keys() and type in all_permissions["input"]:
             self.allows[client_id]["time"] = time.time()
 
         allowed = (client_id == None or client_id in data["target"])
