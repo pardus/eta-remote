@@ -12,14 +12,12 @@ if (isWindows || isApple) {
 }
 
 let client_id = null;
-
 let ws = null;
-
 let input_allowed = true;
-
 let connected = false;
-
 let perms = { input:true, audio: true, file: true, image: true };
+
+document.title = _("Remote Control");
 
 function handlePerms(message) {
     if (typeof message.audio === "boolean") perms.audio = message.audio;
@@ -80,6 +78,7 @@ function connect() {
         if (message.type === "ping") {
             if(client_id == null){
                 client_id = message.id;
+                document.title = _("Remote Control") + " - " + client_id;
             }
             handlePing(message.ping);
         } else if (message.type === "perms") {
