@@ -114,7 +114,7 @@ class Control:
                 ctx.wait = False
                 GLib.idle_add(self._connect, data, client_id)
             elif type == "disconnect":
-                ctx.wait = (len(self.allows.keys()) == 1)
+                ctx.wait = (len(self.allows.keys()) == 0)
                 GLib.idle_add(self._disconnect, client_id)
 
             data["target"] = []
