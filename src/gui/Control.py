@@ -57,12 +57,13 @@ class Control:
         print(json.dumps(self.allows, indent=2))
         self.clients._update()
 
-    def set_permission(self, perm, client_id, status, force=False):
-        if not force:
-            for cl in self.allows.keys():
-                if (time.time() - self.allows[cl]["time"] < 1):
-                    self._update_ui()
-                    return
+    def is_user_input(self):
+        for cl in self.allows.keys():
+            if (time.time() - self.allows[cl]["time"] < 0.3):
+                return True
+        return False
+
+    def set_permission(self, perm, client_id, status):
         if perm not in all_permissions:
             return
         if status:
@@ -97,7 +98,7 @@ class Control:
         self.allows[client_id] = {"perm":[], "data":data, "time": time.time()}
         self._show_clients()
         if self.settings.get_boolean("auto-allow"):
-            self.set_permission("image", client_id, True, True)
+            self.set_permission("image", client_id, True)
         else:
             NewConnection(self, data).show_all()
         self._notify_perms(client_id)

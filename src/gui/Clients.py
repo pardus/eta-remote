@@ -220,9 +220,14 @@ class Clients(Gtk.Box):
         return card
 
     def _on_permission(self, _switch, state, client_id, perm):
+        if self.Controller.is_user_input():
+            self._update()
+            return
         self.Controller.set_permission(perm, client_id, state)
         return True
 
     def _on_kick(self, _btn, client_id):
+        if self.Controller.is_user_input():
+            return
         self.Controller.ws.send(json.dumps({"kick": client_id}))
         GLib.idle_add(self.Controller._disconnect, client_id)
