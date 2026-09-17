@@ -58,9 +58,11 @@ class Control:
         self.clients._update()
 
     def set_permission(self, perm, client_id, status, force=False):
-        if (time.time() - self.allows[client_id]["time"] < 1) and not force:
-            self._update_ui()
-            return
+        if not force:
+            for cl in self.allows.keys():
+                if (time.time() - self.allows[cl]["time"] < 1):
+                    self._update_ui()
+                    return
         if perm not in all_permissions:
             return
         if status:
