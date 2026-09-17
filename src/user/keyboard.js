@@ -96,6 +96,10 @@ const VirtualKeyboard = (() => {
             btn.addEventListener("click", e => { e.preventDefault(); setFn(!fnActive); });
             return;
         }
+        if (btn.code === "Hide") {
+            btn.addEventListener("click", e => { e.preventDefault(); toggle() });
+            return;
+        }
         if (MODIFIERS.has(btn.code)) {
             btn.addEventListener("click", e => { e.preventDefault(); latch(btn); });
             return;
@@ -131,9 +135,6 @@ const VirtualKeyboard = (() => {
                 bind(btn);
                 rowEl.appendChild(btn);
                 if (FN[code]) fnKeys.push(btn);
-                if (code === "Hide") {
-                    btn.addEventListener("click", e => { e.preventDefault(); toggle(); });
-                }
 
             });
 
