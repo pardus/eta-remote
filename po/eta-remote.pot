@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 18:36+0300\n"
+"POT-Creation-Date: 2026-09-17 13:34+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,131 +17,12 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/user/control.js:99
-msgid "Keyboard"
-msgstr ""
-
-#: src/user/control.js:111
-msgid "Fullscreen"
-msgstr ""
-
-#: src/user/audio.js:66
-msgid "Sound: Blocked"
-msgstr ""
-
-#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
-msgid "Sound: Off"
-msgstr ""
-
-#: src/user/audio.js:82
-msgid "Sound: On"
-msgstr ""
-
-#: src/user/file.js:76
-msgid "File sharing is disabled"
-msgstr ""
-
-#: src/user/script.js:11
-msgid ""
-"Notice: This application may not work as intended on your current operating "
-"system. For the best performance and compatibility, we highly recommend "
-"using Linux."
-msgstr ""
-
-#: src/user/script.js:49
-msgid "Ping:"
-msgstr ""
-
-#: src/user/script.js:62
-msgid "Waiting for accept"
-msgstr ""
-
-#: src/user/script.js:98
-msgid "Connection Lost"
-msgstr ""
-
-#: src/user/script.js:162
-msgid "Input: Blocked"
-msgstr ""
-
-#: src/user/script.js:165 src/user/script.js:236 src/user/script.js:239
-msgid "Input: On"
-msgstr ""
-
-#: src/user/script.js:239
-msgid "Input : Off"
-msgstr ""
-
-#: src/user/viewer.js:75
-msgid "Image disabled"
-msgstr ""
-
-#: src/Main.py:25
-msgid "Start application in autostart mode"
-msgstr ""
-
-#: src/Main.py:34
-msgid "Start application and show window"
-msgstr ""
-
-#: src/gui/NewConnection.py:12
-msgid "New Connection"
-msgstr ""
-
-#: src/gui/NewConnection.py:30 src/gui/Clients.py:174
-msgid "Mobile"
-msgstr ""
-
-#: src/gui/NewConnection.py:60
-msgid "Deny"
-msgstr ""
-
-#: src/gui/NewConnection.py:61
-msgid "Allow"
-msgstr ""
-
-#: src/gui/Clients.py:15
-msgid "Input"
-msgstr ""
-
-#: src/gui/Clients.py:16
-msgid "Image"
-msgstr ""
-
-#: src/gui/Clients.py:17
-msgid "Audio"
-msgstr ""
-
-#: src/gui/Clients.py:18
-msgid "File"
-msgstr ""
-
-#: src/gui/Clients.py:68
-msgid "Unknown"
-msgstr ""
-
-#: src/gui/Clients.py:99 src/gui/Clients.py:122
-msgid "No connected clients"
-msgstr ""
-
-#: src/gui/Clients.py:126
-#, python-format
-msgid "%d connected"
-msgstr ""
-
-#: src/gui/Clients.py:130
-msgid "Warning: Wayland support is experimental and may be unstable."
-msgstr ""
-
-#: src/gui/Clients.py:214
-msgid "Kick"
-msgstr ""
-
 #: src/MainWindow.py:40 src/MainWindow.py:78
 msgid "Eta Remote Control"
 msgstr ""
 
 #: src/MainWindow.py:54 src/MainWindow.py:247 src/MainWindow.py:302
+#: src/user/script.js:20 src/user/script.js:81
 msgid "Remote Control"
 msgstr ""
 
@@ -195,4 +76,124 @@ msgstr ""
 
 #: src/MainWindow.py:299
 msgid "Remote Control - Running"
+msgstr ""
+
+#: src/user/audio.js:66
+msgid "Sound: Blocked"
+msgstr ""
+
+#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
+msgid "Sound: Off"
+msgstr ""
+
+#: src/user/audio.js:82
+msgid "Sound: On"
+msgstr ""
+
+#: src/user/file.js:76
+msgid "File sharing is disabled"
+msgstr ""
+
+#: src/user/script.js:11
+msgid ""
+"Notice: This application may not work as intended on your current operating "
+"system. For the best performance and compatibility, we highly recommend "
+"using Linux."
+msgstr ""
+
+#: src/user/script.js:47
+msgid "Ping:"
+msgstr ""
+
+#: src/user/script.js:60
+msgid "Waiting for accept"
+msgstr ""
+
+#: src/user/script.js:97
+msgid "Connection Lost"
+msgstr ""
+
+#: src/user/script.js:161
+msgid "Input: Blocked"
+msgstr ""
+
+#: src/user/script.js:164 src/user/script.js:235 src/user/script.js:238
+msgid "Input: On"
+msgstr ""
+
+#: src/user/script.js:238
+msgid "Input : Off"
+msgstr ""
+
+#: src/user/viewer.js:75
+msgid "Image disabled"
+msgstr ""
+
+#: src/user/control.js:99
+msgid "Keyboard"
+msgstr ""
+
+#: src/user/control.js:111
+msgid "Fullscreen"
+msgstr ""
+
+#: src/Main.py:25
+msgid "Start application in autostart mode"
+msgstr ""
+
+#: src/Main.py:34
+msgid "Start application and show window"
+msgstr ""
+
+#: src/gui/Clients.py:15
+msgid "Input"
+msgstr ""
+
+#: src/gui/Clients.py:16
+msgid "Image"
+msgstr ""
+
+#: src/gui/Clients.py:17
+msgid "Audio"
+msgstr ""
+
+#: src/gui/Clients.py:18
+msgid "File"
+msgstr ""
+
+#: src/gui/Clients.py:68
+msgid "Unknown"
+msgstr ""
+
+#: src/gui/Clients.py:99 src/gui/Clients.py:122
+msgid "No connected clients"
+msgstr ""
+
+#: src/gui/Clients.py:126
+#, python-format
+msgid "%d connected"
+msgstr ""
+
+#: src/gui/Clients.py:130
+msgid "Warning: Wayland support is experimental and may be unstable."
+msgstr ""
+
+#: src/gui/Clients.py:174 src/gui/NewConnection.py:30
+msgid "Mobile"
+msgstr ""
+
+#: src/gui/Clients.py:214
+msgid "Kick"
+msgstr ""
+
+#: src/gui/NewConnection.py:12
+msgid "New Connection"
+msgstr ""
+
+#: src/gui/NewConnection.py:60
+msgid "Deny"
+msgstr ""
+
+#: src/gui/NewConnection.py:61
+msgid "Allow"
 msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 18:36+0300\n"
+"POT-Creation-Date: 2026-09-17 13:34+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,134 +16,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/user/control.js:99
-msgid "Keyboard"
-msgstr "Klavye"
-
-#: src/user/control.js:111
-msgid "Fullscreen"
-msgstr "Tam Ekran"
-
-#: src/user/audio.js:66
-msgid "Sound: Blocked"
-msgstr "Ses: Engellendi"
-
-#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
-msgid "Sound: Off"
-msgstr "Ses: Kapalı"
-
-#: src/user/audio.js:82
-msgid "Sound: On"
-msgstr "Ses: Açık"
-
-#: src/user/file.js:76
-msgid "File sharing is disabled"
-msgstr "Dosya paylaşımı devre dışı"
-
-#: src/user/script.js:11
-msgid ""
-"Notice: This application may not work as intended on your current operating "
-"system. For the best performance and compatibility, we highly recommend "
-"using Linux."
-msgstr ""
-"Uyarı: Bu uygulama, mevcut işletim sisteminizde beklendiği gibi "
-"çalışmayabilir. En iyi performans ve uyumluluk için Linux kullanmanızı "
-"şiddetle tavsiye ederiz."
-
-#: src/user/script.js:49
-msgid "Ping:"
-msgstr "Ping:"
-
-#: src/user/script.js:62
-msgid "Waiting for accept"
-msgstr "Kabul bekleniyor"
-
-#: src/user/script.js:98
-msgid "Connection Lost"
-msgstr "Bağlantı Kesildi"
-
-#: src/user/script.js:162
-msgid "Input: Blocked"
-msgstr "Girdi: Engellendi"
-
-#: src/user/script.js:165 src/user/script.js:236 src/user/script.js:239
-msgid "Input: On"
-msgstr "Girdi: Açık"
-
-#: src/user/script.js:239
-msgid "Input : Off"
-msgstr "Girdi: Kapalı"
-
-#: src/user/viewer.js:75
-msgid "Image disabled"
-msgstr "Görüntü devre dışı"
-
-#: src/Main.py:25
-msgid "Start application in autostart mode"
-msgstr "Uygulamayı başlagıçta çalışma modunda aç"
-
-#: src/Main.py:34
-msgid "Start application and show window"
-msgstr "Uygulamayı başlat ve pencereyi göster"
-
-#: src/gui/NewConnection.py:12
-msgid "New Connection"
-msgstr "Yeni Bağlantı"
-
-#: src/gui/NewConnection.py:30 src/gui/Clients.py:174
-msgid "Mobile"
-msgstr "Mobil"
-
-#: src/gui/NewConnection.py:60
-msgid "Deny"
-msgstr "Reddet"
-
-#: src/gui/NewConnection.py:61
-msgid "Allow"
-msgstr "Kabul et"
-
-#: src/gui/Clients.py:15
-msgid "Input"
-msgstr "Girdi"
-
-#: src/gui/Clients.py:16
-msgid "Image"
-msgstr "Görüntü"
-
-#: src/gui/Clients.py:17
-msgid "Audio"
-msgstr "Ses"
-
-#: src/gui/Clients.py:18
-msgid "File"
-msgstr "Dosya"
-
-#: src/gui/Clients.py:68
-msgid "Unknown"
-msgstr "Bilinmeyen"
-
-#: src/gui/Clients.py:99 src/gui/Clients.py:122
-msgid "No connected clients"
-msgstr "Bağlı istemci yok"
-
-#: src/gui/Clients.py:126
-#, python-format
-msgid "%d connected"
-msgstr "%d bağlandı"
-
-#: src/gui/Clients.py:130
-msgid "Warning: Wayland support is experimental and may be unstable."
-msgstr "Uyarı: Wayland desteği deneyseldir ve stabil olmayabilir."
-
-#: src/gui/Clients.py:214
-msgid "Kick"
-msgstr "Tekmele"
-
 #: src/MainWindow.py:40 src/MainWindow.py:78
 msgid "Eta Remote Control"
 msgstr "Eta Uzaktan Yönetim"
 
 #: src/MainWindow.py:54 src/MainWindow.py:247 src/MainWindow.py:302
+#: src/user/script.js:20 src/user/script.js:81
 msgid "Remote Control"
 msgstr "Uzaktan Yönetim"
 
@@ -153,7 +31,7 @@ msgstr "Bağlı İstemciler"
 
 #: src/MainWindow.py:85
 msgid "Scan a QR code with your phone or tablet to connect"
-msgstr ""
+msgstr "Bağlanmak için bir QR kodunu telefonunuz veya tabletiniz ile tarayın"
 
 #: src/MainWindow.py:119 src/MainWindow.py:260
 msgid "Start"
@@ -199,3 +77,125 @@ msgstr "Çıkış"
 msgid "Remote Control - Running"
 msgstr "Uzaktan Yönetim - Çalışıyor"
 
+#: src/user/audio.js:66
+msgid "Sound: Blocked"
+msgstr "Ses: Engellendi"
+
+#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
+msgid "Sound: Off"
+msgstr "Ses: Kapalı"
+
+#: src/user/audio.js:82
+msgid "Sound: On"
+msgstr "Ses: Açık"
+
+#: src/user/file.js:76
+msgid "File sharing is disabled"
+msgstr "Dosya paylaşımı devre dışı"
+
+#: src/user/script.js:11
+msgid ""
+"Notice: This application may not work as intended on your current operating "
+"system. For the best performance and compatibility, we highly recommend "
+"using Linux."
+msgstr ""
+"Uyarı: Bu uygulama, mevcut işletim sisteminizde beklendiği gibi "
+"çalışmayabilir. En iyi performans ve uyumluluk için Linux kullanmanızı "
+"şiddetle tavsiye ederiz."
+
+#: src/user/script.js:47
+msgid "Ping:"
+msgstr "Ping:"
+
+#: src/user/script.js:60
+msgid "Waiting for accept"
+msgstr "Kabul bekleniyor"
+
+#: src/user/script.js:97
+msgid "Connection Lost"
+msgstr "Bağlantı Kesildi"
+
+#: src/user/script.js:161
+msgid "Input: Blocked"
+msgstr "Girdi: Engellendi"
+
+#: src/user/script.js:164 src/user/script.js:235 src/user/script.js:238
+msgid "Input: On"
+msgstr "Girdi: Açık"
+
+#: src/user/script.js:238
+msgid "Input : Off"
+msgstr "Girdi: Kapalı"
+
+#: src/user/viewer.js:75
+msgid "Image disabled"
+msgstr "Görüntü devre dışı"
+
+#: src/user/control.js:99
+msgid "Keyboard"
+msgstr "Klavye"
+
+#: src/user/control.js:111
+msgid "Fullscreen"
+msgstr "Tam Ekran"
+
+#: src/Main.py:25
+msgid "Start application in autostart mode"
+msgstr "Uygulamayı başlagıçta çalışma modunda aç"
+
+#: src/Main.py:34
+msgid "Start application and show window"
+msgstr "Uygulamayı başlat ve pencereyi göster"
+
+#: src/gui/Clients.py:15
+msgid "Input"
+msgstr "Girdi"
+
+#: src/gui/Clients.py:16
+msgid "Image"
+msgstr "Görüntü"
+
+#: src/gui/Clients.py:17
+msgid "Audio"
+msgstr "Ses"
+
+#: src/gui/Clients.py:18
+msgid "File"
+msgstr "Dosya"
+
+#: src/gui/Clients.py:68
+msgid "Unknown"
+msgstr "Bilinmeyen"
+
+#: src/gui/Clients.py:99 src/gui/Clients.py:122
+msgid "No connected clients"
+msgstr "Bağlı istemci yok"
+
+#: src/gui/Clients.py:126
+#, python-format
+msgid "%d connected"
+msgstr "%d bağlandı"
+
+#: src/gui/Clients.py:130
+msgid "Warning: Wayland support is experimental and may be unstable."
+msgstr "Uyarı: Wayland desteği deneyseldir ve stabil olmayabilir."
+
+#: src/gui/Clients.py:174 src/gui/NewConnection.py:30
+msgid "Mobile"
+msgstr "Mobil"
+
+#: src/gui/Clients.py:214
+msgid "Kick"
+msgstr "Tekmele"
+
+#: src/gui/NewConnection.py:12
+msgid "New Connection"
+msgstr "Yeni Bağlantı"
+
+#: src/gui/NewConnection.py:60
+msgid "Deny"
+msgstr "Reddet"
+
+#: src/gui/NewConnection.py:61
+msgid "Allow"
+msgstr "Kabul et"
