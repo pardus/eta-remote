@@ -1,5 +1,6 @@
 import gi
 import json
+import time
 import threading
 import traceback
 
@@ -56,7 +57,9 @@ class Control:
         print(json.dumps(self.allows, indent=2))
         self.clients._update()
 
-    def set_permission(self, perm, client_id, status):
+    def set_permission(self, perm, client_id, status, force=False):
+        if (time.time() - self.allows[client_id]["time"] < 1) and not force:
+            return
         if perm not in all_permissions:
             return
         if status:
@@ -88,10 +91,10 @@ class Control:
             print(traceback.format_exc())
 
     def _connect(self, data, client_id):
-        self.allows[client_id] = {"perm":[], "data":data}
+        self.allows[client_id] = {"perm":[], "data":data, "time": time.time()}
         self._show_clients()
         if self.settings.get_boolean("auto-allow"):
-            self.set_permission("image", client_id, True)
+            self.set_permission("image", client_id, True, True)
         else:
             NewConnection(self, data).show_all()
         self._notify_perms(client_id)
@@ -127,6 +130,9 @@ class Control:
         except:
             print(traceback.format_exc())
             return False
+
+        if client_id in self.allows.keys():
+            self.allows[client_id]["time"] = time.time()
 
         allowed = (client_id == None or client_id in data["target"])
         if len(self.allows.keys()) == 0:
