@@ -86,17 +86,28 @@ KEYSYM_TEXT = {
     # Accented / international characters
     "EuroSign": "€",
     "idotless": "ı",  "i": "ı",
-    "ssharp": "ß",    "gbreve": "ğ",   "Ubreve": "Ğ",
-    "scaron": "š",    "caron": "ˇ",
-    "scedilla": "ş",  "Scedilla": "Ş",
-    "ccedilla": "ç",  "Ccedilla": "Ç",
-    "adiaeresis": "ä", "Adiaeresis": "Ä",
-    "odiaeresis": "ö", "Odiaeresis": "Ö",
-    "udiaeresis": "ü", "Udiaeresis": "Ü",
+    "ssharp": "ß",    "gbreve": "ğ",   "Gbreve": "Ğ",
+    "scaron": "š",    "caron": "ˇ",  "ucircumflex": "û",
+    "scedilla": "ş",  "Scedilla": "Ş", "Ucircumflex": "Û",
+    "ccedilla": "ç",  "Ccedilla": "Ç", "Iabovedot": "I",
+    "adiaeresis": "ä", "Adiaeresis": "Ä", "icircumflex": "î",
+    "odiaeresis": "ö", "Odiaeresis": "Ö", "Icircumflex": "Î",
+    "udiaeresis": "ü", "Udiaeresis": "Ü", "acircumflex": "â",
+    "Acircumflex": "Â", "sterling": "£", "degree": "°",
+    "registered": "®", "yen": "¥", "ocircumflex": "ô",
+    "Ocircumflex": "Ô", "paragraph": "¶", "questiondown": "¿",
+    "plusminus": "±", "threequarters": "¾", "threeeighths": "⅜",
+    "onehalf": "½", "onequarter": "¼", "threesuperior": "³",
+    "twosuperior": "²", "exclamdown": "¡", "onesuperior": "¹",
+    "notsign": "¬", "acute": "´", "guillemotleft": "«",
+    "guillemotright": "»", "leftdoublequotemark": "“",
+    "cent": "¢", "rightdoublequotemark": "”", "mu": "µ",
+    "section": "§", "multiply": "×", "nobreakspace": " ",
+    "division": "÷", "periodcentered": "·","copyright": "©",
 
     # Special key labels
     "BackSpace": "⌫",   "Tab": "Tab ↹",    "Return": "Enter",
-    "Escape": "Esc",     "Delete": "Del",
+    "Escape": "Esc",     "Delete": "Del",  "ISO_Left_Tab": "Tab ↹",
     "Home": "Home",      "End": "End",
     "Up": "▲",           "Down": "▼",
     "Left": "◀",         "Right": "▶",
@@ -140,17 +151,24 @@ def _parse_symbols(text):
             continue
 
         syms = [s.strip() for s in sm.group(1).split(",")]
-        syms = [s for s in syms if s and s != "VoidSymbol"]
+        syms = [s for s in syms if s and s not in ["VoidSymbol", "NoSymbol"] and not s.startswith("dead")]
         if syms:
             result[name] = syms
     return result
 
+
+def is_hex(sym):
+    found = re.findall(r"[a-fA-F0-9]", sym)
+    return len(found) > 0 and "".join(found) == sym
 
 def _keysym_to_text(sym):
     """Convert an X11 keysym name to a human-readable label."""
     sym = sym.strip()
     if sym in KEYSYM_TEXT:
         return KEYSYM_TEXT[sym]
+    # Unicode. Example U20BA
+    if sym.startswith("U") and is_hex(sym[1:]):
+        return str(chr(int(sym[1:],16)))
     # Single letters / digits pass through unchanged.
     if re.fullmatch(r"[a-zA-Z0-9]", sym):
         return sym
