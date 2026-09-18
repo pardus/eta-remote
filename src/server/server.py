@@ -82,20 +82,21 @@ def handler(websocket):
     finally:
         with rooms_lock:
             clients.discard(client)
-
             if not clients:
                 rooms.pop(path, None)
-            else:
-                message = {"type": "disconnect", "id": client.id}
-                message = json.dumps(message)
+                return
 
-                for remaining in clients:
-                    try:
-                        remaining.websocket.send(message)
-                    except ConnectionClosed:
-                        clients.discard(remaining)
+        message = {"type": "disconnect", "id": client.id}
+        message = json.dumps(message)
 
-            print(f"Client left {path}; id={client.id} clients={len(clients)}")
+        for remaining in clients:
+            try:
+                remaining.websocket.send(message)
+            except ConnectionClosed:
+                with rooms_lock:
+                    clients.discard(remaining)
+
+        print(f"Client left {path}; id={client.id} clients={len(clients)}")
 
 
 def main():
