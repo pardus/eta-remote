@@ -31,7 +31,6 @@ def pulse_start():
             start_new_session=True
         )
 
-empty = b'\0'*4096
 def record_audio(stop_event=None):
     while True:
         if proc is None:
@@ -45,7 +44,7 @@ def record_audio(stop_event=None):
             if stop_event is not None and stop_event.is_set():
                 return
             break
-        if data in empty:
+        if data.count(b'\0') == len(data):
             continue
         yield data
 
