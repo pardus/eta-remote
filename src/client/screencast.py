@@ -149,3 +149,4 @@ class PipeWireCaptureBase:
             self._sink = None
         self._close_session()
         self._connection = None
+        self._frame_event.set()
