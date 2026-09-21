@@ -41,6 +41,14 @@ def handler(websocket):
         if len(clients) == 1:
             admin = True
 
+    def _send(client):
+        try:
+            client.websocket.send(message)
+        except ConnectionClosed:
+            with rooms_lock:
+                clients.discard(client)
+
+
     try:
         for message in websocket:
             # Forward the message to every other client in this room
@@ -70,11 +78,7 @@ def handler(websocket):
             message = json.dumps(message)
 
             for recipient in recipients:
-                try:
-                    recipient.websocket.send(message)
-                except ConnectionClosed:
-                    with rooms_lock:
-                        clients.discard(recipient)
+                threading.Thread(target=_send, args=(recipient,)).start()
 
     except:
         print(traceback.format_exc())
@@ -90,11 +94,7 @@ def handler(websocket):
         message = json.dumps(message)
 
         for remaining in clients:
-            try:
-                remaining.websocket.send(message)
-            except ConnectionClosed:
-                with rooms_lock:
-                    clients.discard(remaining)
+            threading.Thread(target=_send, args=(remaining,)).start()
 
         print(f"Client left {path}; id={client.id} clients={len(clients)}")
 
