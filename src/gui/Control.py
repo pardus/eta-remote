@@ -138,7 +138,7 @@ class Control:
         if client_id in self.allows.keys() and type in all_permissions["input"]:
             self.allows[client_id]["time"] = time.time()
 
-        allowed = (client_id == None or client_id in data["target"])
+        allowed = (client_id == None or client_id in data["target"] or type in ["connect", "disconnect"])
         if len(self.allows.keys()) == 0:
             allowed = False
 

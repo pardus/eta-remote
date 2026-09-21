@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import json
+import time
 import os
 import traceback
 from evdev import UInput, AbsInfo
@@ -226,6 +227,7 @@ class UInputHandler:
             except:
                 print(traceback.format_exc())
         self._devices = []
+        time.sleep(0.3)
         self._init_devices()
 
     def _alloc_slot(self, tracking_id):
