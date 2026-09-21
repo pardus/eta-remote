@@ -1,5 +1,6 @@
 import json
 import queue
+import copy
 import threading
 import time
 from websockets.sync.client import connect
@@ -32,9 +33,10 @@ class WebSocketClient:
 
     def client(self):
         try:
+            ctx = copy.copy(self.ctx)
             for message in self.ctx.websocket:
-                self.ctx.message = message
-                if self.control(self.ctx):
+                ctx.message = message
+                if self.control(ctx):
                     if "request_full" in message:
                         request_full()
                     elif "quality" in message:
@@ -42,27 +44,28 @@ class WebSocketClient:
                         set_quality(data.get("quality", 80))
                     else:
                         self.handler(message)
-                if self._wait_last != self.ctx.wait:
-                    if not self.ctx.wait:
+                if self._wait_last != ctx.wait:
+                    self.ctx.wait = ctx.wait
+                    if not ctx.wait:
                         self._start()
                     else:
                         self._stop()
-                    self._wait_last = self.ctx.wait
+                    self._wait_last = ctx.wait
         except ConnectionClosed:
             pass
         except:
             print(traceback.format_exc())
 
-
     def sender(self, q):
+        ctx = copy.copy(self.ctx)
         while True:
             try:
                 message = q.get()
                 if message is None:
                     return
-                self.ctx.message = message
-                if self.control(self.ctx):
-                    self.ctx.websocket.send(self.ctx.message)
+                ctx.message = message
+                if self.control(ctx):
+                    ctx.websocket.send(ctx.message)
             except:
                 print(traceback.format_exc())
 
