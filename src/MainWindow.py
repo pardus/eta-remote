@@ -256,14 +256,13 @@ class MainWindow(Gtk.Window):
 
         menu.append(Gtk.SeparatorMenuItem())
 
-        if not self.started:
-            start_item = Gtk.MenuItem(label=_("Start"))
-            start_item.connect("activate", lambda _: self.on_start(None))
-            menu.append(start_item)
-        else:
-            stop_item = Gtk.MenuItem(label=_("Stop"))
-            stop_item.connect("activate", lambda _: self._on_stop(None))
-            menu.append(stop_item)
+        self.start_item = Gtk.MenuItem(label=_("Start"))
+        self.start_item.connect("activate", lambda _: self.on_start(None))
+        menu.append(self.start_item)
+
+        self.stop_item = Gtk.MenuItem(label=_("Stop"))
+        self.stop_item.connect("activate", lambda _: self._on_stop(None))
+        menu.append(self.stop_item)
 
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -272,6 +271,10 @@ class MainWindow(Gtk.Window):
         menu.append(quit_item)
 
         menu.show_all()
+
+        self.start_item.set_visible(not self.started)
+        self.stop_item.set_visible(self.started)
+
         return menu
 
     def _on_quit(self, widget):
@@ -301,6 +304,10 @@ class MainWindow(Gtk.Window):
         else:
             self.indicator.set_title(_("Remote Control"))
             self.indicator.set_icon("tr.org.pardus.eta-remote-stopped")
+
+        self.start_item.set_visible(not self.started)
+        self.stop_item.set_visible(self.started)
+
 
     def on_start(self, _btn):
         if self.remote is None:
