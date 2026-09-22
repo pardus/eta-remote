@@ -18,7 +18,7 @@ from Clients import Clients
 all_permissions = {
     "audio":["audio"],
     "input":[
-        "mouse", "key", "touch", "wheel"
+        "mouse", "key", "touch", "wheel", "touchpad"
     ],
     "image": ["image", "request_full"],
     "misc": ["quality"],

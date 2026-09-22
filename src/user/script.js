@@ -17,6 +17,8 @@ let input_allowed = true;
 let connected = false;
 let perms = { input:true, audio: true, file: true, image: true };
 
+let touch_mode = "touch";
+
 document.title = _("Remote Control");
 
 function handlePerms(message) {
@@ -140,7 +142,7 @@ for (const action of TOUCH_ACTIONS) {
                 identifier: touch.identifier
             }));
             if(input_allowed){
-                send("touch", {
+                send(touch_mode, {
                     action,
                     touches
                 });

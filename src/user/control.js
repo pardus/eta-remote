@@ -131,6 +131,21 @@ function initFloatingControls() {
             setPosition(p.left, p.top);
         }
     });
+
+    const touch_mode_button = document.createElement("button");
+    touch_mode_button.id = "fc-touch-mode";
+    touch_mode_button.textContent = _("Touch: Direct");
+    touch_mode_button.addEventListener("click", () => {
+        if (touch_mode == "touch"){
+            touch_mode = "touchpad";
+            touch_mode_button.textContent = _("Touch: Touchpad");
+        } else if (touch_mode == "touchpad"){
+            touch_mode = "touch";
+            touch_mode_button.textContent = _("Touch: Direct");
+        }
+    });
+    menu.appendChild(touch_mode_button);
+
 }
 
 initFloatingControls();

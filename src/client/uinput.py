@@ -2,9 +2,14 @@
 import json
 import time
 import os
+import sys
 import traceback
 from evdev import UInput, AbsInfo
 from evdev import ecodes as E
+
+sys.path.insert(0, os.path.dirname(__file__))
+
+from touchpad import touchpad
 
 SCREEN_WIDTH = int(os.environ.get("REMOTE_SCREEN_WIDTH", 3840))
 SCREEN_HEIGHT = int(os.environ.get("REMOTE_SCREEN_HEIGHT", 2160))
@@ -136,6 +141,8 @@ class UInputHandler:
     def __init__(self):
         self._devices = []
         self._init_devices()
+        _touchpad = touchpad(lambda x: self._send(self.mouse, x))
+        self._handle_touchpad = _touchpad.handle_touchpad
 
     def _init_devices(self):
         self.touch = _create_device(
@@ -207,18 +214,23 @@ class UInputHandler:
         data = json.loads(message)
         event_type = data.get("type")
 
-        if event_type == "touch":
-            self._handle_touch(data)
-        elif event_type == "mouse":
-            self._handle_mouse(data)
-        elif event_type == "wheel":
-            self._handle_wheel(data)
-        elif event_type == "mouse_rel":
-            self._handle_mouse_rel(data)
-        elif event_type == "key":
-            self._handle_key(data)
-        elif event_type == "disconnect":
-            self._handle_disconnect()
+        try:
+            if event_type == "touch":
+                self._handle_touch(data)
+            elif event_type == "touchpad":
+                self._handle_touchpad(data)
+            elif event_type == "mouse":
+                self._handle_mouse(data)
+            elif event_type == "wheel":
+                self._handle_wheel(data)
+            elif event_type == "mouse_rel":
+                self._handle_mouse_rel(data)
+            elif event_type == "key":
+                self._handle_key(data)
+            elif event_type == "disconnect":
+                self._handle_disconnect()
+        except:
+            print(traceback.format_exc())
 
     def _handle_disconnect(self):
         for device in self._devices:
