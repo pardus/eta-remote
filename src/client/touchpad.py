@@ -5,7 +5,7 @@ BUTTONS = [E.BTN_LEFT, E.BTN_RIGHT, E.BTN_MIDDLE]
 
 class touchpad:
     def __init__(self, sender):
-        self.pos = {"x": 0, "y": 0}
+        self.pos = {"x": 0, "y": 0, "v": 0}
         self.count = 0
         self.count_max = 0
         self.moved = False
@@ -30,9 +30,21 @@ class touchpad:
                 if tid == 0:
                     self.pos = {
                         "x": t.get("x", 0),
-                        "y": t.get("y", 0)
+                        "y": t.get("y", 0),
+                        "v": -1
                     }
         elif action == "touchmove":
+            if len(touches) > 1:
+                v = 0
+                for t in touches:
+                    v += t.get("y", 0)
+                v = v / len(touches)
+                dv = v - self.pos["v"]
+                if self.pos["v"] > 0:
+                    events += [
+                        (E.EV_REL, E.REL_WHEEL_HI_RES, int(dv*-5))
+                    ]
+                self.pos["v"] = v
             for t in touches:
                 if t.get("identifier", -1) == 0:
                     x = t.get("x", 0)
@@ -40,11 +52,13 @@ class touchpad:
                     dx = x - self.pos["x"]
                     dy = y - self.pos["y"]
                     if dx != 0 or dy != 0:
-                        events += [
-                            (E.EV_REL, E.REL_X, dx),
-                            (E.EV_REL, E.REL_Y, dy),
-                        ]
-                        self.pos = {"x": x, "y": y}
+                        if len(touches) == 1:
+                            events += [
+                                (E.EV_REL, E.REL_X, dx),
+                                (E.EV_REL, E.REL_Y, dy),
+                            ]
+                        self.pos["x"] = x
+                        self.pos["y"] = y
                         self.moved = True
         elif action == "touchend":
             self.count -= 1
