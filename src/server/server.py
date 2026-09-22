@@ -13,6 +13,7 @@ import json
 
 rooms: dict[str, set] = {}
 rooms_lock = threading.Lock()
+clients_lock = threading.Lock()
 
 
 def get_uid():
@@ -46,7 +47,8 @@ def handler(websocket):
             client.websocket.send(message)
         except ConnectionClosed:
             with rooms_lock:
-                clients.discard(client)
+                with clients_lock:
+                    clients.discard(client)
 
 
     try:
@@ -60,20 +62,23 @@ def handler(websocket):
                 continue
 
             if "kick" in message and admin:
-                for kicked in clients.copy():
-                    if kicked.id == message.get("kick", None):
-                        print("kick", kicked.id)
-                        kicked.websocket.close()
-                        clients.discard(kicked)
+                with clients_lock:
+                    for kicked in clients.copy():
+                        if kicked.id == message.get("kick", None):
+                            print("kick", kicked.id)
+                            kicked.websocket.close()
+                            clients.discard(kicked)
 
             if "target" in message:
-                recipients = set()
-                for recipient in clients:
-                    for target in message.get("target", []):
-                        if target == recipient.id:
-                            recipients.add(recipient)
+                with clients_lock:
+                    recipients = set()
+                    for recipient in clients:
+                        for target in message.get("target", []):
+                            if target == recipient.id:
+                                recipients.add(recipient)
             else:
-                recipients = clients - {client}
+                with clients_lock:
+                    recipients = clients - {client}
 
             message = json.dumps(message)
 

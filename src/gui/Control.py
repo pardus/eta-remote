@@ -15,6 +15,8 @@ from gi.repository import Gtk, GLib, Gio
 from NewConnection import NewConnection
 from Clients import Clients
 
+allow_lock = threading.RLock()
+
 all_permissions = {
     "audio":["audio"],
     "input":[
@@ -58,34 +60,35 @@ class Control:
         self.clients._update()
 
     def is_user_input(self):
-        for cl in self.allows.keys():
-            if (time.time() - self.allows[cl]["time"] < 0.3):
-                return True
+        with allow_lock:
+            for cl in self.allows.keys():
+                if (time.time() - self.allows[cl]["time"] < 0.3):
+                    return True
         return False
 
     def set_permission(self, perm, client_id, status):
         if perm not in all_permissions:
             return
-        if status:
-            if perm not in self.allows[client_id]["perm"]:
-                self.allows[client_id]["perm"].append(perm)
-        else:
-            if perm in self.allows[client_id]["perm"]:
-                self.allows[client_id]["perm"].remove(perm)
+        with allow_lock:
+            if status:
+                if perm not in self.allows[client_id]["perm"]:
+                    self.allows[client_id]["perm"].append(perm)
+            else:
+                if perm in self.allows[client_id]["perm"]:
+                    self.allows[client_id]["perm"].remove(perm)
         self._update_ui()
         self._notify_perms(client_id)
 
     def _notify_perms(self, client_id):
+        with allow_lock:
+            perms = self.allows.get(client_id, {}).get("perm", [])
         if self.ws is None:
             return
-        perms = self.allows.get(client_id, {}).get("perm", [])
+        perms = {"audio": "audio" in perms, "file": "file" in perms, "image": "image" in perms, "input": "input" in perms}
         msg = json.dumps({
             "type": "perms",
             "target": [client_id],
-            "audio": "audio" in perms,
-            "file": "file" in perms,
-            "image": "image" in perms,
-            "input": "input" in perms,
+            **perms
         })
         try:
             self.ws.send(msg)
@@ -95,7 +98,8 @@ class Control:
             print(traceback.format_exc())
 
     def _connect(self, data, client_id):
-        self.allows[client_id] = {"perm":[], "data":data, "time": time.time()}
+        with allow_lock:
+            self.allows[client_id] = {"perm":[], "data":data, "time": time.time()}
         self._show_clients()
         if self.settings.get_boolean("auto-allow"):
             self.set_permission("image", client_id, True)
@@ -104,8 +108,9 @@ class Control:
         self._notify_perms(client_id)
 
     def _disconnect(self, client_id):
-        if client_id in self.allows.keys():
-            self.allows.pop(client_id)
+        with allow_lock:
+            if client_id in self.allows.keys():
+                self.allows.pop(client_id)
         if not self.allows:
             self._show_main()
         self._update_ui()
@@ -124,23 +129,26 @@ class Control:
                 ctx.wait = (len(self.allows.keys()) == 0)
                 GLib.idle_add(self._disconnect, client_id)
 
-            data["target"] = []
-            for cl in self.allows.keys():
-                for perm in self.allows[cl].get("perm",[]) + ["misc"]:
-                    if type in all_permissions.get(perm, []):
-                        data["target"].append(cl)
-                        break
+            with allow_lock:
+                data["target"] = []
+                for cl in list(self.allows.keys()):
+                    for perm in self.allows[cl].get("perm",[]) + ["misc"]:
+                        if type in all_permissions.get(perm, []):
+                            data["target"].append(cl)
+                            break
             ctx.message = json.dumps(data)
         except:
             print(traceback.format_exc())
             return False
 
-        if client_id in self.allows.keys() and type in all_permissions["input"]:
-            self.allows[client_id]["time"] = time.time()
+        with allow_lock:
+            if client_id in self.allows.keys() and type in all_permissions["input"]:
+                self.allows[client_id]["time"] = time.time()
 
         allowed = (client_id == None or client_id in data["target"] or type in ["connect", "disconnect"])
-        if len(self.allows.keys()) == 0:
-            allowed = False
+        with allow_lock:
+            if len(self.allows.keys()) == 0:
+                allowed = False
 
         if not allowed:
             return False
