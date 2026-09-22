@@ -84,9 +84,14 @@ class Control:
             perms = self.allows.get(client_id, {}).get("perm", [])
         if self.ws is None:
             return
-        perms = {"audio": "audio" in perms, "file": "file" in perms, "image": "image" in perms, "input": "input" in perms}
+        perms = {
+                 "audio" : "audio" in perms,
+                 "file"  : "file"  in perms,
+                 "image" : "image" in perms,
+                 "input" : "input" in perms
+        }
         msg = json.dumps({
-            "type": "perms",
+            "type"  : "perms",
             "target": [client_id],
             **perms
         })
