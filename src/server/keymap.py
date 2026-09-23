@@ -8,6 +8,8 @@ import subprocess
 
 import traceback
 
+from i18n import _
+
 import json
 
 _data = {}
@@ -17,6 +19,32 @@ with open(os.path.dirname(__file__)+"/keymap.json", "r") as f:
 KEYSYM_TEXT = _data.get("KEYSYM_TEXT", [])
 CODE_TO_XKB = _data.get("CODE_TO_XKB", [])
 
+
+KEYSYM_TEXT.update({
+    "Shift_L": "Shift",
+    "Control_L": "Ctrl",
+    "Alt_L": "Alt",
+    "Meta_L": "Super",
+    "Super_L": "Super",
+    "ISO_Level3_Shift": "AltGr",
+    "BackSpace": "\u232b",
+    "Tab": "\u21b9",
+    "Return": "Enter",
+    "Escape": "Esc",
+    "Delete": "Del",
+    "Caps_Lock": "Caps",
+    "ISO_Left_Tab": "Tab \u21b9",
+    "Home": "Home",
+    "End": "End",
+    "Up": "\u25b2",
+    "Down": "\u25bc",
+    "Left": "\u25c0",
+    "Right": "\u25b6",
+    "Prior": "PgUp",
+    "Next": "PgDn",
+    "Print": "PrtSc",
+    "Hide": _("Hide")
+})
 
 # --- X11 helpers -------------------------------------------------------------
 
@@ -63,10 +91,13 @@ def _keysym_to_text(sym):
     """Convert an X11 keysym name to a human-readable label."""
     sym = sym.strip()
     if sym in KEYSYM_TEXT:
-        return KEYSYM_TEXT[sym]
+        sym = "U"+KEYSYM_TEXT[sym]
     # Unicode. Example U20BA
-    if sym.startswith("U") and is_hex(sym[1:]):
-        return str(chr(int(sym[1:],16)))
+    if sym.startswith("U"):
+        if is_hex(sym[1:]):
+            return str(chr(int(sym[1:],16)))
+        else:
+            return sym[1:]
     # Single letters / digits pass through unchanged.
     if re.fullmatch(r"[a-zA-Z0-9]", sym):
         return sym
