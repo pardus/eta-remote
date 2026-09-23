@@ -8,116 +8,14 @@ import subprocess
 
 import traceback
 
-# --- JS KeyboardEvent.code to xkb key name ----------------------------------
-# xkb names are evdev identifiers used by xkbcomp (e.g. AD01 = Q key).
+import json
 
-CODE_TO_XKB = {
-    # Special / modifier keys
-    "Escape":     "ESC",
-    "Backspace":  "BKSP",
-    "Tab":        "TAB",
-    "CapsLock":   "CAPS",
-    "Enter":      "RTRN",
-    "ShiftLeft":  "LFSH",
-    "ControlLeft":"LCTL",
-    "AltLeft":    "LALT",
-    "MetaLeft":   "LWIN",
-    "Space":      "SPCE",
-    "AltRight":   "RALT",
+_data = {}
+with open(os.path.dirname(__file__)+"/keymap.json", "r") as f:
+    _data = json.load(f)
 
-    # Top row – number keys
-    "Backquote":  "TLDE",
-    "Digit1": "AE01", "Digit2": "AE02", "Digit3": "AE03", "Digit4": "AE04",
-    "Digit5": "AE05", "Digit6": "AE06", "Digit7": "AE07", "Digit8": "AE08",
-    "Digit9": "AE09", "Digit0": "AE10",
-    "Minus": "AE11",  "Equal": "AE12",
-
-    # QWERTY row (top letter row)
-    "KeyQ": "AD01", "KeyW": "AD02", "KeyE": "AD03", "KeyR": "AD04",
-    "KeyT": "AD05", "KeyY": "AD06", "KeyU": "AD07", "KeyI": "AD08",
-    "KeyO": "AD09", "KeyP": "AD10",
-    "BracketLeft": "AD11", "BracketRight": "AD12", "Backslash": "BKSL",
-
-    # Home row
-    "KeyA": "AC01", "KeyS": "AC02", "KeyD": "AC03", "KeyF": "AC04",
-    "KeyG": "AC05", "KeyH": "AC06", "KeyJ": "AC07", "KeyK": "AC08",
-    "KeyL": "AC09", "Semicolon": "AC10", "Quote": "AC11",
-
-    # Bottom letter row
-    "KeyZ": "AB01", "KeyX": "AB02", "KeyC": "AB03", "KeyV": "AB04",
-    "KeyB": "AB05", "KeyN": "AB06", "KeyM": "AB07",
-    "Comma": "AB08", "Period": "AB09", "Slash": "AB10",
-
-    # Navigation
-    "Home": "HOME", "End": "END",
-    "PageUp": "PGUP", "PageDown": "PGDN",
-    "ArrowLeft": "LEFT", "ArrowDown": "DOWN",
-    "ArrowRight": "RGHT", "ArrowUp": "UP",
-
-    # Editing / misc
-    "Delete": "DELE", "PrintScreen": "PRSC",
-
-    # Function keys
-    "F1":  "FK01", "F2":  "FK02", "F3":  "FK03", "F4":  "FK04",
-    "F5":  "FK05", "F6":  "FK06", "F7":  "FK07", "F8":  "FK08",
-    "F9":  "FK09", "F10": "FK10", "F11": "FK11", "F12": "FK12",
-}
-
-# --- Keysym to display text --------------------------------------------------
-# Fallbacks for keysyms that don't render as plain Unicode characters.
-
-KEYSYM_TEXT = {
-    # Punctuation & symbols
-    "space": " ",    "minus": "-",    "equal": "=",
-    "plus": "+",     "asterisk": "*", "slash": "/",
-    "backslash": "\\", "comma": ",",  "period": ".",
-    "semicolon": ";", "colon": ":",
-    "quotedbl": '"', "apostrophe": "'", "grave": "`",
-    "asciitilde": "~", "exclam": "!",  "at": "@",
-    "numbersign": "#", "dollar": "$",  "percent": "%",
-    "asciicircum": "^", "ampersand": "&",
-    "parenleft": "(", "parenright": ")",
-    "underscore": "_",
-    "bracketleft": "[", "bracketright": "]",
-    "braceleft": "{",  "braceright": "}",
-    "bar": "|",  "less": "<",  "greater": ">",
-    "question": "?",
-
-    # Accented / international characters
-    "EuroSign": "€",
-    "idotless": "ı",  "i": "ı",
-    "ssharp": "ß",    "gbreve": "ğ",   "Gbreve": "Ğ",
-    "scaron": "š",    "caron": "ˇ",  "ucircumflex": "û",
-    "scedilla": "ş",  "Scedilla": "Ş", "Ucircumflex": "Û",
-    "ccedilla": "ç",  "Ccedilla": "Ç", "Iabovedot": "I",
-    "adiaeresis": "ä", "Adiaeresis": "Ä", "icircumflex": "î",
-    "odiaeresis": "ö", "Odiaeresis": "Ö", "Icircumflex": "Î",
-    "udiaeresis": "ü", "Udiaeresis": "Ü", "acircumflex": "â",
-    "Acircumflex": "Â", "sterling": "£", "degree": "°",
-    "registered": "®", "yen": "¥", "ocircumflex": "ô",
-    "Ocircumflex": "Ô", "paragraph": "¶", "questiondown": "¿",
-    "plusminus": "±", "threequarters": "¾", "threeeighths": "⅜",
-    "onehalf": "½", "onequarter": "¼", "threesuperior": "³",
-    "twosuperior": "²", "exclamdown": "¡", "onesuperior": "¹",
-    "notsign": "¬", "acute": "´", "guillemotleft": "«",
-    "guillemotright": "»", "leftdoublequotemark": "“",
-    "cent": "¢", "rightdoublequotemark": "”", "mu": "µ",
-    "section": "§", "multiply": "×", "nobreakspace": " ",
-    "division": "÷", "periodcentered": "·","copyright": "©",
-
-    # Special key labels
-    "BackSpace": "⌫",   "Tab": "Tab ↹",    "Return": "Enter",
-    "Escape": "Esc",     "Delete": "Del",  "ISO_Left_Tab": "Tab ↹",
-    "Home": "Home",      "End": "End",
-    "Up": "▲",           "Down": "▼",
-    "Left": "◀",         "Right": "▶",
-    "Prior": "PgUp",     "Next": "PgDn",
-    "Print": "PrtSc",
-    "Caps_Lock": "Caps", "Shift_L": "Shift",
-    "Control_L": "Ctrl", "Alt_L": "Alt",
-    "Meta_L": "Super",   "Super_L": "Super",
-    "ISO_Level3_Shift": "AltGr",
-}
+KEYSYM_TEXT = _data.get("KEYSYM_TEXT", [])
+CODE_TO_XKB = _data.get("CODE_TO_XKB", [])
 
 
 # --- X11 helpers -------------------------------------------------------------
