@@ -138,9 +138,13 @@ function initFloatingControls() {
     touch_mode_button.addEventListener("click", () => {
         if (touch_mode == "touch"){
             touch_mode = "touchpad";
+            capture.style.minHeight = "100vh";
+            capture.style.minWidth = "100vw";
             touch_mode_button.textContent = _("Touch: Touchpad");
         } else if (touch_mode == "touchpad"){
             touch_mode = "touch";
+            capture.style.minHeight = "0";
+            capture.style.minWidth = "0";
             touch_mode_button.textContent = _("Touch: Direct");
         }
     });
