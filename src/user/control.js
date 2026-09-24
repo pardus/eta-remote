@@ -88,18 +88,21 @@ function initFloatingControls() {
         }
     });
 
-
-    document.getElementById("fc-keyboard").addEventListener("click", (e) => {
+    const fc_keyboard = document.createElement("button");
+    fc_keyboard.addEventListener("click", (e) => {
         e.stopPropagation();
         if (typeof VirtualKeyboard !== "undefined") {
             VirtualKeyboard.toggle();
         }
         menu.classList.remove("show");
     });
-    document.getElementById("fc-keyboard").textContent = _("Keyboard")
+    fc_keyboard.textContent = _("Keyboard")
+    if (window.ontouchstart !== undefined){
+        menu.appendChild(fc_keyboard);
+    }
 
-
-    document.getElementById("fc-fullscreen").addEventListener("click", (e) => {
+    const fc_fullscreen = document.createElement("button");
+    fc_fullscreen.addEventListener("click", (e) => {
         e.stopPropagation();
         if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -108,12 +111,21 @@ function initFloatingControls() {
         }
         menu.classList.remove("show");
     });
-    document.getElementById("fc-fullscreen").textContent = _("Fullscreen")
-    const fc_quality = document.getElementById("fc-quality");
+    fc_fullscreen.textContent = _("Fullscreen")
+    menu.appendChild(fc_fullscreen);
+
+
+    const fc_quality = document.createElement("input");
+    fc_quality.type = "range";
+    fc_quality.min = 10;
+    fc_quality.max = 80;
+    fc_quality.value = 70;
     fc_quality.addEventListener("change", (e) => {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
         send("quality", {"quality": fc_quality.value});
     });
+
+    menu.appendChild(fc_quality);
 
     window.addEventListener("resize", () => {
         const p = getPosition();
@@ -148,7 +160,9 @@ function initFloatingControls() {
             touch_mode_button.textContent = _("Touch: Direct");
         }
     });
-    menu.appendChild(touch_mode_button);
+    if (window.ontouchstart !== undefined){
+        menu.appendChild(touch_mode_button);
+    }
 
 }
 

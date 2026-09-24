@@ -42,13 +42,15 @@ function pingCalculator(){
     setTimeout(pingCalculator, 1000); 
 }
 
-const fc_ping = document.getElementById("fc-ping");
+const fc_ping = document.createElement("div");
+fc_ping.id = "fc-ping";
 function handlePing(ping){
     const time_cur = performance.now()
     const fping = parseInt(time_cur - ping);
     fc_ping.innerText = _("Ping:")+" " + fping;
     wait_pong = false;
 }
+document.getElementById("fc-menu").appendChild(fc_ping);
 
 pingCalculator();
 function connect() {
