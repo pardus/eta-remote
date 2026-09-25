@@ -35,6 +35,7 @@ class RemoteControl:
         self.window = None
         self.ws_server = None
         self.client = None
+        self.pipe_uinput = None
         self.clients_box = clients
 
     def _serve_http(self):
@@ -72,7 +73,8 @@ class RemoteControl:
             ws_server.serve_forever()
 
     def _run_client(self):
-        self.client = WebSocketClient(self.address, PipeUInputHandler().handle, self.window.control)
+        self.pipe_uinput = PipeUInputHandler()
+        self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
         self.client.run()
 
     def _spawn(self, target):
@@ -99,7 +101,9 @@ class RemoteControl:
             self.httpd.shutdown()
         if self.ws_server:
             self.ws_server.shutdown()
+        self.pipe_uinput.stop()
         self.ws_server = None
         self.httpd = None
         self.client = None
+        del self.pipe_uinput
         self.threads.clear()

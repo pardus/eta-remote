@@ -16,6 +16,9 @@ class PipeUInputHandler:
             stdin=subprocess.PIPE,
         )
 
+    def stop(self):
+         self.worker.stdin.close()
+
     def handle(self, message):
         if self.worker.poll() is not None:
             return
