@@ -59,6 +59,13 @@ class Control:
         print(json.dumps(self.allows, indent=2))
         self.clients._update()
 
+    def stop(self):
+        self.allows = {}
+        if self.ws:
+            self.ws.close()
+        self.ws = None
+        self._update_ui()
+
     def is_user_input(self):
         with allow_lock:
             for cl in self.allows.keys():

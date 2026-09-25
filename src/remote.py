@@ -101,9 +101,11 @@ class RemoteControl:
             self.httpd.shutdown()
         if self.ws_server:
             self.ws_server.shutdown()
-        self.pipe_uinput.stop()
+        if self.pipe_uinput:
+            self.pipe_uinput.stop()
+        self.window.stop()
         self.ws_server = None
         self.httpd = None
         self.client = None
-        del self.pipe_uinput
+        self.pipe_uinput = None
         self.threads.clear()
