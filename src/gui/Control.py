@@ -31,6 +31,7 @@ class Control:
     def __init__(self, clients=None):
         self.settings = Gio.Settings.new("tr.org.pardus.eta-remote")
         self.allows = {}
+        self.ncs = {}
         self.clients = clients or Clients(self)
         self.clients.Controller = self
         self.ws = None
@@ -111,17 +112,22 @@ class Control:
 
     def _connect(self, data, client_id):
         with allow_lock:
-            self.allows[client_id] = {"perm":[], "data":data, "time": time.time()}
+            self.allows[client_id] = {"perm":[], "data":data, "time": time.time(), "new-connection": None}
         self._show_clients()
         if self.settings.get_boolean("auto-allow"):
             self.set_permission("image", client_id, True)
         else:
-            NewConnection(self, data).show_all()
+            nc = NewConnection(self, data)
+            self.ncs[client_id] = nc
+            nc.show_all()
         self._notify_perms(client_id)
 
     def _disconnect(self, client_id):
         with allow_lock:
             if client_id in self.allows.keys():
+                nc = self.ncs.get(client_id)
+                if nc:
+                    nc.destroy()
                 self.allows.pop(client_id)
         if not self.allows:
             self._show_main()
