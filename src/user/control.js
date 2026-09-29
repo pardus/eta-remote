@@ -160,9 +160,9 @@ function initFloatingControls() {
             touch_mode_button.textContent = _("Touch: Direct");
         }
     });
-    if (window.ontouchstart !== undefined){
+    /*if (window.ontouchstart !== undefined){*/
         menu.appendChild(touch_mode_button);
-    }
+    /*}*/
 
 }
 

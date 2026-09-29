@@ -1,6 +1,6 @@
 const warningContainer = document.createElement('div');
 warningContainer.id = 'warning-container';
-document.getElementById('capture').appendChild(warningContainer);
+document.body.appendChild(warningContainer);
 
 function warning(message, can_close){
     const dialog = document.createElement('div');
@@ -28,7 +28,7 @@ const status = document.createTextNode("");
 const status_div = document.createElement('div');
 status_div.className = 'status center';
 status_div.appendChild(status);
-document.getElementById("capture").appendChild(status_div);
+document.body.appendChild(status_div);
 
 function setStatus(message){
     status.textContent = message;
