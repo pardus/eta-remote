@@ -15,6 +15,7 @@ class touchpad:
         self._send = sender
         self._last_event = 0
         self._lock = False
+        self._primary = 0
 
     def _click(self, button, delay=TOUCH_TRESHOLD):
         self._last_event = time.time()
@@ -33,11 +34,13 @@ class touchpad:
         events = []
         if action == "touchstart":
             self.moved = False
+            if self.count == 0 and len(touches) > 0:
+                self._primary = touches[0].get("identifier", 0)
             self.count += 1
             self.count_max = max(self.count, self.count_max)
             for t in touches:
                 tid = t.get("identifier", -1)
-                if tid == 0:
+                if tid == self._primary:
                     self.pos = {
                         "x": t.get("x", 0),
                         "y": t.get("y", 0),
@@ -59,7 +62,7 @@ class touchpad:
                     ]
                 self.pos["v"] = v
             for t in touches:
-                if t.get("identifier", -1) == 0:
+                if t.get("identifier", -1) == self._primary:
                     x = t.get("x", 0)
                     y = t.get("y", 0)
                     dx = x - self.pos["x"]
@@ -76,7 +79,7 @@ class touchpad:
         elif action == "touchend":
             self.count -= 1
             for t in touches:
-                if t.get("identifier", -1) == 0:
+                if t.get("identifier", -1) == self._primary or len(touches) == 1:
                     if self._lock:
                         self._send([(E.EV_KEY, E.BTN_LEFT, 0)])
                         self._lock = False
@@ -84,4 +87,5 @@ class touchpad:
                         threading.Thread(target=self._click, args=(self.count_max,)).start()
                     self.count = 0
                     self.count_max = 0
+                    self._primary = 0
         self._send(events)
