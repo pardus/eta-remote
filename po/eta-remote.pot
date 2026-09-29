@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-17 13:34+0300\n"
+"POT-Creation-Date: 2026-09-29 16:02+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,132 +17,20 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/MainWindow.py:40 src/MainWindow.py:78
-msgid "Eta Remote Control"
+#: src/gui/NewConnection.py:12
+msgid "New Connection"
 msgstr ""
 
-#: src/MainWindow.py:54 src/MainWindow.py:247 src/MainWindow.py:302
-#: src/user/script.js:20 src/user/script.js:81
-msgid "Remote Control"
+#: src/gui/NewConnection.py:30 src/gui/Clients.py:174
+msgid "Mobile"
 msgstr ""
 
-#: src/MainWindow.py:56
-msgid "Connected Clients"
+#: src/gui/NewConnection.py:60
+msgid "Deny"
 msgstr ""
 
-#: src/MainWindow.py:85
-msgid "Scan a QR code with your phone or tablet to connect"
-msgstr ""
-
-#: src/MainWindow.py:119 src/MainWindow.py:260
-msgid "Start"
-msgstr ""
-
-#: src/MainWindow.py:123 src/MainWindow.py:264
-msgid "Stop"
-msgstr ""
-
-#: src/MainWindow.py:150
-msgid "Autostart on boot"
-msgstr ""
-
-#: src/MainWindow.py:151
-msgid "Allow all new connections"
-msgstr ""
-
-#: src/MainWindow.py:190
-msgid "No active network connection found"
-msgstr ""
-
-#: src/MainWindow.py:206
-msgid "Connect to control this device remotely"
-msgstr ""
-
-#: src/MainWindow.py:211
-msgid "Scan or copy this address:"
-msgstr ""
-
-#: src/MainWindow.py:227
-msgid "Interface:"
-msgstr ""
-
-#: src/MainWindow.py:253
-msgid "Show"
-msgstr ""
-
-#: src/MainWindow.py:270
-msgid "Quit"
-msgstr ""
-
-#: src/MainWindow.py:299
-msgid "Remote Control - Running"
-msgstr ""
-
-#: src/user/audio.js:66
-msgid "Sound: Blocked"
-msgstr ""
-
-#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
-msgid "Sound: Off"
-msgstr ""
-
-#: src/user/audio.js:82
-msgid "Sound: On"
-msgstr ""
-
-#: src/user/file.js:76
-msgid "File sharing is disabled"
-msgstr ""
-
-#: src/user/script.js:11
-msgid ""
-"Notice: This application may not work as intended on your current operating "
-"system. For the best performance and compatibility, we highly recommend "
-"using Linux."
-msgstr ""
-
-#: src/user/script.js:47
-msgid "Ping:"
-msgstr ""
-
-#: src/user/script.js:60
-msgid "Waiting for accept"
-msgstr ""
-
-#: src/user/script.js:97
-msgid "Connection Lost"
-msgstr ""
-
-#: src/user/script.js:161
-msgid "Input: Blocked"
-msgstr ""
-
-#: src/user/script.js:164 src/user/script.js:235 src/user/script.js:238
-msgid "Input: On"
-msgstr ""
-
-#: src/user/script.js:238
-msgid "Input : Off"
-msgstr ""
-
-#: src/user/viewer.js:75
-msgid "Image disabled"
-msgstr ""
-
-#: src/user/control.js:99
-msgid "Keyboard"
-msgstr ""
-
-#: src/user/control.js:111
-msgid "Fullscreen"
-msgstr ""
-
-#: src/Main.py:25
-msgid "Start application in autostart mode"
-msgstr ""
-
-#: src/Main.py:34
-msgid "Start application and show window"
+#: src/gui/NewConnection.py:61
+msgid "Allow"
 msgstr ""
 
 #: src/gui/Clients.py:15
@@ -178,22 +66,173 @@ msgstr ""
 msgid "Warning: Wayland support is experimental and may be unstable."
 msgstr ""
 
-#: src/gui/Clients.py:174 src/gui/NewConnection.py:30
-msgid "Mobile"
-msgstr ""
-
 #: src/gui/Clients.py:214
 msgid "Kick"
 msgstr ""
 
-#: src/gui/NewConnection.py:12
-msgid "New Connection"
+#: src/MainWindow.py:40 src/MainWindow.py:78
+msgid "Eta Remote Control"
 msgstr ""
 
-#: src/gui/NewConnection.py:60
-msgid "Deny"
+#: src/MainWindow.py:54 src/MainWindow.py:247 src/MainWindow.py:305
+#: src/user/script.js:40 src/user/script.js:103
+msgid "Remote Control"
 msgstr ""
 
-#: src/gui/NewConnection.py:61
-msgid "Allow"
+#: src/MainWindow.py:56
+msgid "Connected Clients"
+msgstr ""
+
+#: src/MainWindow.py:85
+msgid "Scan a QR code with your phone or tablet to connect"
+msgstr ""
+
+#: src/MainWindow.py:119 src/MainWindow.py:259
+msgid "Start"
+msgstr ""
+
+#: src/MainWindow.py:123 src/MainWindow.py:263
+msgid "Stop"
+msgstr ""
+
+#: src/MainWindow.py:150
+msgid "Autostart on boot"
+msgstr ""
+
+#: src/MainWindow.py:151
+msgid "Allow all new connections"
+msgstr ""
+
+#: src/MainWindow.py:190
+msgid "No active network connection found"
+msgstr ""
+
+#: src/MainWindow.py:206
+msgid "Connect to control this device remotely"
+msgstr ""
+
+#: src/MainWindow.py:211
+msgid "Scan or copy this address:"
+msgstr ""
+
+#: src/MainWindow.py:227
+msgid "Interface:"
+msgstr ""
+
+#: src/MainWindow.py:253
+msgid "Show"
+msgstr ""
+
+#: src/MainWindow.py:269
+msgid "Quit"
+msgstr ""
+
+#: src/MainWindow.py:302
+msgid "Remote Control - Running"
+msgstr ""
+
+#: src/server/keymap.py:46
+msgid "Hide"
+msgstr ""
+
+#: src/user/viewer.js:75
+msgid "Image disabled"
+msgstr ""
+
+#: src/user/audio.js:66
+msgid "Sound: Blocked"
+msgstr ""
+
+#: src/user/audio.js:68 src/user/audio.js:79 src/user/audio.js:82
+msgid "Sound: Off"
+msgstr ""
+
+#: src/user/audio.js:82
+msgid "Sound: On"
+msgstr ""
+
+#: src/user/control.js:99
+msgid "Keyboard"
+msgstr ""
+
+#: src/user/control.js:114
+msgid "Fullscreen"
+msgstr ""
+
+#: src/user/control.js:149 src/user/control.js:160
+msgid "Touch: Direct"
+msgstr ""
+
+#: src/user/control.js:155
+msgid "Touch: Touchpad"
+msgstr ""
+
+#: src/user/script.js:12
+msgid ""
+"Notice: This application may not work as intended on your current operating "
+"system. For the best performance and compatibility, we highly recommend "
+"using Linux."
+msgstr ""
+
+#: src/user/script.js:14
+msgid ""
+"Notice: This application may not work as intended on your current device. "
+"For the best performance and compatibility, we highly recommend using "
+"Android."
+msgstr ""
+
+#: src/user/script.js:21
+msgid ""
+"This application is designed primarily for Android. On your current device, "
+"touch input, screen mirroring, and hardware keyboard support may be limited "
+"or unavailable. For the best experience, we recommend using an Android "
+"device. You can continue, but some features may not work as expected."
+msgstr ""
+
+#: src/user/script.js:23
+msgid ""
+"This application is designed primarily for Linux. On your system, remote "
+"input, screen capture, audio streaming, and file transfer may be limited or "
+"unavailable. For the best experience, we recommend using a Linux desktop. "
+"You can continue, but some features may not work as expected."
+msgstr ""
+
+#: src/user/script.js:25
+msgid "Continue"
+msgstr ""
+
+#: src/user/script.js:68
+msgid "Ping:"
+msgstr ""
+
+#: src/user/script.js:82
+msgid "Waiting for accept"
+msgstr ""
+
+#: src/user/script.js:119
+msgid "Connection Lost"
+msgstr ""
+
+#: src/user/script.js:183
+msgid "Input: Blocked"
+msgstr ""
+
+#: src/user/script.js:186 src/user/script.js:257 src/user/script.js:260
+msgid "Input: On"
+msgstr ""
+
+#: src/user/script.js:260
+msgid "Input : Off"
+msgstr ""
+
+#: src/user/file.js:76
+msgid "File sharing is disabled"
+msgstr ""
+
+#: src/Main.py:25
+msgid "Start application in autostart mode"
+msgstr ""
+
+#: src/Main.py:34
+msgid "Start application and show window"
 msgstr ""
