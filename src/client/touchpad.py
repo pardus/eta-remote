@@ -18,6 +18,8 @@ class touchpad:
         self._primary = 0
 
     def _click(self, button, delay=TOUCH_TRESHOLD):
+        if button < 1:
+            return
         self._last_event = time.time()
         time.sleep(delay)
         if self._lock:
@@ -49,6 +51,7 @@ class touchpad:
                     if  time.time() - self._last_event < TOUCH_TRESHOLD:
                         self._send([(E.EV_KEY, E.BTN_LEFT, 1)])
                         self._lock = True
+                    break
         elif action == "touchmove":
             if len(touches) > 1:
                 v = 0
@@ -88,4 +91,5 @@ class touchpad:
                     self.count = 0
                     self.count_max = 0
                     self._primary = 0
+                    break
         self._send(events)
