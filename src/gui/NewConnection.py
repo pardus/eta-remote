@@ -9,12 +9,12 @@ from Clients import get_os, get_browser, PERMISSION_LABELS
 
 class NewConnection(Gtk.Dialog):
     def __init__(self, Controller, data):
-        super().__init__(title=_("New Connection"))
+        client_id = data.get("id")
+        super().__init__(title=_("New Connection") + " - " + client_id)
         self.set_default_size(320, 300)
         self.set_resizable(False)
         self.set_modal(True)
-
-        client_id = data.get("id")
+        self.set_icon_name("tr.org.pardus.eta-remote")
 
         os_name = get_os(data.get("useragent"), data.get("platform"))
         os_name += " - "+ client_id

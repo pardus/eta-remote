@@ -35,7 +35,6 @@ def run():
         if not line:
             continue
         message = base64.b64decode(line.encode()).decode()
-        print(message)
         handler.handle(message)
 
 

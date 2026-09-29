@@ -39,8 +39,10 @@ class MainWindow(Gtk.Window):
     def __init__(self, app):
         super().__init__(title=_("Eta Remote Control"), application=app)
         self.set_default_size(720, 560)
+        self.set_icon_name("tr.org.pardus.eta-remote")
 
         header = Gtk.HeaderBar()
+        header.set_title(_("Eta Remote Control"))
         self.set_titlebar(header)
         header.set_show_close_button(True)
 
