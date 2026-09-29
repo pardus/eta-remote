@@ -164,7 +164,7 @@ msgstr "Dokunma: Doğrudan"
 
 #: src/user/control.js:155
 msgid "Touch: Touchpad"
-msgstr "Tokunma: Touchpad"
+msgstr "Dokunma: Touchpad"
 
 #: src/user/script.js:12
 msgid ""

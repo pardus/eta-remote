@@ -152,11 +152,13 @@ function initFloatingControls() {
             touch_mode = "touchpad";
             capture.style.minHeight = "100vh";
             capture.style.minWidth = "100vw";
+            canvas.style.display = "none";
             touch_mode_button.textContent = _("Touch: Touchpad");
         } else if (touch_mode == "touchpad"){
             touch_mode = "touch";
             capture.style.minHeight = "0";
             capture.style.minWidth = "0";
+            canvas.style.display = "block";
             touch_mode_button.textContent = _("Touch: Direct");
         }
     });
