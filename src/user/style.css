@@ -256,3 +256,49 @@ body {
 #fc-ping {
   color: #f8f8f2;
 }
+
+#os-warning-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .7);
+}
+
+#os-warning-overlay.hidden {
+  display: none;
+}
+
+#os-warning-dialog {
+  background: #282a36;
+  color: #f8f8f2;
+  border-radius: 12px;
+  padding: 24px 28px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+}
+
+#os-warning-dialog p {
+  margin-bottom: 20px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#os-warning-accept {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 8px;
+  background: #bd93f9;
+  color: #282a36;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#os-warning-accept:hover {
+  background: #ff79c6;
+}

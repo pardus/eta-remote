@@ -8,7 +8,25 @@ const isApple = /Mac|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
 
 
 if (isWindows || isApple) {
-  warning(_("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux."), false);
+  if (isMobileDevice){
+      warning(_("Notice: This application may not work as intended on your current device. For the best performance and compatibility, we highly recommend using Android."), false);
+  } else {
+      warning(_("Notice: This application may not work as intended on your current operating system. For the best performance and compatibility, we highly recommend using Linux."), false);      
+  }
+
+  const overlay = document.getElementById("os-warning-overlay");
+  const message = document.getElementById("os-warning-message");
+  const acceptBtn = document.getElementById("os-warning-accept");
+  if (isMobileDevice){
+      message.textContent = _("This application is designed primarily for Android. On your current device, touch input, screen mirroring, and hardware keyboard support may be limited or unavailable. For the best experience, we recommend using an Android device. You can continue, but some features may not work as expected.");
+  } else {
+      message.textContent = _("This application is designed primarily for Linux. On your system, remote input, screen capture, audio streaming, and file transfer may be limited or unavailable. For the best experience, we recommend using a Linux desktop. You can continue, but some features may not work as expected.");
+  }
+  acceptBtn.textContent = _("Continue");
+  overlay.classList.remove("hidden");
+  acceptBtn.addEventListener("click", () => {
+    overlay.classList.add("hidden");
+  });
 }
 
 let client_id = null;
