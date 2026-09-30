@@ -27,6 +27,12 @@ install_data(
 )
 
 install_data(
+    'data/config.json',
+    install_dir: get_option('sysconfdir') / 'pardus',
+    rename: 'eta-remote.json'
+)
+
+install_data(
     'data/eta-remote.desktop',
     install_dir: get_option('datadir') / 'applications'
 )

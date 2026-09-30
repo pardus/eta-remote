@@ -7,6 +7,8 @@ import uuid
 import zlib
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "config.json")
+if os.path.isfile("/etc/pardus/eta-remote.json"):
+    CONFIG_PATH = "/etc/pardus/eta-remote.json"
 
 
 def load_config(path=None):
