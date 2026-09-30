@@ -86,7 +86,7 @@ class touchpad:
                     if self._lock:
                         self._send([(E.EV_KEY, E.BTN_LEFT, 0)])
                         self._lock = False
-                    elif not self.moved:
+                    if not self.moved:
                         threading.Thread(target=self._click, args=(self.count_max,)).start()
                     self.count = 0
                     self.count_max = 0

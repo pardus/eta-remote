@@ -2,6 +2,7 @@ import os
 import signal
 import time
 import base64
+import gzip
 import json
 import subprocess
 
@@ -11,13 +12,13 @@ FFMPEG_CMD = [
     "-i", "default.monitor",
     "-fflags", "nobuffer",
     "-flags", "low_delay",
-    "-ac", "1",
+    "-ac", "1"
     "-ar", "16000",
-    "-c:a", "pcm_s8",
-    "-application", "lowdelay",
-    "-f", "s8",
+    "-c:a", "pcm_s16le",
+    "-f", "s16le",
     "pipe:1"
- ]
+]
+
 
 
 proc = None
@@ -57,10 +58,11 @@ def pulse_stop():
 
 def main(handler=None, stop_event=None):
     for data in record_audio(stop_event):
+        compressed = gzip.compress(data)
         message = json.dumps(
             {
                 "type": "audio",
-                "data": base64.b64encode(data).decode("ascii"),
+                "data": base64.b64encode(compressed).decode("ascii"),
             },
             separators=(",", ":"),
         )

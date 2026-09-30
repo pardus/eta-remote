@@ -12,15 +12,20 @@ function initAudio() {
     }
 }
 
-function decodeS8(b64) {
+async function decodeS16(b64) {
     const binary = atob(b64);
-    const bytes = new Uint8Array(binary.length);
+    const compressed = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
+        compressed[i] = binary.charCodeAt(i);
     }
-    const out = new Float32Array(bytes.length);
-    for (let i = 0; i < bytes.length; i++) {
-        out[i] = bytes[i] < 128 ? bytes[i] / 127 : (bytes[i] - 256) / 127;
+    const ds = new DecompressionStream("gzip");
+    const stream = new Blob([compressed]).stream().pipeThrough(ds);
+    const decompressed = new Uint8Array(await new Response(stream).arrayBuffer());
+    const samples = decompressed.length >> 1;
+    const out = new Float32Array(samples);
+    for (let i = 0; i < samples; i++) {
+        const val = decompressed[i * 2] | (decompressed[i * 2 + 1] << 8);
+        out[i] = val < 32768 ? val / 32767 : (val - 65536) / 32767;
     }
     return out;
 }
@@ -38,7 +43,7 @@ function scheduleNext() {
     }
 }
 
-function handleAudio(data) {
+async function handleAudio(data) {
     initAudio();
     if (audioCtx.state === "suspended") {
         audioCtx.resume();
@@ -47,7 +52,7 @@ function handleAudio(data) {
         return;
     }
 
-    const samples = decodeS8(data);
+    const samples = await decodeS16(data);
     const buffer = audioCtx.createBuffer(1, samples.length, SAMPLE_RATE);
     buffer.copyToChannel(samples, 0);
 

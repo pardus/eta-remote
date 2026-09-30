@@ -28,7 +28,7 @@ class WebSocketClient:
         self._wait_last = True
         self._stop_event = threading.Event()
         self._data_queue = queue.Queue()
-        self._audio_queue = queue.Queue()
+        self._audio_queue = queue.Queue(maxsize=10)
         self.ctx = context()
 
     def client(self):
@@ -88,7 +88,10 @@ class WebSocketClient:
                     lock["audio"].wait()
                     if self._stop_event.is_set():
                         return
-            self._audio_queue.put(message)
+            try:
+                self._audio_queue.put_nowait(message)
+            except queue.Full:
+                pass
 
         capture_thread = threading.Thread(
             target=capture_main, args=(data_handler,),
