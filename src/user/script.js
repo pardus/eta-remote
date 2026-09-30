@@ -34,6 +34,7 @@ let ws = null;
 let input_allowed = true;
 let connected = false;
 let perms = { input:true, audio: true, file: true, image: true };
+let ws_port = 8765;
 
 let touch_mode = "touch";
 
@@ -76,7 +77,10 @@ function connect() {
         return;
     }
     const room = window.location.toString().split("#")[1];
-    ws = new WebSocket("ws://"+window.location.hostname+":8765/"+room);
+    proto = "ws://"
+    if window.location.protocol == "http:":
+        proto = "wss://"
+    ws = new WebSocket(proto+window.location.hostname+":"+ws_port+"/"+room);
 
     ws.onopen = () => {
         capture.focus();
@@ -263,7 +267,18 @@ function addInputButton() {
     menu.appendChild(button);
 }
 
-window.addEventListener("load", function(){
+window.addEventListener("load", async function(){
     addInputButton();
+    try {
+        const resp = await fetch("/config.json");
+        if (resp.ok) {
+            const config = await resp.json();
+            if (config.ws && config.ws.port) {
+                ws_port = config.ws.port;
+            }
+        }
+    } catch (e) {
+        console.error("Failed to load config:", e);
+    }
     connect();
 });

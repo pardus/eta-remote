@@ -65,6 +65,14 @@ class RemoteControl:
                     self.end_headers()
                     self.wfile.write(body)
                     return
+                if self.path.split("?")[0] == "/config.json":
+                    body = json.dumps(load_config(), ensure_ascii=False).encode()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
                 elif self.path.split("?")[0] == "/translate.js":
                     client_language = self.headers.get('Accept-Language')
                     body = gen_translate(client_language).encode()
