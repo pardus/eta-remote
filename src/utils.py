@@ -2,9 +2,18 @@ import os
 import socket
 import struct
 import fcntl
-
+import json
 import uuid
 import zlib
+
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "config.json")
+
+
+def load_config(path=None):
+    """Load and return the configuration from config.json."""
+    config_file = path or CONFIG_PATH
+    with open(config_file, "r") as f:
+        return json.load(f)
 
 def get_local_ip():
     ret = []

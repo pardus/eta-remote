@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 
+import os
+import sys
 import queue
 import threading
+
 from websockets.sync.server import serve
 from websockets.exceptions import ConnectionClosed
 
 import traceback
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.insert(0, os.path.join(BASE_DIR, "../"))
 
 import uuid
 import time
@@ -124,7 +131,12 @@ def handler(websocket):
 
 
 def main():
-    with serve(handler, "0.0.0.0", 8765, max_size=None) as server:
+    from utils import load_config
+    config = load_config()
+    ws_config = config.get("ws", {})
+    host = ws_config.get("server") or "0.0.0.0"
+    port = ws_config.get("port", 8765)
+    with serve(handler, host, port, max_size=None) as server:
         server.serve_forever()
 
 

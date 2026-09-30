@@ -188,7 +188,16 @@ class MainWindow(Gtk.Window):
         for child in self.addr_box.get_children():
             self.addr_box.remove(child)
 
-        addrs = utils.get_local_ip()
+        config = utils.load_config()
+        httpd_config = config.get("httpd", {})
+        httpd_address = httpd_config.get("address", "")
+        httpd_port = httpd_config.get("port", 8000)
+
+        if httpd_address:
+            addrs = [(httpd_address, "")]
+        else:
+            addrs = utils.get_local_ip()
+
         if not addrs:
             label = Gtk.Label()
             label.set_markup(f"<span foreground='#888888'>{GLib.markup_escape_text(_('No active network connection found'))}</span>")
@@ -197,7 +206,7 @@ class MainWindow(Gtk.Window):
         for ip, dev in addrs:
             box_main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            url = f"http://{ip}:8000#{self._room}"
+            url = f"http://{ip}:{httpd_port}#{self._room}"
 
             qr_img = Gtk.Image.new_from_pixbuf(self._make_qr(url))
             qr_img.set_pixel_size(256)
@@ -223,21 +232,22 @@ class MainWindow(Gtk.Window):
             info_box.pack_start(url_label, False, False, 5)
 
             box.pack_start(info_box, True, True, 13)
-            
+
             box_main.pack_start(box, True, True, 0)
             box_main.pack_start(Gtk.Separator(), False, False, 5)
-            
-            dev_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            dev_box.pack_start(Gtk.Label(label=_("Interface:")), False, False, 0)
 
-            dev_label = Gtk.Label()
-            dev_label.set_markup(f"<span foreground='#888888'>{GLib.markup_escape_text(dev)}</span>")
-            dev_box.pack_start(dev_label, False, False, 21)
+            if dev:
+                dev_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+                dev_box.pack_start(Gtk.Label(label=_("Interface:")), False, False, 0)
 
-            box_main.pack_start(dev_box, False, False, 0)
+                dev_label = Gtk.Label()
+                dev_label.set_markup(f"<span foreground='#888888'>{GLib.markup_escape_text(dev)}</span>")
+                dev_box.pack_start(dev_label, False, False, 21)
+
+                box_main.pack_start(dev_box, False, False, 0)
 
             self.addr_box.pack_start(box_main, False, False, 0)
-            
+
 
         self.addr_box.show_all()
 

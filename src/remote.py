@@ -20,16 +20,29 @@ for sub in ("client", "server", "gui", "user"):
 from websocket import WebSocketClient
 from main import PipeUInputHandler
 from keymap import build_keymap
+from utils import load_config
 
 from translate import gen_translate
 
 from Control import Control
 
 class RemoteControl:
-    def __init__(self, address="ws://localhost:8765", room="room1", port=8000, user_dir=None, clients=None):
+    def __init__(self, address=None, room="room1", port=None, user_dir=None, clients=None):
+        config = load_config()
+        ws_config = config.get("ws", {})
+        httpd_config = config.get("httpd", {})
+        if address is None:
+            host = ws_config.get("server") or "localhost"
+            ws_port = ws_config.get("port", 8765)
+            address = f"ws://{host}:{ws_port}"
+        if port is None:
+            port = httpd_config.get("port", 8000)
         self.address = address + "/"+ room
         self.room = room
         self.port = port
+        self.httpd_address = httpd_config.get("address") or "0.0.0.0"
+        self.ws_host = ws_config.get("server") or "0.0.0.0"
+        self.ws_port = ws_config.get("port", 8765)
         self.user_dir = user_dir or os.path.join(BASE_DIR, "user")
         self.httpd = None
         self.threads = []
@@ -63,8 +76,8 @@ class RemoteControl:
                     return
                 return super().do_GET()
 
-        print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
-        return ThreadingHTTPServer(("0.0.0.0", self.port), lambda *a, **kw: Handler(*a, directory=user_dir, **kw))
+        print(f"http server on http://{self.httpd_address}:{self.port} serving {user_dir}")
+        return ThreadingHTTPServer((self.httpd_address, self.port), lambda *a, **kw: Handler(*a, directory=user_dir, **kw))
 
     def _serve_http(self):
         self.httpd.serve_forever()
@@ -93,7 +106,7 @@ class RemoteControl:
         # so stop() can never observe a half-initialized service.
         import server
         try:
-            self.ws_server = server.serve(server.handler, "0.0.0.0", 8765, max_size=None)
+            self.ws_server = server.serve(server.handler, self.ws_host, self.ws_port, max_size=None)
             self.httpd = self._make_http_server()
             self.pipe_uinput = PipeUInputHandler()
             self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
