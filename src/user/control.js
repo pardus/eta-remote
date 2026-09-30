@@ -112,7 +112,9 @@ function initFloatingControls() {
         menu.classList.remove("show");
     });
     fc_fullscreen.textContent = _("Fullscreen")
-    menu.appendChild(fc_fullscreen);
+    if(!isApple){
+        menu.appendChild(fc_fullscreen);
+    }
 
 
     const fc_quality = document.createElement("input");
