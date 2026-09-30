@@ -77,9 +77,10 @@ function connect() {
         return;
     }
     const room = window.location.toString().split("#")[1];
-    proto = "ws://"
-    if window.location.protocol == "http:":
-        proto = "wss://"
+    let proto = "ws://";
+    if (window.location.protocol == "https:"){
+        proto = "wss://";
+    }
     ws = new WebSocket(proto+window.location.hostname+":"+ws_port+"/"+room);
 
     ws.onopen = () => {
