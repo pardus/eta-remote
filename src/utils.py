@@ -2,6 +2,10 @@ import os
 import socket
 import struct
 import fcntl
+
+import uuid
+import zlib
+
 def get_local_ip():
     ret = []
     for ifname in os.listdir("/sys/class/net"):
@@ -17,3 +21,12 @@ def get_local_ip():
         except Exception as e:
             print(e)
     return ret
+
+
+def get_uid():
+    # get uuid4
+    uid = str(uuid.uuid4())
+    # crc32 checksum
+    uid = zlib.crc32(uid.encode("utf-8"))
+    # hex string
+    return str(hex(uid))[2:]

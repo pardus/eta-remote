@@ -26,8 +26,9 @@ from translate import gen_translate
 from Control import Control
 
 class RemoteControl:
-    def __init__(self, address="ws://localhost:8765/room1", port=8000, user_dir=None, clients=None):
-        self.address = address
+    def __init__(self, address="ws://localhost:8765", room="room1", port=8000, user_dir=None, clients=None):
+        self.address = address + "/"+ room
+        self.room = room
         self.port = port
         self.user_dir = user_dir or os.path.join(BASE_DIR, "user")
         self.httpd = None

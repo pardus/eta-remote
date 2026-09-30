@@ -2,6 +2,7 @@ import io
 import os
 import sys
 
+import uuid
 import qrcode
 
 import gi
@@ -64,6 +65,7 @@ class MainWindow(Gtk.Window):
 
         self.add(self.stack)
         self.connect("delete-event", self._on_delete_event)
+        self._room = utils.get_uid()
         self._setup_status_icon()
         self._refresh_addr_box()
 
@@ -195,7 +197,7 @@ class MainWindow(Gtk.Window):
         for ip, dev in addrs:
             box_main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            url = f"http://{ip}:8000"
+            url = f"http://{ip}:8000#{self._room}"
 
             qr_img = Gtk.Image.new_from_pixbuf(self._make_qr(url))
             qr_img.set_pixel_size(256)
@@ -313,7 +315,7 @@ class MainWindow(Gtk.Window):
 
     def on_start(self, _btn):
         if self.remote is None:
-            self.remote = RemoteControl(clients=self.registry)
+            self.remote = RemoteControl(clients=self.registry, address="ws://127.0.0.1:8765", room=self._room)
             self.remote.start()
         self._set_status(True)
 

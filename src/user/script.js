@@ -75,7 +75,8 @@ function connect() {
     if(ws){
         return;
     }
-    ws = new WebSocket("ws://"+window.location.hostname+":8765/room1");
+    const room = window.location.toString().split("#")[1];
+    ws = new WebSocket("ws://"+window.location.hostname+":8765/"+room);
 
     ws.onopen = () => {
         capture.focus();
