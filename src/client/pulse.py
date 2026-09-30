@@ -12,7 +12,7 @@ FFMPEG_CMD = [
     "-i", "default.monitor",
     "-fflags", "nobuffer",
     "-flags", "low_delay",
-    "-ac", "1"
+    "-ac", "1",
     "-ar", "16000",
     "-c:a", "pcm_s16le",
     "-f", "s16le",
