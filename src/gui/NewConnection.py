@@ -68,6 +68,5 @@ class NewConnection(Gtk.Dialog):
                 if check.get_active():
                     Controller.set_permission(perm, client_id, True)
         elif response in (Gtk.ResponseType.REJECT, Gtk.ResponseType.DELETE_EVENT):
-            if Controller.ws:
-                Controller.ws.send(json.dumps({"kick": client_id}))
+            Controller.send_ws(json.dumps({"kick": client_id}))
         self.destroy()

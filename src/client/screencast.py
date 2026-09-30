@@ -139,7 +139,8 @@ class PipeWireCaptureBase:
     def wait_event(self):
         if self._pipe is None:
             return
-        self._frame_event.wait()
+        # bounded wait: never block forever if the reader thread died
+        self._frame_event.wait(timeout=5)
 
     def display_close(self):
         self._stop.set()

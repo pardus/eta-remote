@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import queue
 import threading
 from websockets.sync.server import serve
 from websockets.exceptions import ConnectionClosed
@@ -24,32 +25,45 @@ def get_uid():
     # hex string
     return str(hex(uid))[2:]
 
+
 class Client:
     def __init__(self):
         self.websocket = None
         self.id = None
+        self.queue = None
+        self.writer = None
+
+
+def _writer(client):
+    """Drain one client's send queue until stopped or the connection dies."""
+    while True:
+        message = client.queue.get()
+        if message is None:
+            return
+        try:
+            client.websocket.send(message)
+        except ConnectionClosed:
+            return
+
 
 def handler(websocket):
     path = websocket.request.path
     admin = False
+    clients = None
     with rooms_lock:
         clients = rooms.setdefault(path, set())
-        client = Client()
-        client.id = get_uid()
-        client.websocket = websocket
-        clients.add(client)
-        print(f"Client joined {path}; id={client.id}; clients={len(clients)}")
-        if len(clients) == 1:
-            admin = True
+        with clients_lock:
+            client = Client()
+            client.id = get_uid()
+            client.websocket = websocket
+            client.queue = queue.Queue()
+            clients.add(client)
+            print(f"Client joined {path}; id={client.id}; clients={len(clients)}")
+            if len(clients) == 1:
+                admin = True
 
-    def _send(client):
-        try:
-            client.websocket.send(message)
-        except ConnectionClosed:
-            with rooms_lock:
-                with clients_lock:
-                    clients.discard(client)
-
+    client.writer = threading.Thread(target=_writer, args=(client,), daemon=True)
+    client.writer.start()
 
     try:
         for message in websocket:
@@ -58,7 +72,7 @@ def handler(websocket):
             message["id"] = client.id
 
             if "ping" in message:
-                websocket.send(json.dumps(message))
+                client.queue.put(json.dumps(message))
                 continue
 
             if "kick" in message and admin:
@@ -67,41 +81,46 @@ def handler(websocket):
                         if kicked.id == message.get("kick", None):
                             print("kick", kicked.id)
                             kicked.websocket.close()
+                            kicked.queue.put(None)
                             clients.discard(kicked)
 
             if "target" in message:
                 with clients_lock:
-                    recipients = set()
-                    for recipient in clients:
-                        for target in message.get("target", []):
-                            if target == recipient.id:
-                                recipients.add(recipient)
+                    recipients = [
+                        recipient for recipient in clients
+                        if recipient.id in message.get("target", [])
+                    ]
             else:
                 with clients_lock:
                     recipients = clients - {client}
 
-            message = json.dumps(message)
+            data = json.dumps(message)
 
             for recipient in recipients:
-                threading.Thread(target=_send, args=(recipient,)).start()
+                recipient.queue.put(data)
 
     except:
         print(traceback.format_exc())
 
     finally:
         with rooms_lock:
-            clients.discard(client)
-            if not clients:
-                rooms.pop(path, None)
-                return
+            with clients_lock:
+                clients.discard(client)
+                remaining = clients.copy()
+                # Only drop the room if it is still the same (now empty) set;
+                # a new client may have joined between the discard and here.
+                if not clients and rooms.get(path) is clients:
+                    rooms.pop(path, None)
+
+        client.queue.put(None)
 
         message = {"type": "disconnect", "id": client.id}
         message = json.dumps(message)
 
-        for remaining in clients:
-            threading.Thread(target=_send, args=(remaining,)).start()
+        for remaining_client in remaining:
+            remaining_client.queue.put(message)
 
-        print(f"Client left {path}; id={client.id} clients={len(clients)}")
+        print(f"Client left {path}; id={client.id} clients={len(remaining)}")
 
 
 def main():

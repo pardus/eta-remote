@@ -11,7 +11,6 @@ import traceback
 from capture import main as capture_main, request_full, set_quality
 from pulse import main as pulse_main, pulse_stop, pulse_start
 
-lock = {"data":threading.Condition(), "audio":threading.Condition()}
 
 class context:
     def __init__(self):
@@ -20,6 +19,7 @@ class context:
         self.message = ""
         self.wait = True
 
+
 class WebSocketClient:
     def __init__(self, address, handler=print, control=print):
         self.address = address
@@ -27,6 +27,7 @@ class WebSocketClient:
         self.control = control
         self._wait_last = True
         self._stop_event = threading.Event()
+        self._go_event = threading.Event()
         self._data_queue = queue.Queue()
         self._audio_queue = queue.Queue(maxsize=10)
         self.ctx = context()
@@ -58,36 +59,42 @@ class WebSocketClient:
 
     def sender(self, q):
         ctx = copy.copy(self.ctx)
-        while True:
+        while not self._stop_event.is_set():
+            # run() clears ctx.websocket when the connection drops
+            if self.ctx.websocket is None:
+                return
             try:
-                message = q.get()
-                if message is None:
-                    return
-                ctx.message = message
-                if self.control(ctx):
+                message = q.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            if message is None:
+                return
+            ctx.message = message
+            if self.control(ctx):
+                try:
                     ctx.websocket.send(ctx.message)
-            except:
-                print(traceback.format_exc())
+                except ConnectionClosed:
+                    return
+                except:
+                    print(traceback.format_exc())
 
     def streamer(self):
         def data_handler(message):
             if self._stop_event.is_set():
                 return
             if self.ctx.wait:
-                with lock["data"]:
-                    lock["data"].wait()
-                    if self._stop_event.is_set():
-                        return
+                self._go_event.wait()
+                if self._stop_event.is_set():
+                    return
             self._data_queue.put(message)
 
         def audio_handler(message):
             if self._stop_event.is_set():
                 return
             if self.ctx.wait:
-                with lock["audio"]:
-                    lock["audio"].wait()
-                    if self._stop_event.is_set():
-                        return
+                self._go_event.wait()
+                if self._stop_event.is_set():
+                    return
             try:
                 self._audio_queue.put_nowait(message)
             except queue.Full:
@@ -102,39 +109,44 @@ class WebSocketClient:
             kwargs={"stop_event": self._stop_event}, daemon=True
         )
 
-        sender_thread_1 = threading.Thread(
-            target=self.sender, args=(self._data_queue,), daemon=True
-        )
-        sender_thread_2 = threading.Thread(
-            target=self.sender, args=(self._audio_queue,), daemon=True
-        )
-
         capture_thread.start()
         audio_thread.start()
-        sender_thread_1.start()
-        sender_thread_2.start()
 
-        capture_thread.join()
-        audio_thread.join()
-        sender_thread_1.join()
-        sender_thread_2.join()
+        try:
+            while not self._stop_event.is_set():
+                # wait until a connection is available
+                while not self._stop_event.is_set() and self.ctx.websocket is None:
+                    time.sleep(0.05)
+                if self._stop_event.is_set():
+                    break
+                sender_thread_1 = threading.Thread(
+                    target=self.sender, args=(self._data_queue,), daemon=True
+                )
+                sender_thread_2 = threading.Thread(
+                    target=self.sender, args=(self._audio_queue,), daemon=True
+                )
+                sender_thread_1.start()
+                sender_thread_2.start()
+                sender_thread_1.join()
+                sender_thread_2.join()
+                # senders exited: either the connection dropped (loop and
+                # wait for the next one) or stop() was called (loop exits)
+        finally:
+            capture_thread.join()
+            audio_thread.join()
 
     def _start(self):
-        with lock["data"]:
-            lock["data"].notify()
-        with lock["audio"]:
-            lock["audio"].notify()
+        self._go_event.set()
         pulse_start()
 
     def _stop(self):
+        self._go_event.clear()
         pulse_stop()
 
     def stop(self):
         self._stop_event.set()
-        with lock["data"]:
-            lock["data"].notify_all()
-        with lock["audio"]:
-            lock["audio"].notify_all()
+        # unblock data/audio handlers waiting on the go event
+        self._go_event.set()
         try:
             self._data_queue.put_nowait(None)
         except:
@@ -145,28 +157,33 @@ class WebSocketClient:
             pass
         pulse_stop()
         try:
-            self.ctx.websocket.close()
+            if self.ctx.websocket is not None:
+                self.ctx.websocket.close()
         except:
             pass
 
     def run(self):
-        while not self._stop_event.is_set():
-            try:
-                with connect(self.address, max_size=None) as websocket:
-                    self.ctx = context()
-                    self.ctx.websocket = websocket
-                    client_thread = threading.Thread(target=self.client)
-                    streamer_thread = threading.Thread(target=self.streamer)
-                    client_thread.start()
-                    streamer_thread.start()
-                    client_thread.join()
-                    streamer_thread.join()
-                return
-            except (OSError, ConnectionClosed):
-                if self._stop_event.is_set():
-                    return
-                print("connection failed, retrying")
-                time.sleep(1)
+        streamer_thread = threading.Thread(target=self.streamer, daemon=True)
+        streamer_thread.start()
+        try:
+            while not self._stop_event.is_set():
+                try:
+                    with connect(self.address, max_size=None) as websocket:
+                        self.ctx = context()
+                        self.ctx.websocket = websocket
+                        client_thread = threading.Thread(target=self.client)
+                        client_thread.start()
+                        client_thread.join()
+                        # connection dropped: tell the senders and loop to
+                        # reconnect instead of leaving them blocked
+                        self.ctx.websocket = None
+                except (OSError, ConnectionClosed):
+                    if self._stop_event.is_set():
+                        return
+                    print("connection failed, retrying")
+                    time.sleep(1)
+        finally:
+            streamer_thread.join()
 
 
 if __name__ == "__main__":

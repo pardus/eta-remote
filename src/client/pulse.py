@@ -5,6 +5,7 @@ import base64
 import gzip
 import json
 import subprocess
+import threading
 
 FFMPEG_CMD = [
     "ffmpeg",
@@ -22,15 +23,18 @@ FFMPEG_CMD = [
 
 
 proc = None
+_proc_lock = threading.Lock()
+
 def pulse_start():
     global proc
-    if proc is None:
-        proc = subprocess.Popen(
-            FFMPEG_CMD,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True
-        )
+    with _proc_lock:
+        if proc is None:
+            proc = subprocess.Popen(
+                FFMPEG_CMD,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
 
 def record_audio(stop_event=None):
     while True:
@@ -51,10 +55,17 @@ def record_audio(stop_event=None):
 
 def pulse_stop():
     global proc
-    if proc is None:
-        return
-    os.killpg(proc.pid, signal.SIGKILL)
-    proc = None
+    with _proc_lock:
+        if proc is None:
+            return
+        p = proc
+        proc = None
+    # kill outside the lock: never hold a lock across a syscall that can
+    # block or fail on a dead pid
+    try:
+        os.killpg(p.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
 
 def main(handler=None, stop_event=None):
     for data in record_audio(stop_event):

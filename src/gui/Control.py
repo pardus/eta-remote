@@ -35,6 +35,7 @@ class Control:
         self.clients = clients or Clients(self)
         self.clients.Controller = self
         self.ws = None
+        self.ws_lock = threading.Lock()
 
     def _stack(self):
         return self.clients.get_parent()
@@ -60,11 +61,27 @@ class Control:
         print(json.dumps(self.allows, indent=2))
         self.clients._update()
 
+    def send_ws(self, message):
+        """Thread-safe websocket send; safe from any thread."""
+        with self.ws_lock:
+            ws = self.ws
+        if ws is None:
+            return
+        try:
+            ws.send(message)
+        except ConnectionClosed:
+            with self.ws_lock:
+                if self.ws is ws:
+                    self.ws = None
+        except:
+            print(traceback.format_exc())
+
     def stop(self):
         self.allows = {}
-        if self.ws:
-            self.ws.close()
-        self.ws = None
+        with self.ws_lock:
+            if self.ws:
+                self.ws.close()
+            self.ws = None
         self._update_ui()
 
     def is_user_input(self):
@@ -90,8 +107,6 @@ class Control:
     def _notify_perms(self, client_id):
         with allow_lock:
             perms = self.allows.get(client_id, {}).get("perm", [])
-        if self.ws is None:
-            return
         perms = {
                  "audio" : "audio" in perms,
                  "file"  : "file"  in perms,
@@ -103,12 +118,7 @@ class Control:
             "target": [client_id],
             **perms
         })
-        try:
-            self.ws.send(msg)
-        except ConnectionClosed:
-            self.ws = None
-        except:
-            print(traceback.format_exc())
+        self.send_ws(msg)
 
     def _connect(self, data, client_id):
         with allow_lock:
@@ -135,7 +145,8 @@ class Control:
 
     def control(self, ctx):
         """control and filter websocket context"""
-        self.ws = ctx.websocket
+        with self.ws_lock:
+            self.ws = ctx.websocket
         try:
             data = json.loads(ctx.message)
             client_id = data.get("id")
@@ -175,8 +186,7 @@ class Control:
             def file_ack(name, chunk, complete):
                 try:
                     ack = json.dumps({"type": "file_ack", "name": name, "chunk": chunk, "complete": complete})
-                    if self.ws:
-                        self.ws.send(ack)
+                    self.send_ws(ack)
                 except:
                     print(traceback.format_exc())
             threading.Thread(target=handle_file, args=(data, file_ack), daemon=True).start()

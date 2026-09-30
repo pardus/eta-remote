@@ -228,5 +228,5 @@ class Clients(Gtk.Box):
     def _on_kick(self, _btn, client_id):
         if self.Controller.is_user_input():
             return
-        self.Controller.ws.send(json.dumps({"kick": client_id}))
+        self.Controller.send_ws(json.dumps({"kick": client_id}))
         GLib.idle_add(self.Controller._disconnect, client_id)

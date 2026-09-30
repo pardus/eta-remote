@@ -38,7 +38,7 @@ class RemoteControl:
         self.pipe_uinput = None
         self.clients_box = clients
 
-    def _serve_http(self):
+    def _make_http_server(self):
         user_dir = self.user_dir
 
         class Handler(SimpleHTTPRequestHandler):
@@ -62,19 +62,17 @@ class RemoteControl:
                     return
                 return super().do_GET()
 
-        self.httpd = ThreadingHTTPServer(("0.0.0.0", self.port), lambda *a, **kw: Handler(*a, directory=user_dir, **kw))
         print(f"http server on http://0.0.0.0:{self.port} serving {user_dir}")
+        return ThreadingHTTPServer(("0.0.0.0", self.port), lambda *a, **kw: Handler(*a, directory=user_dir, **kw))
+
+    def _serve_http(self):
         self.httpd.serve_forever()
 
     def _run_server(self):
-        import server
-        with server.serve(server.handler, "0.0.0.0", 8765, max_size=None) as ws_server:
-            self.ws_server = ws_server
-            ws_server.serve_forever()
+        with self.ws_server:
+            self.ws_server.serve_forever()
 
     def _run_client(self):
-        self.pipe_uinput = PipeUInputHandler()
-        self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
         self.client.run()
 
     def _spawn(self, target):
@@ -90,6 +88,17 @@ class RemoteControl:
         self.window = Control(clients=self.clients_box)
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._shutdown)
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self._shutdown)
+        # Create every long-lived object here, before any thread is spawned,
+        # so stop() can never observe a half-initialized service.
+        import server
+        try:
+            self.ws_server = server.serve(server.handler, "0.0.0.0", 8765, max_size=None)
+            self.httpd = self._make_http_server()
+            self.pipe_uinput = PipeUInputHandler()
+            self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
+        except:
+            self.stop()
+            raise
         self._spawn(self._run_server)
         self._spawn(self._serve_http)
         self._spawn(self._run_client)
@@ -103,9 +112,12 @@ class RemoteControl:
             self.ws_server.shutdown()
         if self.pipe_uinput:
             self.pipe_uinput.stop()
-        self.window.stop()
+        if self.window:
+            self.window.stop()
         self.ws_server = None
         self.httpd = None
         self.client = None
         self.pipe_uinput = None
+        for t in self.threads:
+            t.join(timeout=5)
         self.threads.clear()
