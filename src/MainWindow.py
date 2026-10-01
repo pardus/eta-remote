@@ -194,7 +194,7 @@ class MainWindow(Gtk.Window):
         httpd_port = httpd_config.get("port", 8000)
 
         if httpd_address:
-            addrs = [(httpd_address, "")]
+            addrs = [(httpd_address, None)]
         else:
             addrs = utils.get_local_ip()
 
@@ -207,6 +207,8 @@ class MainWindow(Gtk.Window):
             box_main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
             url = f"http://{ip}:{httpd_port}#{self._room}"
+            if dev is None:
+                url = f"{ip}#{self._room}"
 
             qr_img = Gtk.Image.new_from_pixbuf(self._make_qr(url))
             qr_img.set_pixel_size(256)
@@ -325,7 +327,7 @@ class MainWindow(Gtk.Window):
 
     def on_start(self, _btn):
         if self.remote is None:
-            self.remote = RemoteControl(clients=self.registry, address="ws://127.0.0.1:8765", room=self._room)
+            self.remote = RemoteControl(clients=self.registry, room=self._room)
             self.remote.start()
         self._set_status(True)
 

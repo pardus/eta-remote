@@ -1,6 +1,6 @@
 {
     "ws":{
-      "server": "",
+      "address": "",
       "port": 8765
      },
      "httpd": {

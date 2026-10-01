@@ -180,7 +180,7 @@ class WebSocketClient:
                 except (OSError, ConnectionClosed):
                     if self._stop_event.is_set():
                         return
-                    print("connection failed, retrying")
+                    print("connection failed, retrying", self.address)
                     time.sleep(1)
         finally:
             streamer_thread.join()

@@ -32,9 +32,9 @@ class RemoteControl:
         ws_config = config.get("ws", {})
         httpd_config = config.get("httpd", {})
         if address is None:
-            host = ws_config.get("server") or "localhost"
+            host = ws_config.get("address", "ws://127.0.0.1")
             ws_port = ws_config.get("port", 8765)
-            address = f"ws://{host}:{ws_port}"
+            address = f"{host}:{ws_port}"
         if port is None:
             port = httpd_config.get("port", 8000)
         self.address = address + "/"+ room
@@ -51,6 +51,8 @@ class RemoteControl:
         self.client = None
         self.pipe_uinput = None
         self.clients_box = clients
+
+        print(config)
 
     def _make_http_server(self):
         user_dir = self.user_dir
@@ -114,15 +116,19 @@ class RemoteControl:
         # so stop() can never observe a half-initialized service.
         import server
         try:
-            self.ws_server = server.serve(server.handler, self.ws_host, self.ws_port, max_size=None)
-            self.httpd = self._make_http_server()
+            if self.ws_host == "0.0.0.0":
+                self.ws_server = server.serve(server.handler, self.ws_host, self.ws_port, max_size=None)
+            if self.httpd_address == "0.0.0.0":
+                self.httpd = self._make_http_server()
             self.pipe_uinput = PipeUInputHandler()
             self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
         except:
             self.stop()
             raise
-        self._spawn(self._run_server)
-        self._spawn(self._serve_http)
+        if self.ws_host == "0.0.0.0":
+            self._spawn(self._run_server)
+        if self.httpd_address == "0.0.0.0":
+            self._spawn(self._serve_http)
         self._spawn(self._run_client)
 
     def stop(self):
