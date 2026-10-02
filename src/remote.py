@@ -32,17 +32,17 @@ class RemoteControl:
         ws_config = config.get("ws", {})
         httpd_config = config.get("httpd", {})
         if address is None:
-            host = ws_config.get("address", "ws://127.0.0.1")
-            ws_port = ws_config.get("port", 8765)
+            host = ws_config.get("address") or  "ws://127.0.0.1"
+            ws_port = ws_config.get("port") or 8765
             address = f"{host}:{ws_port}"
         if port is None:
-            port = httpd_config.get("port", 8000)
+            port = httpd_config.get("port") or 8080
         self.address = address + "/"+ room
         self.room = room
         self.port = port
         self.httpd_address = httpd_config.get("address") or "0.0.0.0"
         self.ws_host = ws_config.get("server") or "0.0.0.0"
-        self.ws_port = ws_config.get("port", 8765)
+        self.ws_port = ws_config.get("port") or 8765
         self.user_dir = user_dir or os.path.join(BASE_DIR, "user")
         self.httpd = None
         self.threads = []
@@ -52,7 +52,7 @@ class RemoteControl:
         self.pipe_uinput = None
         self.clients_box = clients
 
-        print(config)
+        print(config, self.address)
 
     def _make_http_server(self):
         user_dir = self.user_dir

@@ -1,10 +1,10 @@
 {
     "ws":{
-      "address": "",
+      "address": null,
       "port": 8765
      },
      "httpd": {
-      "address": "",
+      "address": null,
       "port": 8080
      }
 }
