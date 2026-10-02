@@ -57,7 +57,8 @@ body {
   background-color: rgba(255, 85, 85, .69);
   color: #f8f8f2;
   text-shadow: 2px 2px 8px #000;
-  pointer-events: auto;
+  pointer-events: none;
+  font-size: max(min(1vh, 1vw), 12px);
 }
 
 #warning-container .warning .close {
@@ -69,6 +70,7 @@ body {
   border: none;
   color: #f8f8f2;
   padding: 0 8px;
+  pointer-events: auto;
 }
 
 #virtual-keyboard {
