@@ -8,7 +8,7 @@ from websockets.exceptions import ConnectionClosed
 
 import traceback
 
-from capture import main as capture_main, request_full, set_quality
+from capture import main as capture_main, request_full
 from pulse import main as pulse_main, pulse_stop, pulse_start
 
 
@@ -40,9 +40,6 @@ class WebSocketClient:
                 if self.control(ctx):
                     if "request_full" in message:
                         request_full()
-                    elif "quality" in message:
-                        data = json.loads(message)
-                        set_quality(data.get("quality", 80))
                     else:
                         self.handler(message)
                 if self._wait_last != ctx.wait:

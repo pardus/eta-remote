@@ -35,7 +35,6 @@ else:
     from pillow.capture import grab_rgb, display_close, wait_event
 
 SPEED = 60
-QUALITY = 70
 
 img_width = 0
 img_height = 0
@@ -69,6 +68,15 @@ def image_diff_patch_json(previous, current):
         else:
             return None
 
+    img_size = img_width * img_height
+    patch_size = patch.width * patch.height
+    ratio = 0.8
+    if img_size > 0:
+        ratio = 1.0 - (patch_size / img_size)
+    if ratio > 0.8:
+        ratio = 0.8
+    elif ratio < 0.2:
+        ratio = 0.2
 
     buffer = BytesIO()
 
@@ -76,7 +84,7 @@ def image_diff_patch_json(previous, current):
         buffer,
         format="JPEG",
         optimize=True,
-        quality=QUALITY,
+        quality=int(ratio*100),
     )
 
     encoded_pixels = base64.b64encode(
@@ -105,16 +113,6 @@ req_full = False
 def request_full():
     global req_full
     req_full = True
-
-def set_quality(quality):
-    global QUALITY
-    q = int(quality)
-    if q > 80:
-        q = 80
-    if q < 10:
-        q = 10
-    QUALITY = q
-    request_full()
 
 def _should_stop(stop_event):
     return stop_event is not None and stop_event.is_set()

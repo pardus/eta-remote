@@ -117,18 +117,6 @@ function initFloatingControls() {
     }
 
 
-    const fc_quality = document.createElement("input");
-    fc_quality.type = "range";
-    fc_quality.min = 10;
-    fc_quality.max = 80;
-    fc_quality.value = 70;
-    fc_quality.addEventListener("change", (e) => {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        send("quality", {"quality": fc_quality.value});
-    });
-
-    menu.appendChild(fc_quality);
-
     window.addEventListener("resize", () => {
         const p = getPosition();
         if(p.left == null || p.top == null){
