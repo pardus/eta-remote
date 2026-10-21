@@ -5,7 +5,7 @@ import gzip
 import subprocess
 import threading
 
-from protocol import pack_audio
+from protocol import MsgType, pack
 
 FFMPEG_CMD = [
     "ffmpeg",
@@ -73,7 +73,7 @@ def pulse_stop():
 def main(handler=None, stop_event=None):
     for data in record_audio(stop_event):
         if handler:
-            handler(pack_audio(gzip.compress(data)))
+            handler(pack(MsgType.AUDIO, gzip.compress(data)))
 
 
 if __name__ == "__main__":

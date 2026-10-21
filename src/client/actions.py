@@ -7,7 +7,7 @@ import subprocess
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from protocol import HEADER_SIZE, INPUT_PARSERS, unpack_header
+from protocol import HEADER_SIZE, INPUT_TYPES, unpack_header, unpack
 from uinput import UInputHandler
 
 
@@ -28,10 +28,9 @@ class PipeUInputHandler:
         if not isinstance(message, bytes) or self.worker.poll() is not None:
             return
         msg_type, _ = unpack_header(message)
-        parse = INPUT_PARSERS.get(msg_type)
-        if parse is None:
+        if msg_type not in INPUT_TYPES:
             return
-        payload = json.dumps(parse(message[HEADER_SIZE:]))
+        payload = json.dumps(unpack(msg_type, message[HEADER_SIZE:]))
         self.worker.stdin.write(base64.b64encode(payload.encode()) + b"\n")
         self.worker.stdin.flush()
 

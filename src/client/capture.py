@@ -6,7 +6,7 @@ from io import BytesIO
 
 from PIL import Image, ImageChops
 
-from protocol import pack_image
+from protocol import MsgType, pack
 
 
 Patch = namedtuple(
@@ -158,7 +158,7 @@ def main(handler=None, stop_event=None):
             patch = image_diff_patch(previous_image, current_image)
 
             if patch is not None and handler:
-                handler(pack_image(*patch))
+                handler(pack(MsgType.IMAGE, *patch))
 
             previous_image = current_image
 

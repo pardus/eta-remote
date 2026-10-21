@@ -56,7 +56,7 @@ let wait_pong = false;
 function pingCalculator(){
     const time_cur = performance.now();
     if(ws && !wait_pong){
-        sendBinary(packPing(time_cur));
+        sendBinary(pack(MsgType.PING, time_cur));
         wait_pong = true;
     }
     setTimeout(pingCalculator, 1000); 
@@ -91,7 +91,7 @@ function connect() {
         setStatus(_("Waiting for accept"));
         connected = false;
         // Send CONNECT message
-        sendBinary(packConnect("client", properties()));
+        sendBinary(pack(MsgType.CONNECT, "client", properties()));
     };
 
     ws.onmessage = function (event) {
@@ -116,28 +116,28 @@ function connect() {
 function handleMessage(type, payload, senderId = null) {
     switch (type) {
         case MsgType.PERMS:
-            handlePerms(unpackPerms(payload));
+            handlePerms(unpack(MsgType.PERMS, payload));
             break;
         case MsgType.FILE_ACK: {
-            const ack = unpackFileAck(payload);
+            const ack = unpack(MsgType.FILE_ACK, payload);
             handleFileAck(ack.name, ack.chunk, ack.complete);
             break;
         }
         case MsgType.AUDIO:
-            handleAudio(unpackAudio(payload));
+            handleAudio(unpack(MsgType.AUDIO, payload));
             break;
         case MsgType.IMAGE:
-            handlePatch(unpackImage(payload));
+            handlePatch(unpack(MsgType.IMAGE, payload));
             break;
         case MsgType.PING:
             if (!client_id && senderId) {
                 client_id = senderId;
                 document.title = _("Remote Control") + " - " + client_id;
             }
-            handlePing(unpackPing(payload));
+            handlePing(unpack(MsgType.PING, payload));
             break;
         case MsgType.FORWARD: {
-            const forwarded = unpackForward(payload);
+            const forwarded = unpack(MsgType.FORWARD, payload);
             const inner = unpackHeader(forwarded.innerMsg);
             handleMessage(
                 inner.type,
@@ -159,31 +159,31 @@ function send(type, data) {
     let buffer;
     switch(type) {
         case "touch":
-            buffer = packTouch(data.action, data.touches);
+            buffer = pack(MsgType.TOUCH, data.action, data.touches);
             break;
         case "touchpad":
-            buffer = packTouchpad(data);
+            buffer = pack(MsgType.TOUCHPAD, data);
             break;
         case "mouse":
-            buffer = packMouse(data.action, data.x, data.y, data.button, data.w, data.h);
+            buffer = pack(MsgType.MOUSE, data.action, data.x, data.y, data.button, data.w, data.h);
             break;
         case "mouse_rel":
-            buffer = packMouseRel(data.action, data.rel_x, data.rel_y, data.button);
+            buffer = pack(MsgType.MOUSE_REL, data.action, data.rel_x, data.rel_y, data.button);
             break;
         case "wheel":
-            buffer = packWheel(data.dx, data.dy);
+            buffer = pack(MsgType.WHEEL, data.dx, data.dy);
             break;
         case "key":
-            buffer = packKey(data.code, data.action);
+            buffer = pack(MsgType.KEY, data.code, data.action);
             break;
         case "request_full":
-            buffer = packRequestFull();
+            buffer = pack(MsgType.REQUEST_FULL);
             break;
         case "quality":
-            buffer = packQuality(data.quality);
+            buffer = pack(MsgType.QUALITY, data.quality);
             break;
         case "ping":
-            buffer = packPing();
+            buffer = pack(MsgType.PING);
             break;
         default:
             console.warn("Unknown message type:", type);

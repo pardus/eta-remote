@@ -14,7 +14,7 @@ from gi.repository import Gtk, GLib, Gio
 from NewConnection import NewConnection
 from Clients import Clients
 
-from protocol import pack_perms, pack_file_ack, pack_kick
+from protocol import MsgType, pack
 
 allow_lock = threading.RLock()
 
@@ -108,7 +108,7 @@ class Control:
     def _notify_perms(self, client_id):
         with allow_lock:
             perms = self.allows.get(client_id, {}).get("perm", [])
-        msg = pack_perms(
+        msg = pack(MsgType.PERMS,
             "audio" in perms,
             "file" in perms,
             "image" in perms,
@@ -184,7 +184,7 @@ class Control:
         if kind == "file":
             def file_ack(name, chunk, complete):
                 try:
-                    ack = pack_file_ack(name, chunk, complete)
+                    ack = pack(MsgType.FILE_ACK, name, chunk, complete)
                     self.send_ws(ack)
                 except:
                     print(traceback.format_exc())
@@ -196,5 +196,5 @@ class Control:
 
     def kick_client(self, client_id):
         """Kick a client by ID."""
-        msg = pack_kick(client_id)
+        msg = pack(MsgType.KICK, client_id)
         self.send_ws(msg)

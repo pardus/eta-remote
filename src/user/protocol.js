@@ -117,222 +117,212 @@ function createMessage(msgType, payload) {
     return concat(packHeader(msgType, payload.byteLength), payload);
 }
 
-// Pack functions for outgoing messages
-
-function packConnect(clientId, clientData) {
-    return createMessage(MsgType.CONNECT, concat(
-        writeString(clientId),
-        writeBytes(new TextEncoder().encode(JSON.stringify(clientData || {})))
-    ));
-}
-
-function packTouch(action, touches) {
-    const actionBuf = new TextEncoder().encode(action);
-    const payload = new Uint8Array(1 + actionBuf.length + 2 + touches.length * 16);
-    const view = new DataView(payload.buffer);
-    let offset = 0;
-    payload[offset++] = actionBuf.length;
-    payload.set(actionBuf, offset);
-    offset += actionBuf.length;
-    view.setUint16(offset, touches.length);
-    offset += 2;
-    for (const t of touches) {
-        view.setUint16(offset, t.identifier & 0xFFFF);
-        view.setInt32(offset + 2, t.x | 0);
-        view.setInt32(offset + 6, t.y | 0);
-        view.setUint16(offset + 10, t.w | 0);
-        view.setUint16(offset + 12, t.h | 0);
-        view.setUint16(offset + 14, Math.max(0, Math.min(1023, t.f | 0)));
-        offset += 16;
-    }
-    return createMessage(MsgType.TOUCH, payload);
-}
-
-function packTouchpad(data) {
-    return createMessage(MsgType.TOUCHPAD, writeBytes(new TextEncoder().encode(JSON.stringify(data))));
-}
-
-function packMouse(action, x, y, button, w, h) {
-    const actionBuf = new TextEncoder().encode(action);
-    const payload = new ArrayBuffer(1 + actionBuf.length + 18);
-    const view = new DataView(payload);
-    let offset = 0;
-    view.setUint8(offset, actionBuf.length);
-    offset += 1;
-    new Uint8Array(payload, offset).set(actionBuf);
-    offset += actionBuf.length;
-    view.setFloat32(offset, x);
-    offset += 4;
-    view.setFloat32(offset, y);
-    offset += 4;
-    view.setUint16(offset, button);
-    offset += 2;
-    view.setInt32(offset, w);
-    offset += 4;
-    view.setInt32(offset, h);
-    return createMessage(MsgType.MOUSE, new Uint8Array(payload));
-}
-
-function packMouseRel(action, relX, relY, button) {
-    const actionBuf = new TextEncoder().encode(action);
-    const payload = new ArrayBuffer(1 + actionBuf.length + 10);
-    const view = new DataView(payload);
-    let offset = 0;
-    view.setUint8(offset, actionBuf.length);
-    offset += 1;
-    new Uint8Array(payload, offset).set(actionBuf);
-    offset += actionBuf.length;
-    view.setInt32(offset, relX);
-    offset += 4;
-    view.setInt32(offset, relY);
-    offset += 4;
-    view.setUint16(offset, button);
-    return createMessage(MsgType.MOUSE_REL, new Uint8Array(payload));
-}
-
-function packWheel(dx, dy) {
-    const payload = new ArrayBuffer(8);
-    const view = new DataView(payload);
-    view.setInt32(0, dx);
-    view.setInt32(4, dy);
-    return createMessage(MsgType.WHEEL, new Uint8Array(payload));
-}
-
-function packKey(code, action) {
-    const codeBuf = new TextEncoder().encode(code);
-    const actionBuf = new TextEncoder().encode(action);
-    const payload = new Uint8Array(1 + codeBuf.length + 1 + actionBuf.length);
-    let offset = 0;
-    payload[offset++] = codeBuf.length;
-    payload.set(codeBuf, offset);
-    offset += codeBuf.length;
-    payload[offset++] = actionBuf.length;
-    payload.set(actionBuf, offset);
-    return createMessage(MsgType.KEY, payload);
-}
-
-function packPing(timestamp = 0) {
-    const payload = new ArrayBuffer(8);
-    new DataView(payload).setFloat64(0, timestamp);
-    return createMessage(MsgType.PING, new Uint8Array(payload));
-}
-
-function unpackPing(payload) {
-    return createDataView(payload).getFloat64(0);
-}
-
-function packRequestFull() {
-    return createMessage(MsgType.REQUEST_FULL, new Uint8Array(0));
-}
-
-function packQuality(quality) {
-    const payload = new Uint8Array([Math.max(0, Math.min(100, quality))]);
-    return createMessage(MsgType.QUALITY, payload);
-}
-
-function packFile(name, chunk, totalChunks, data, mimetype = "") {
-    const chunkBuf = new ArrayBuffer(8);
-    const chunkView = new DataView(chunkBuf);
-    chunkView.setUint32(0, chunk);
-    chunkView.setUint32(4, totalChunks);
-
-    return createMessage(MsgType.FILE, concat(
-        writeString(name),
-        writeString(mimetype),
-        chunkBuf,
-        writeBytes(data)
-    ));
-}
-
-// Unpack functions for incoming messages
-
 function unpackHeader(data) {
     const view = createDataView(data);
     return { type: view.getUint8(0), payloadLen: view.getUint32(1) };
 }
 
-function unpackImage(payload) {
-    const view = createDataView(payload);
-    let offset = 0;
-    const x = view.getFloat32(offset); offset += 4;
-    const y = view.getFloat32(offset); offset += 4;
-    const width = view.getUint16(offset); offset += 2;
-    const height = view.getUint16(offset); offset += 2;
-    const screenWidth = view.getFloat32(offset); offset += 4;
-    const screenHeight = view.getFloat32(offset); offset += 4;
-    const [jpegData] = readBytes(view, offset);
-    return { x, y, width, height, screenWidth, screenHeight, jpegData };
-}
-
-function unpackAudio(payload) {
-    return readBytes(createDataView(payload), 0)[0];
-}
-
-function unpackDisconnect(payload) {
-    const view = createDataView(payload);
-    return readString(view, 0)[0];
-}
-
-function unpackConnectInfo(payload) {
-    const view = createDataView(payload);
-    let offset = 0;
-    const numClients = view.getUint16(offset); offset += 2;
-    const clients = [];
-    for (let i = 0; i < numClients; i++) {
-        const [clientId, newOffset] = readString(view, offset);
-        offset = newOffset;
-        const [clientDataBytes, newOffset2] = readBytes(view, offset);
-        offset = newOffset2;
-        const clientData = clientDataBytes.length > 0 ? JSON.parse(new TextDecoder().decode(clientDataBytes)) : {};
-        clients.push({ id: clientId, data: clientData });
+// Pack a message based on its type
+function pack(msgType, ...args) {
+    switch (msgType) {
+        case MsgType.CONNECT: {
+            const [clientId, clientData] = args;
+            return createMessage(msgType, concat(
+                writeString(clientId),
+                writeBytes(new TextEncoder().encode(JSON.stringify(clientData || {})))
+            ));
+        }
+        case MsgType.TOUCH: {
+            const [action, touches] = args;
+            const actionBuf = new TextEncoder().encode(action);
+            const payload = new Uint8Array(1 + actionBuf.length + 2 + touches.length * 16);
+            const view = new DataView(payload.buffer);
+            let offset = 0;
+            payload[offset++] = actionBuf.length;
+            payload.set(actionBuf, offset);
+            offset += actionBuf.length;
+            view.setUint16(offset, touches.length);
+            offset += 2;
+            for (const t of touches) {
+                view.setUint16(offset, t.identifier & 0xFFFF);
+                view.setInt32(offset + 2, t.x | 0);
+                view.setInt32(offset + 6, t.y | 0);
+                view.setUint16(offset + 10, t.w | 0);
+                view.setUint16(offset + 12, t.h | 0);
+                view.setUint16(offset + 14, Math.max(0, Math.min(1023, t.f | 0)));
+                offset += 16;
+            }
+            return createMessage(msgType, payload);
+        }
+        case MsgType.TOUCHPAD: {
+            const [data] = args;
+            return createMessage(msgType, writeBytes(new TextEncoder().encode(JSON.stringify(data))));
+        }
+        case MsgType.MOUSE: {
+            const [action, x, y, button, w, h] = args;
+            const actionBuf = new TextEncoder().encode(action);
+            const payload = new ArrayBuffer(1 + actionBuf.length + 18);
+            const view = new DataView(payload);
+            let offset = 0;
+            view.setUint8(offset, actionBuf.length);
+            offset += 1;
+            new Uint8Array(payload, offset).set(actionBuf);
+            offset += actionBuf.length;
+            view.setFloat32(offset, x);
+            offset += 4;
+            view.setFloat32(offset, y);
+            offset += 4;
+            view.setUint16(offset, button);
+            offset += 2;
+            view.setInt32(offset, w);
+            offset += 4;
+            view.setInt32(offset, h);
+            return createMessage(msgType, new Uint8Array(payload));
+        }
+        case MsgType.MOUSE_REL: {
+            const [action, relX, relY, button] = args;
+            const actionBuf = new TextEncoder().encode(action);
+            const payload = new ArrayBuffer(1 + actionBuf.length + 10);
+            const view = new DataView(payload);
+            let offset = 0;
+            view.setUint8(offset, actionBuf.length);
+            offset += 1;
+            new Uint8Array(payload, offset).set(actionBuf);
+            offset += actionBuf.length;
+            view.setInt32(offset, relX);
+            offset += 4;
+            view.setInt32(offset, relY);
+            offset += 4;
+            view.setUint16(offset, button);
+            return createMessage(msgType, new Uint8Array(payload));
+        }
+        case MsgType.WHEEL: {
+            const [dx, dy] = args;
+            const payload = new ArrayBuffer(8);
+            const view = new DataView(payload);
+            view.setInt32(0, dx);
+            view.setInt32(4, dy);
+            return createMessage(msgType, new Uint8Array(payload));
+        }
+        case MsgType.KEY: {
+            const [code, action] = args;
+            const codeBuf = new TextEncoder().encode(code);
+            const actionBuf = new TextEncoder().encode(action);
+            const payload = new Uint8Array(1 + codeBuf.length + 1 + actionBuf.length);
+            let offset = 0;
+            payload[offset++] = codeBuf.length;
+            payload.set(codeBuf, offset);
+            offset += codeBuf.length;
+            payload[offset++] = actionBuf.length;
+            payload.set(actionBuf, offset);
+            return createMessage(msgType, payload);
+        }
+        case MsgType.PING: {
+            const [timestamp = 0] = args;
+            const payload = new ArrayBuffer(8);
+            new DataView(payload).setFloat64(0, timestamp);
+            return createMessage(msgType, new Uint8Array(payload));
+        }
+        case MsgType.REQUEST_FULL:
+            return createMessage(msgType, new Uint8Array(0));
+        case MsgType.QUALITY: {
+            const [quality] = args;
+            const payload = new Uint8Array([Math.max(0, Math.min(100, quality))]);
+            return createMessage(msgType, payload);
+        }
+        case MsgType.FILE: {
+            const [name, chunk, totalChunks, data, mimetype = ""] = args;
+            const chunkBuf = new ArrayBuffer(8);
+            const chunkView = new DataView(chunkBuf);
+            chunkView.setUint32(0, chunk);
+            chunkView.setUint32(4, totalChunks);
+            return createMessage(msgType, concat(
+                writeString(name),
+                writeString(mimetype),
+                chunkBuf,
+                writeBytes(data)
+            ));
+        }
+        default:
+            throw new Error("Unsupported pack message type: " + msgType);
     }
-    return clients;
 }
 
-function unpackFileAck(payload) {
+// Unpack a message payload based on its type
+function unpack(msgType, payload) {
     const view = createDataView(payload);
-    let offset = 0;
-    const [name, newOffset] = readString(view, offset);
-    offset = newOffset;
-    const chunk = view.getUint32(offset); offset += 4;
-    const complete = view.getUint8(offset) !== 0;
-    return { name, chunk, complete };
-}
-
-function unpackPerms(payload) {
-    const view = createDataView(payload);
-    let offset = 0;
-    const flags = view.getUint8(offset); offset += 1;
-    const audio = (flags & 0x08) !== 0;
-    const file = (flags & 0x04) !== 0;
-    const image = (flags & 0x02) !== 0;
-    const input = (flags & 0x01) !== 0;
-    const numTargets = view.getUint16(offset); offset += 2;
-    const targets = [];
-    for (let i = 0; i < numTargets; i++) {
-        const [tid, newOffset] = readString(view, offset);
-        offset = newOffset;
-        targets.push(tid);
+    switch (msgType) {
+        case MsgType.IMAGE: {
+            let offset = 0;
+            const x = view.getFloat32(offset); offset += 4;
+            const y = view.getFloat32(offset); offset += 4;
+            const width = view.getUint16(offset); offset += 2;
+            const height = view.getUint16(offset); offset += 2;
+            const screenWidth = view.getFloat32(offset); offset += 4;
+            const screenHeight = view.getFloat32(offset); offset += 4;
+            const [jpegData] = readBytes(view, offset);
+            return { x, y, width, height, screenWidth, screenHeight, jpegData };
+        }
+        case MsgType.AUDIO:
+            return readBytes(view, 0)[0];
+        case MsgType.DISCONNECT:
+            return readString(view, 0)[0];
+        case MsgType.CONNECT_INFO: {
+            let offset = 0;
+            const numClients = view.getUint16(offset); offset += 2;
+            const clients = [];
+            for (let i = 0; i < numClients; i++) {
+                const [clientId, newOffset] = readString(view, offset);
+                offset = newOffset;
+                const [clientDataBytes, newOffset2] = readBytes(view, offset);
+                offset = newOffset2;
+                const clientData = clientDataBytes.length > 0 ? JSON.parse(new TextDecoder().decode(clientDataBytes)) : {};
+                clients.push({ id: clientId, data: clientData });
+            }
+            return clients;
+        }
+        case MsgType.FILE_ACK: {
+            let offset = 0;
+            const [name, newOffset] = readString(view, offset);
+            offset = newOffset;
+            const chunk = view.getUint32(offset); offset += 4;
+            const complete = view.getUint8(offset) !== 0;
+            return { name, chunk, complete };
+        }
+        case MsgType.PERMS: {
+            let offset = 0;
+            const flags = view.getUint8(offset); offset += 1;
+            const audio = (flags & 0x08) !== 0;
+            const file = (flags & 0x04) !== 0;
+            const image = (flags & 0x02) !== 0;
+            const input = (flags & 0x01) !== 0;
+            const numTargets = view.getUint16(offset); offset += 2;
+            const targets = [];
+            for (let i = 0; i < numTargets; i++) {
+                const [tid, newOffset] = readString(view, offset);
+                offset = newOffset;
+                targets.push(tid);
+            }
+            return { audio, file, image, input, targets };
+        }
+        case MsgType.FORWARD: {
+            let offset = 0;
+            const [senderId, newOffset] = readString(view, offset);
+            offset = newOffset;
+            const [innerMsg, _] = readBytes(view, offset);
+            return { senderId, innerMsg };
+        }
+        case MsgType.PING:
+            return view.getFloat64(0);
+        default:
+            throw new Error("Unsupported unpack message type: " + msgType);
     }
-    return { audio, file, image, input, targets };
-}
-
-function unpackForward(payload) {
-    const view = createDataView(payload);
-    let offset = 0;
-    const [senderId, newOffset] = readString(view, offset);
-    offset = newOffset;
-    const [innerMsg, _] = readBytes(view, offset);
-    return { senderId, innerMsg };
 }
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         MsgType, HEADER_SIZE, BinaryProtocol,
-        packConnect, packTouch, packTouchpad, packMouse, packMouseRel, packWheel, packKey,
-        packPing, packRequestFull, packQuality, packFile,
-        unpackHeader, unpackImage, unpackAudio, unpackDisconnect,
-        unpackConnectInfo, unpackFileAck, unpackPerms, unpackForward, unpackPing
+        pack, unpack, unpackHeader
     };
 }

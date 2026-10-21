@@ -9,10 +9,8 @@ from websockets.exceptions import ConnectionClosed
 import traceback
 
 from protocol import (
-    BinaryProtocol, MsgType, pack_connect, unpack_header, HEADER_SIZE,
-    unpack_image, unpack_audio, unpack_disconnect, unpack_connect_info,
-    unpack_file_ack, unpack_perms, unpack_forward, unpack_connect,
-    unpack_file, INPUT_PARSERS,
+    BinaryProtocol, MsgType, pack, unpack, unpack_header, HEADER_SIZE,
+    INPUT_TYPES,
 )
 
 from capture import main as capture_main, request_full
@@ -50,7 +48,7 @@ class WebSocketClient:
         if self.control(ctx):
             if ctx.message.get("type") == "request_full":
                 request_full()
-            elif msg_type in INPUT_PARSERS:
+            elif msg_type in INPUT_TYPES:
                 self.handler(msg_data)
             else:
                 self.handler(ctx.message)
@@ -75,7 +73,7 @@ class WebSocketClient:
                 for msg_data in self._protocol.feed(message):
                     msg_type, _ = unpack_header(msg_data)
                     if msg_type == MsgType.FORWARD:
-                        sender_id, inner = unpack_forward(msg_data[HEADER_SIZE:])
+                        sender_id, inner = unpack(MsgType.FORWARD, msg_data[HEADER_SIZE:])
                         inner_type, _ = unpack_header(inner)
                         self._process_message(ctx, inner_type, inner, sender_id)
                     else:
@@ -85,13 +83,12 @@ class WebSocketClient:
         except:
             print(traceback.format_exc())
 
-    def _parse_message(self, msg_type: MsgType, payload: bytes):
+    def _parse_message(self, msg_type, payload):
         """Parse binary message payload into a dict for the control/handler."""
         try:
-            if msg_type in INPUT_PARSERS:
-                return INPUT_PARSERS[msg_type](payload)
+            result = unpack(msg_type, payload)
             if msg_type == MsgType.IMAGE:
-                x, y, width, height, sw, sh, jpeg_data = unpack_image(payload)
+                x, y, width, height, sw, sh, jpeg_data = result
                 return {
                     "type": "image",
                     "x": x, "y": y,
@@ -100,23 +97,23 @@ class WebSocketClient:
                     "pixels": jpeg_data,
                 }
             if msg_type == MsgType.AUDIO:
-                return {"type": "audio", "data": unpack_audio(payload)}
+                return {"type": "audio", "data": result}
             if msg_type == MsgType.DISCONNECT:
-                return {"type": "disconnect", "id": unpack_disconnect(payload)}
+                return {"type": "disconnect", "id": result}
             if msg_type == MsgType.CONNECT_INFO:
-                return {"type": "connect_info", "clients": unpack_connect_info(payload)}
+                return {"type": "connect_info", "clients": result}
             if msg_type == MsgType.FILE_ACK:
-                name, chunk, complete = unpack_file_ack(payload)
+                name, chunk, complete = result
                 return {"type": "file_ack", "name": name, "chunk": chunk, "complete": complete}
             if msg_type == MsgType.PERMS:
-                audio, file, image, input_, targets = unpack_perms(payload)
+                audio, file, image, input_, targets = result
                 return {
                     "type": "perms",
                     "audio": audio, "file": file, "image": image, "input": input_,
                     "target": targets,
                 }
             if msg_type == MsgType.FILE:
-                name, mimetype, chunk, total_chunks, data = unpack_file(payload)
+                name, mimetype, chunk, total_chunks, data = result
                 return {
                     "type": "file",
                     "name": name,
@@ -126,13 +123,9 @@ class WebSocketClient:
                     "data": data,
                 }
             if msg_type == MsgType.CONNECT:
-                _, client_data = unpack_connect(payload)
+                _, client_data = result
                 return {"type": "connect", **(client_data or {})}
-            if msg_type == MsgType.REQUEST_FULL:
-                return {"type": "request_full"}
-            if msg_type == MsgType.PING:
-                return {"type": "ping"}
-            return {"type": "unknown", "raw_type": msg_type, "payload": payload}
+            return result
         except:
             print(traceback.format_exc())
             return None
@@ -244,7 +237,7 @@ class WebSocketClient:
                         self.ctx = context()
                         self.ctx.websocket = websocket
                         self._protocol = BinaryProtocol()
-                        websocket.send(pack_connect("client", {
+                        websocket.send(pack(MsgType.CONNECT, "client", {
                             "useragent": "eta-remote-client",
                             "platform": platform.platform(),
                             "language": "en",

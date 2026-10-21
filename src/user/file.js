@@ -166,7 +166,7 @@ function sendFile(file) {
         try {
             const arrayBuffer = await slice.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
-            sendBinary(packFile(name, chunkIndex, totalChunks, data, file.type));
+            sendBinary(pack(MsgType.FILE, name, chunkIndex, totalChunks, data, file.type));
             chunkIndex++;
             const transferred = Math.min(chunkIndex * CHUNK_SIZE, file.size);
             const pct = Math.round((transferred / file.size) * 100);

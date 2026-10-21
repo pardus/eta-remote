@@ -18,8 +18,7 @@ import uuid
 import zlib
 
 from protocol import (
-    MsgType, BinaryProtocol, parse_message, unpack_connect, unpack_kick,
-    unpack_perms, pack_disconnect, pack_connect_info, pack_forward,
+    MsgType, BinaryProtocol, parse_message, pack, unpack,
 )
 
 rooms: dict[str, set] = {}
@@ -81,7 +80,7 @@ def handler(websocket):
     with clients_lock:
         others = [(c.id, c.data) for c in clients if c != client]
     if others:
-        client.queue.put(pack_connect_info(others))
+        client.queue.put(pack(MsgType.CONNECT_INFO, others))
 
     try:
         for message in websocket:
@@ -89,13 +88,13 @@ def handler(websocket):
                 msg_type, payload = parse_message(msg_data)
 
                 if msg_type == MsgType.CONNECT:
-                    _, client_data = unpack_connect(payload)
+                    _, client_data = unpack(MsgType.CONNECT, payload)
                     client.data = client_data or client.data
                 elif msg_type == MsgType.PING:
-                    client.queue.put(pack_forward(client.id, msg_data))
+                    client.queue.put(pack(MsgType.FORWARD, client.id, msg_data))
                     continue
                 elif msg_type == MsgType.KICK and admin:
-                    target_id = unpack_kick(payload)
+                    target_id = unpack(MsgType.KICK, payload)
                     with clients_lock:
                         for kicked in clients.copy():
                             if kicked.id == target_id:
@@ -107,12 +106,12 @@ def handler(websocket):
 
                 with clients_lock:
                     if msg_type == MsgType.PERMS:
-                        targets = unpack_perms(payload)[4]
+                        targets = unpack(MsgType.PERMS, payload)[4]
                         recipients = [c for c in clients if c.id in targets]
                     else:
                         recipients = clients - {client}
 
-                forward_msg = pack_forward(client.id, msg_data)
+                forward_msg = pack(MsgType.FORWARD, client.id, msg_data)
                 for recipient in recipients:
                     recipient.queue.put(forward_msg)
 
@@ -132,7 +131,7 @@ def handler(websocket):
         client.queue.put(None)
 
         # Notify remaining clients of disconnect
-        disconnect_msg = pack_disconnect(client.id)
+        disconnect_msg = pack(MsgType.DISCONNECT, client.id)
         for remaining_client in remaining:
             remaining_client.queue.put(disconnect_msg)
 
