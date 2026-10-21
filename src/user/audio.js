@@ -12,12 +12,8 @@ function initAudio() {
     }
 }
 
-async function decodeS16(b64) {
-    const binary = atob(b64);
-    const compressed = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        compressed[i] = binary.charCodeAt(i);
-    }
+async function decodeS16(compressed) {
+    // compressed is a Uint8Array of gzipped data
     const ds = new DecompressionStream("gzip");
     const stream = new Blob([compressed]).stream().pipeThrough(ds);
     const decompressed = new Uint8Array(await new Response(stream).arrayBuffer());
@@ -70,6 +66,7 @@ function handleAudioPerms(enabled) {
             muted = true;
             button.textContent = _("Sound: Blocked");
         } else {
+            muted = false;
             button.textContent = _("Sound: Off");
         }
     }

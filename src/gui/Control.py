@@ -1,5 +1,4 @@
 import gi
-import json
 import time
 import threading
 import traceback
@@ -15,17 +14,20 @@ from gi.repository import Gtk, GLib, Gio
 from NewConnection import NewConnection
 from Clients import Clients
 
+from protocol import pack_perms, pack_file_ack, pack_kick
+
 allow_lock = threading.RLock()
 
 all_permissions = {
-    "audio":["audio"],
-    "input":[
+    "audio": ["audio"],
+    "input": [
         "mouse", "key", "touch", "wheel", "touchpad"
     ],
     "image": ["image", "request_full"],
     "misc": ["quality"],
     "file": ["file"]
 }
+
 
 class Control:
     def __init__(self, clients=None):
@@ -58,7 +60,6 @@ class Control:
         if threading.current_thread() is not threading.main_thread():
             GLib.idle_add(self._update_ui)
             return
-        print(json.dumps(self.allows, indent=2))
         self.clients._update()
 
     def send_ws(self, message):
@@ -107,22 +108,18 @@ class Control:
     def _notify_perms(self, client_id):
         with allow_lock:
             perms = self.allows.get(client_id, {}).get("perm", [])
-        perms = {
-                 "audio" : "audio" in perms,
-                 "file"  : "file"  in perms,
-                 "image" : "image" in perms,
-                 "input" : "input" in perms
-        }
-        msg = json.dumps({
-            "type"  : "perms",
-            "target": [client_id],
-            **perms
-        })
+        msg = pack_perms(
+            "audio" in perms,
+            "file" in perms,
+            "image" in perms,
+            "input" in perms,
+            target_ids=[client_id],
+        )
         self.send_ws(msg)
 
     def _connect(self, data, client_id):
         with allow_lock:
-            self.allows[client_id] = {"perm":[], "data":data, "time": time.time(), "new-connection": None}
+            self.allows[client_id] = {"perm": [], "data": data, "time": time.time(), "new-connection": None}
         self._show_clients()
         if self.settings.get_boolean("auto-allow"):
             self.set_permission("image", client_id, True)
@@ -144,37 +141,39 @@ class Control:
         self._update_ui()
 
     def control(self, ctx):
-        """control and filter websocket context"""
+        """Filter and route one parsed websocket message."""
         with self.ws_lock:
             self.ws = ctx.websocket
         try:
-            data = json.loads(ctx.message)
+            data = ctx.message
+            if data is None:
+                return False
             client_id = data.get("id")
-            type = data.get("type")
-            if type == "connect":
+            kind = data.get("type")
+            if kind == "connect":
                 ctx.wait = False
                 GLib.idle_add(self._connect, data, client_id)
-            elif type == "disconnect":
+            elif kind == "disconnect":
                 ctx.wait = (len(self.allows.keys()) == 0)
                 GLib.idle_add(self._disconnect, client_id)
 
             with allow_lock:
                 data["target"] = []
                 for cl in list(self.allows.keys()):
-                    for perm in self.allows[cl].get("perm",[]) + ["misc"]:
-                        if type in all_permissions.get(perm, []):
+                    for perm in self.allows[cl].get("perm", []) + ["misc"]:
+                        if kind in all_permissions.get(perm, []):
                             data["target"].append(cl)
                             break
-            ctx.message = json.dumps(data)
+            ctx.message = data
         except:
             print(traceback.format_exc())
             return False
 
         with allow_lock:
-            if client_id in self.allows.keys() and type in all_permissions["input"]:
+            if client_id in self.allows.keys() and kind in all_permissions["input"]:
                 self.allows[client_id]["time"] = time.time()
 
-        allowed = (client_id == None or client_id in data["target"] or type in ["connect", "disconnect"])
+        allowed = (client_id is None or client_id in data["target"] or kind in ["connect", "disconnect"])
         with allow_lock:
             if len(self.allows.keys()) == 0:
                 allowed = False
@@ -182,10 +181,10 @@ class Control:
         if not allowed:
             return False
 
-        if type == "file":
+        if kind == "file":
             def file_ack(name, chunk, complete):
                 try:
-                    ack = json.dumps({"type": "file_ack", "name": name, "chunk": chunk, "complete": complete})
+                    ack = pack_file_ack(name, chunk, complete)
                     self.send_ws(ack)
                 except:
                     print(traceback.format_exc())
@@ -194,3 +193,8 @@ class Control:
             return True
 
         return False
+
+    def kick_client(self, client_id):
+        """Kick a client by ID."""
+        msg = pack_kick(client_id)
+        self.send_ws(msg)

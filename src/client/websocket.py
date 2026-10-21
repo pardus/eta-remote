@@ -1,12 +1,19 @@
-import json
 import queue
 import copy
+import platform
 import threading
 import time
 from websockets.sync.client import connect
 from websockets.exceptions import ConnectionClosed
 
 import traceback
+
+from protocol import (
+    BinaryProtocol, MsgType, pack_connect, unpack_header, HEADER_SIZE,
+    unpack_image, unpack_audio, unpack_disconnect, unpack_connect_info,
+    unpack_file_ack, unpack_perms, unpack_forward, unpack_connect,
+    unpack_file, INPUT_PARSERS,
+)
 
 from capture import main as capture_main, request_full
 from pulse import main as pulse_main, pulse_stop, pulse_start
@@ -16,7 +23,7 @@ class context:
     def __init__(self):
         self.allow = False
         self.websocket = None
-        self.message = ""
+        self.message = None
         self.wait = True
 
 
@@ -31,33 +38,107 @@ class WebSocketClient:
         self._data_queue = queue.Queue()
         self._audio_queue = queue.Queue(maxsize=10)
         self.ctx = context()
+        self._protocol = BinaryProtocol()
+
+    def _process_message(self, ctx, msg_type, msg_data, sender_id=None):
+        ctx.message = self._parse_message(msg_type, msg_data[HEADER_SIZE:])
+        if ctx.message is None:
+            return
+        if sender_id is not None:
+            ctx.message["id"] = sender_id
+
+        if self.control(ctx):
+            if ctx.message.get("type") == "request_full":
+                request_full()
+            elif msg_type in INPUT_PARSERS:
+                self.handler(msg_data)
+            else:
+                self.handler(ctx.message)
+
+        if self._wait_last != ctx.wait:
+            self.ctx.wait = ctx.wait
+            if not ctx.wait:
+                self._start()
+            else:
+                self._stop()
+            self._wait_last = ctx.wait
 
     def client(self):
         try:
             ctx = copy.copy(self.ctx)
-            for message in self.ctx.websocket:
-                ctx.message = message
-                if self.control(ctx):
-                    if "request_full" in message:
-                        request_full()
+            while not self._stop_event.is_set():
+                try:
+                    message = self.ctx.websocket.recv()
+                except ConnectionClosed:
+                    return
+
+                for msg_data in self._protocol.feed(message):
+                    msg_type, _ = unpack_header(msg_data)
+                    if msg_type == MsgType.FORWARD:
+                        sender_id, inner = unpack_forward(msg_data[HEADER_SIZE:])
+                        inner_type, _ = unpack_header(inner)
+                        self._process_message(ctx, inner_type, inner, sender_id)
                     else:
-                        self.handler(message)
-                if self._wait_last != ctx.wait:
-                    self.ctx.wait = ctx.wait
-                    if not ctx.wait:
-                        self._start()
-                    else:
-                        self._stop()
-                    self._wait_last = ctx.wait
+                        self._process_message(ctx, msg_type, msg_data)
         except ConnectionClosed:
             pass
         except:
             print(traceback.format_exc())
 
+    def _parse_message(self, msg_type: MsgType, payload: bytes):
+        """Parse binary message payload into a dict for the control/handler."""
+        try:
+            if msg_type in INPUT_PARSERS:
+                return INPUT_PARSERS[msg_type](payload)
+            if msg_type == MsgType.IMAGE:
+                x, y, width, height, sw, sh, jpeg_data = unpack_image(payload)
+                return {
+                    "type": "image",
+                    "x": x, "y": y,
+                    "width": width, "height": height,
+                    "screen_width": sw, "screen_height": sh,
+                    "pixels": jpeg_data,
+                }
+            if msg_type == MsgType.AUDIO:
+                return {"type": "audio", "data": unpack_audio(payload)}
+            if msg_type == MsgType.DISCONNECT:
+                return {"type": "disconnect", "id": unpack_disconnect(payload)}
+            if msg_type == MsgType.CONNECT_INFO:
+                return {"type": "connect_info", "clients": unpack_connect_info(payload)}
+            if msg_type == MsgType.FILE_ACK:
+                name, chunk, complete = unpack_file_ack(payload)
+                return {"type": "file_ack", "name": name, "chunk": chunk, "complete": complete}
+            if msg_type == MsgType.PERMS:
+                audio, file, image, input_, targets = unpack_perms(payload)
+                return {
+                    "type": "perms",
+                    "audio": audio, "file": file, "image": image, "input": input_,
+                    "target": targets,
+                }
+            if msg_type == MsgType.FILE:
+                name, mimetype, chunk, total_chunks, data = unpack_file(payload)
+                return {
+                    "type": "file",
+                    "name": name,
+                    "mimetype": mimetype,
+                    "chunk": chunk,
+                    "totalChunks": total_chunks,
+                    "data": data,
+                }
+            if msg_type == MsgType.CONNECT:
+                _, client_data = unpack_connect(payload)
+                return {"type": "connect", **(client_data or {})}
+            if msg_type == MsgType.REQUEST_FULL:
+                return {"type": "request_full"}
+            if msg_type == MsgType.PING:
+                return {"type": "ping"}
+            return {"type": "unknown", "raw_type": msg_type, "payload": payload}
+        except:
+            print(traceback.format_exc())
+            return None
+
     def sender(self, q):
-        ctx = copy.copy(self.ctx)
         while not self._stop_event.is_set():
-            # run() clears ctx.websocket when the connection drops
             if self.ctx.websocket is None:
                 return
             try:
@@ -66,14 +147,12 @@ class WebSocketClient:
                 continue
             if message is None:
                 return
-            ctx.message = message
-            if self.control(ctx):
-                try:
-                    ctx.websocket.send(ctx.message)
-                except ConnectionClosed:
-                    return
-                except:
-                    print(traceback.format_exc())
+            try:
+                self.ctx.websocket.send(message)
+            except ConnectionClosed:
+                return
+            except:
+                print(traceback.format_exc())
 
     def streamer(self):
         def data_handler(message):
@@ -111,7 +190,6 @@ class WebSocketClient:
 
         try:
             while not self._stop_event.is_set():
-                # wait until a connection is available
                 while not self._stop_event.is_set() and self.ctx.websocket is None:
                     time.sleep(0.05)
                 if self._stop_event.is_set():
@@ -126,8 +204,6 @@ class WebSocketClient:
                 sender_thread_2.start()
                 sender_thread_1.join()
                 sender_thread_2.join()
-                # senders exited: either the connection dropped (loop and
-                # wait for the next one) or stop() was called (loop exits)
         finally:
             capture_thread.join()
             audio_thread.join()
@@ -142,7 +218,6 @@ class WebSocketClient:
 
     def stop(self):
         self._stop_event.set()
-        # unblock data/audio handlers waiting on the go event
         self._go_event.set()
         try:
             self._data_queue.put_nowait(None)
@@ -168,11 +243,16 @@ class WebSocketClient:
                     with connect(self.address, max_size=None) as websocket:
                         self.ctx = context()
                         self.ctx.websocket = websocket
+                        self._protocol = BinaryProtocol()
+                        websocket.send(pack_connect("client", {
+                            "useragent": "eta-remote-client",
+                            "platform": platform.platform(),
+                            "language": "en",
+                            "mobile": False,
+                        }))
                         client_thread = threading.Thread(target=self.client)
                         client_thread.start()
                         client_thread.join()
-                        # connection dropped: tell the senders and loop to
-                        # reconnect instead of leaving them blocked
                         self.ctx.websocket = None
                 except (OSError, ConnectionClosed):
                     if self._stop_event.is_set():

@@ -1,11 +1,18 @@
 import os
-import base64
-import json
 import time
 import traceback
+from collections import namedtuple
 from io import BytesIO
 
-from PIL import Image, ImageChops, ImageGrab
+from PIL import Image, ImageChops
+
+from protocol import pack_image
+
+
+Patch = namedtuple(
+    "Patch",
+    "x y width height screen_width screen_height jpeg"
+)
 
 
 def _mutter_running():
@@ -39,8 +46,9 @@ SPEED = 60
 img_width = 0
 img_height = 0
 
-def image_diff_patch_json(previous, current):
 
+def image_diff_patch(previous, current):
+    """Return a Patch describing the changed region and its JPEG data, or None."""
     if previous.size != current.size:
         raise ValueError("Images must have the same dimensions")
 
@@ -57,8 +65,8 @@ def image_diff_patch_json(previous, current):
     if int(scale) <= 1:
         scale = 1
     else:
-        new_w = int(patch.width/scale)
-        new_h = int(patch.height/scale)
+        new_w = int(patch.width / scale)
+        new_h = int(patch.height / scale)
         if new_w > 0 and new_h > 0:
             patch = patch.resize(
                 (new_w, new_h),
@@ -84,35 +92,27 @@ def image_diff_patch_json(previous, current):
         buffer,
         format="JPEG",
         optimize=True,
-        quality=int(ratio*100),
+        quality=int(ratio * 100),
     )
 
-    encoded_pixels = base64.b64encode(
-        buffer.getvalue()
-    ).decode("ascii")
-
-    result = {
-        "type": "image",
-        "x": x1/scale,
-        "y": y1/scale,
-        "width": patch.width,
-        "height": patch.height,
-        "screen_width": img_width/scale,
-        "screen_height": img_height/scale,
-        "pixels": encoded_pixels,
-    }
-
-    return json.dumps(
-        result,
-        separators=(",", ":"),
+    return Patch(
+        x1 / scale,
+        y1 / scale,
+        patch.width,
+        patch.height,
+        img_width / scale,
+        img_height / scale,
+        buffer.getvalue(),
     )
-
 
 
 req_full = False
+
+
 def request_full():
     global req_full
     req_full = True
+
 
 def _should_stop(stop_event):
     return stop_event is not None and stop_event.is_set()
@@ -155,18 +155,14 @@ def main(handler=None, stop_event=None):
                 img_height = current_image.height
                 previous_image = Image.new('RGB', (img_width, img_height), color='black')
 
-            patch_json = image_diff_patch_json(
-                previous_image,
-                current_image,
-            )
+            patch = image_diff_patch(previous_image, current_image)
 
-            if patch_json != None:
-                if handler:
-                    handler(patch_json)
+            if patch is not None and handler:
+                handler(pack_image(*patch))
 
             previous_image = current_image
 
-            delay = len(str(patch_json)) / (921600*SPEED)
+            delay = len(patch.jpeg) / (921600 * SPEED) if patch else 0
             wait_event()
             now = time.time()
             if now - cur < delay:
@@ -183,7 +179,6 @@ def main(handler=None, stop_event=None):
             time.sleep(3)
 
     display_close()
-
 
 
 if __name__ == "__main__":

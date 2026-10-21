@@ -15,9 +15,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(BASE_DIR, "../"))
 
 import uuid
-import time
 import zlib
-import json
+
+from protocol import (
+    MsgType, BinaryProtocol, parse_message, unpack_connect, unpack_kick,
+    unpack_perms, pack_disconnect, pack_connect_info, pack_forward,
+)
 
 rooms: dict[str, set] = {}
 rooms_lock = threading.Lock()
@@ -39,6 +42,8 @@ class Client:
         self.id = None
         self.queue = None
         self.writer = None
+        self.protocol = BinaryProtocol()
+        self.data = {}
 
 
 def _writer(client):
@@ -72,39 +77,44 @@ def handler(websocket):
     client.writer = threading.Thread(target=_writer, args=(client,), daemon=True)
     client.writer.start()
 
+    # Send the list of already-connected clients to the new client
+    with clients_lock:
+        others = [(c.id, c.data) for c in clients if c != client]
+    if others:
+        client.queue.put(pack_connect_info(others))
+
     try:
         for message in websocket:
-            # Forward the message to every other client in this room
-            message = json.loads(message)
-            message["id"] = client.id
+            for msg_data in client.protocol.feed(message):
+                msg_type, payload = parse_message(msg_data)
 
-            if "ping" in message:
-                client.queue.put(json.dumps(message))
-                continue
+                if msg_type == MsgType.CONNECT:
+                    _, client_data = unpack_connect(payload)
+                    client.data = client_data or client.data
+                elif msg_type == MsgType.PING:
+                    client.queue.put(pack_forward(client.id, msg_data))
+                    continue
+                elif msg_type == MsgType.KICK and admin:
+                    target_id = unpack_kick(payload)
+                    with clients_lock:
+                        for kicked in clients.copy():
+                            if kicked.id == target_id:
+                                print("kick", kicked.id)
+                                kicked.websocket.close()
+                                kicked.queue.put(None)
+                                clients.discard(kicked)
+                    continue
 
-            if "kick" in message and admin:
                 with clients_lock:
-                    for kicked in clients.copy():
-                        if kicked.id == message.get("kick", None):
-                            print("kick", kicked.id)
-                            kicked.websocket.close()
-                            kicked.queue.put(None)
-                            clients.discard(kicked)
+                    if msg_type == MsgType.PERMS:
+                        targets = unpack_perms(payload)[4]
+                        recipients = [c for c in clients if c.id in targets]
+                    else:
+                        recipients = clients - {client}
 
-            if "target" in message:
-                with clients_lock:
-                    recipients = [
-                        recipient for recipient in clients
-                        if recipient.id in message.get("target", [])
-                    ]
-            else:
-                with clients_lock:
-                    recipients = clients - {client}
-
-            data = json.dumps(message)
-
-            for recipient in recipients:
-                recipient.queue.put(data)
+                forward_msg = pack_forward(client.id, msg_data)
+                for recipient in recipients:
+                    recipient.queue.put(forward_msg)
 
     except:
         print(traceback.format_exc())
@@ -121,11 +131,10 @@ def handler(websocket):
 
         client.queue.put(None)
 
-        message = {"type": "disconnect", "id": client.id}
-        message = json.dumps(message)
-
+        # Notify remaining clients of disconnect
+        disconnect_msg = pack_disconnect(client.id)
         for remaining_client in remaining:
-            remaining_client.queue.put(message)
+            remaining_client.queue.put(disconnect_msg)
 
         print(f"Client left {path}; id={client.id} clients={len(remaining)}")
 

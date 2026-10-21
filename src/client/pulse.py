@@ -1,11 +1,11 @@
 import os
 import signal
 import time
-import base64
 import gzip
-import json
 import subprocess
 import threading
+
+from protocol import pack_audio
 
 FFMPEG_CMD = [
     "ffmpeg",
@@ -21,9 +21,9 @@ FFMPEG_CMD = [
 ]
 
 
-
 proc = None
 _proc_lock = threading.Lock()
+
 
 def pulse_start():
     global proc
@@ -35,6 +35,7 @@ def pulse_start():
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
+
 
 def record_audio(stop_event=None):
     while True:
@@ -53,6 +54,7 @@ def record_audio(stop_event=None):
             continue
         yield data
 
+
 def pulse_stop():
     global proc
     with _proc_lock:
@@ -67,18 +69,12 @@ def pulse_stop():
     except ProcessLookupError:
         pass
 
+
 def main(handler=None, stop_event=None):
     for data in record_audio(stop_event):
-        compressed = gzip.compress(data)
-        message = json.dumps(
-            {
-                "type": "audio",
-                "data": base64.b64encode(compressed).decode("ascii"),
-            },
-            separators=(",", ":"),
-        )
         if handler:
-            handler(message)
+            handler(pack_audio(gzip.compress(data)))
+
 
 if __name__ == "__main__":
     main(print)

@@ -40,7 +40,6 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
 
-
 window.addEventListener("load", function(){
 
     if(!ws){
@@ -49,11 +48,12 @@ window.addEventListener("load", function(){
 
 });
 
+
 function handlePatch(message) {
     if (!perms.image) return;
-    if (message.screen_width && message.screen_height) {
-        const w = Number(message.screen_width);
-        const h = Number(message.screen_height);
+    if (message.screenWidth && message.screenHeight) {
+        const w = Number(message.screenWidth);
+        const h = Number(message.screenHeight);
         if (w != sourceWidth || h != sourceHeight){
             sourceWidth = w;
             sourceHeight = h;
@@ -93,8 +93,10 @@ function drawPatch(patch) {
     }
 
     const image = new Image();
+    const url = URL.createObjectURL(new Blob([patch.jpegData], { type: "image/jpeg" }));
 
     image.onload = function () {
+        URL.revokeObjectURL(url);
         const drawX = x * scale;
         const drawY = y * scale;
         const drawWidth = width * scale;
@@ -110,14 +112,9 @@ function drawPatch(patch) {
     };
 
     image.onerror = function () {
+        URL.revokeObjectURL(url);
         console.error("Could not decode image patch");
     };
 
-
-    const pixels = String(patch.pixels).replace(
-        /^data:image\/[^;]+;base64,/,
-        ""
-    );
-
-    image.src = `data:image/jpeg;base64,${pixels}`;
+    image.src = url;
 }

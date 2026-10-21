@@ -31,6 +31,7 @@ if (isWindows || isApple) {
 
 let client_id = null;
 let ws = null;
+let protocol = new BinaryProtocol();
 let input_allowed = true;
 let connected = false;
 let perms = { input:true, audio: true, file: true, image: true };
@@ -55,7 +56,7 @@ let wait_pong = false;
 function pingCalculator(){
     const time_cur = performance.now();
     if(ws && !wait_pong){
-        send("ping", {"ping": time_cur});
+        sendBinary(packPing(time_cur));
         wait_pong = true;
     }
     setTimeout(pingCalculator, 1000); 
@@ -72,6 +73,7 @@ function handlePing(ping){
 document.getElementById("fc-menu").appendChild(fc_ping);
 
 pingCalculator();
+
 function connect() {
     if(ws){
         return;
@@ -82,41 +84,24 @@ function connect() {
         proto = "wss://";
     }
     ws = new WebSocket(proto+window.location.hostname+":"+ws_port+"/"+room);
+    ws.binaryType = "arraybuffer";
 
     ws.onopen = () => {
         capture.focus();
         setStatus(_("Waiting for accept"));
         connected = false;
-        send("connect", properties());
+        // Send CONNECT message
+        sendBinary(packConnect("client", properties()));
     };
 
     ws.onmessage = function (event) {
-        let message;
-        if(!connected){
-            connected = true;
-            setStatus("");
-        }
-        try {
-            message = JSON.parse(event.data);
-        } catch (error) {
-            console.error("Invalid JSON:", event.data);
-            return;
-        }
-
-        if (message.type === "ping") {
-            if(client_id == null){
-                client_id = message.id;
-                document.title = _("Remote Control") + " - " + client_id;
+        protocol.feed(new Uint8Array(event.data));
+        for (const msg of protocol.getMessages()) {
+            if (!connected) {
+                connected = true;
+                setStatus("");
             }
-            handlePing(message.ping);
-        } else if (message.type === "perms") {
-            handlePerms(message);
-        } else if (message.type === "file_ack") {
-            handleFileAck(message.name, message.chunk, message.complete);
-        } else if (message.type === "audio" && message.data) {
-            handleAudio(message.data);
-        } else if (message.pixels) {
-            handlePatch(message);
+            handleMessage(msg.type, msg.data.subarray(HEADER_SIZE));
         }
     };
 
@@ -128,9 +113,83 @@ function connect() {
 
 }
 
+function handleMessage(type, payload, senderId = null) {
+    switch (type) {
+        case MsgType.PERMS:
+            handlePerms(unpackPerms(payload));
+            break;
+        case MsgType.FILE_ACK: {
+            const ack = unpackFileAck(payload);
+            handleFileAck(ack.name, ack.chunk, ack.complete);
+            break;
+        }
+        case MsgType.AUDIO:
+            handleAudio(unpackAudio(payload));
+            break;
+        case MsgType.IMAGE:
+            handlePatch(unpackImage(payload));
+            break;
+        case MsgType.PING:
+            if (!client_id && senderId) {
+                client_id = senderId;
+                document.title = _("Remote Control") + " - " + client_id;
+            }
+            handlePing(unpackPing(payload));
+            break;
+        case MsgType.FORWARD: {
+            const forwarded = unpackForward(payload);
+            const inner = unpackHeader(forwarded.innerMsg);
+            handleMessage(
+                inner.type,
+                forwarded.innerMsg.subarray(HEADER_SIZE),
+                forwarded.senderId
+            );
+            break;
+        }
+    }
+}
+
+function sendBinary(buffer) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(buffer);
+    }
+}
+
 function send(type, data) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    ws.send(JSON.stringify({type, ...data }));
+    let buffer;
+    switch(type) {
+        case "touch":
+            buffer = packTouch(data.action, data.touches);
+            break;
+        case "touchpad":
+            buffer = packTouchpad(data);
+            break;
+        case "mouse":
+            buffer = packMouse(data.action, data.x, data.y, data.button, data.w, data.h);
+            break;
+        case "mouse_rel":
+            buffer = packMouseRel(data.action, data.rel_x, data.rel_y, data.button);
+            break;
+        case "wheel":
+            buffer = packWheel(data.dx, data.dy);
+            break;
+        case "key":
+            buffer = packKey(data.code, data.action);
+            break;
+        case "request_full":
+            buffer = packRequestFull();
+            break;
+        case "quality":
+            buffer = packQuality(data.quality);
+            break;
+        case "ping":
+            buffer = packPing();
+            break;
+        default:
+            console.warn("Unknown message type:", type);
+            return;
+    }
+    sendBinary(buffer);
 }
 
 function properties(){
@@ -236,7 +295,7 @@ window.addEventListener("resize", () => {
 for (const action of ["keydown", "keyup"]) {
     document.addEventListener(action, (e) => {
         if(input_allowed){
-            send("key", {key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
+            send("key", { key: e.key, code: e.code, action: action === "keydown" ? "down" : "up" });
         }
         e.preventDefault();
         return false;

@@ -155,32 +155,27 @@ function sendFile(file) {
     const row = createProgressRow(name, file.size);
 
     const pending = { waiting: false, readAndSendChunk: null, row };
-    pending.readAndSendChunk = function() {
+    pending.readAndSendChunk = async function() {
         if (pending.waiting) return;
 
         const start = chunkIndex * CHUNK_SIZE;
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const slice = file.slice(start, end);
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            const base64 = reader.result.split(",")[1];
-            pending.waiting = true;
-            send("file", {
-                name: name,
-                mimetype: file.type,
-                size: file.size,
-                chunk: chunkIndex,
-                totalChunks: totalChunks,
-                data: base64
-            });
+        pending.waiting = true;
+        try {
+            const arrayBuffer = await slice.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            sendBinary(packFile(name, chunkIndex, totalChunks, data, file.type));
             chunkIndex++;
             const transferred = Math.min(chunkIndex * CHUNK_SIZE, file.size);
             const pct = Math.round((transferred / file.size) * 100);
             row.barEl.style.width = pct + "%";
             row.infoEl.textContent = formatBytes(transferred) + " / " + formatBytes(file.size);
-        };
-        reader.readAsDataURL(slice);
+        } catch (err) {
+            console.error("Failed to read file chunk:", err);
+            pending.waiting = false;
+        }
     };
 
     pendingFiles[name] = pending;

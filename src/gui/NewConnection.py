@@ -1,5 +1,4 @@
 import gi
-import json
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GLib
@@ -68,5 +67,5 @@ class NewConnection(Gtk.Dialog):
                 if check.get_active():
                     Controller.set_permission(perm, client_id, True)
         elif response in (Gtk.ResponseType.REJECT, Gtk.ResponseType.DELETE_EVENT):
-            Controller.send_ws(json.dumps({"kick": client_id}))
+            Controller.kick_client(client_id)
         self.destroy()

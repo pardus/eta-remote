@@ -2,7 +2,6 @@ import gi
 
 from gi.repository import GLib
 
-import base64 as b64
 import os
 import threading
 import traceback
@@ -12,6 +11,7 @@ if not Downloads:
     Downloads = os.path.expanduser("~/Downloads")
 open_files = {}
 files_lock = threading.Lock()
+
 
 def safe_path(name):
     parts = []
@@ -23,11 +23,12 @@ def safe_path(name):
         return None
     return os.path.join(Downloads, *parts)
 
+
 def handle_file(data, on_complete=None):
     name = data.get("name")
     chunk = data.get("chunk", 0)
     total_chunks = data.get("totalChunks", 1)
-    file_data = b64.b64decode(data.get("data", ""))
+    file_data = data.get("data", b"")
     complete = False
 
     path = safe_path(name)
