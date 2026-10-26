@@ -2,13 +2,13 @@ Source: eta-remote
 Section: utils
 Priority: optional
 Maintainer: Ali Rıza KESKİN <ali.riza.keskin@pardus.org.tr>
-Build-Depends: debhelper (>= 12),
+Build-Depends: debhelper-compat (= 13),
                meson (>= 0.50.0),
                pkg-config,
                libxext-dev,
                libx11-dev
-Standards-Version: 4.3.0
-Homepage: https://pardus.org.tr
+Standards-Version: 4.6.1
+Homepage: https://github.com/pardus/eta-remote
 
 Package: eta-remote
 Architecture: any
@@ -17,6 +17,6 @@ Depends: ${misc:Depends},
          python3-evdev,
          ffmpeg,
          python3-qrcode,
-         python3-websockets
+         python3-websockets (>=15.0)
 Description: Remote control application for etap.
  Etap Remote control.
