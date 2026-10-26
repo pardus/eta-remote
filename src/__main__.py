@@ -12,6 +12,5 @@ sys.path.insert(0, BASE_DIR)
 from Main import Application
 
 if __name__ == "__main__":
-    GLib.set_prgname("tr.org.pardus.eta-remote")
     app = Application()
     app.run(sys.argv)

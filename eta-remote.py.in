@@ -1,0 +1,10 @@
+#!/usr/bin/python3
+
+import sys
+prefix = "@PREFIX@"
+sys.path.insert(0, prefix+'/share/eta/eta-remote')
+
+from Main import Application
+
+app = Application()
+app.run(sys.argv)

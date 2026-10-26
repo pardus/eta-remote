@@ -23,7 +23,8 @@ install_subdir(
 
 install_data(
     'data/eta-remote-autostart.desktop',
-    install_dir: get_option('sysconfdir') / 'xdg/autostart'
+    install_dir: get_option('sysconfdir') / 'xdg/autostart',
+    rename: 'tr.org.pardus.eta-remote.desktop'
 )
 
 install_data(
@@ -34,7 +35,8 @@ install_data(
 
 install_data(
     'data/eta-remote.desktop',
-    install_dir: get_option('datadir') / 'applications'
+    install_dir: get_option('datadir') / 'applications',
+    rename: 'tr.org.pardus.eta-remote.desktop'
 )
 
 install_data(
@@ -60,4 +62,15 @@ install_data(
 install_data(
     'data/icons/tr.org.pardus.eta-remote-stopped.svg',
     install_dir: get_option('datadir') / 'icons/hicolor/scalable/apps'
+)
+
+conf = configuration_data()
+conf.set('PREFIX', get_option('prefix'))
+
+configure_file(
+  input: 'eta-remote.py.in',
+  output : 'eta-remote',
+  configuration: conf,
+  install_dir: get_option('bindir'),
+  install: true
 )
