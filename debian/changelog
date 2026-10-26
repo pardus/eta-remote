@@ -2,6 +2,179 @@ eta-remote (0.0.1) unshable; urgency=medium
 
   [ Ali Riza KESKIN ]
   * init
+  * create event capture page
+  * server: add client id and json check
+  * client improvements - client: send connect info - short id - screen rotate info send
+  * multitouch event forward
+  * uinput handler added
+  * create actions.py for run main.py as normal user and uinput as root with pkexec
+  * create main.py: start client server and user
+  * add virtual keyboard
+  * add virtual keyboard
+  * improvements
+  * minor fix
+  * screen capture added
+  * viewer
+  * fix start client
+  * capture and viewer fix
+  * fix
+  * use PIL.ImageGrab.grab()
+  * capture downscale to 1280x720. adaptive fps
+  * set patch quality 80
+  * user gui fix
+  * speed variable and viewer fix
+  * fix canvas - capture size issue
+  * resize optimize
+  * fix keyboard show
+  * request_full added
+  * single channel websocket and controller added
+  * control context
+  * gui init
+  * prevent key events
+  * add touch force
+  * add force
+  * abs_pressure
+  * fix
+  * uinput.py rewrite: use python3-evdev
+  * disconnect reload uinput
+  * controller improvements
+  * fix virtual keyboard
+  * add XShmGetImage based screenshotter
+  * optimize downscale
+  * remove alpha channel set
+  * keyup/keydown event listener fix
+  * auth list and target added
+  * allow button added
+  * center div and body background
+  * patch quality settings
+  * quality change slider added
+  * calculate patch than downscale
+  * fixes and improvements
+  * meson build added
+  * debian files added
+  * autostart and polkit rule added
+  * remove unused image scale
+  * fix frame bloat issue
+  * add audio stream using ffmpeg and pulse-null-sink
+  * use default.monitor sink instead of null sink
+  * reduce sample rate for save bandwidth
+  * split audio and data queue
+  * Revert "fix frame bloat issue"
+  * revert f487fcdbafd8b6f1696c927313762dfb560a9f46 and split remote.py
+  * add MainWindow.py
+  * add desktop file
+  * icon added
+  * fix stop signal
+  * autostart on boot: start service on boot
+  * add qrcode
+  * start remote.py as thread instead of fork
+  * auto allow options added
+  * warning added
+  * update warning
+  * add file drag & drop
+  * upload progress
+  * disable websocket frame limit and increase file sand chunk limit
+  * permissions added
+  * fix quality
+  * audio & image capture: wait until client connected
+  * use xdamage: wait damage event
+  * cleanup pillow capture
+  * add translation
+  * status added
+  * grab_rgb fail fallback: blank placeholder image
+  * dont crash grab_rgb fail
+  * stop ffmpeg when no client available
+  * ffmpeg start command improvement
+  * split new connection from controller
+  * update permission logic
+  * input on/off added
+  * improvements
+  * kick added
+  * websockets.asyncio replaced with websockets.sync
+  * add connected client window
+  * kick signal improvement
+  * parse browser info
+  * drop set permission from client
+  * remove input permission from defaults. add seperator
+  * incomming connection improvement
+  * split audio and data lock
+  * wayland support added.
+  * fix uinput on wayland
+  * fix for kde wayland
+  * split wayland/xdg-portal and gnome backends
+  * add translation support
+  * update translation
+  * js translation added
+  * fix escape character issue
+  * fetch language from user
+  * prevent control button invisible
+  * use ayatana instead of gtk statusicon. desktop file fixes
+  * fixes
+  * ping calculator added
+  * file send improvements
+  * report client permission to user
+  * warning container
+  * css improvements
+  * update clients window
+  * remove subprocess from starting service
+  * redesign all windows
+  * fix stop/break dbus issue
+  * fixes
+  * translation update
+  * fix stop ctx.wait allow length
+  * add missing translation
+  * add missing translation
+  * css:remove crosshair cursor
+  * keymap shift altgr characters added
+  * add missing symbols
+  * prevent user to change yourself permission
+  * fix gui bug prevent permission change
+  * prevent user change other users permission
+  * prevent users kick others
+  * minor fix
+  * empty audio data check improvement
+  * fix broadcast disconnect message wait issue
+  * copy ctx: prevent self.ctx.message race condition bug
+  * indicator start/stop fix
+  * client/screencast: Set _frame_event after close display
+  * send message to websocket client as async
+  * reset uinput device after client disconnect
+  * add touchpad and touch mode
+  * add 2 tap right click on touchpad mode
+  * add touchpad wheel
+  * add missing thread lock
+  * minor indent improvement
+  * virtual keyboard position fix
+  * split json data from keymap file
+  * add all keylabels from ckbcomp source
+  * touchpad surface height width fix
+  * css fix
+  * define keys from code and css fix
+  * fix uinput handler close issue
+  * fix stop allow list clear issue and update list issue
+  * fix client disconnect accept dialog destroy
+  * touchpad: double tap select added
+  * touchpad: find primary touch identifier
+  * unsupported warning fix
+  * update warning messages
+  * update translation
+  * fix window title
+  * fix touchpad primary detect issue
+  * touchpad: hide screen when touchpad mode
+  * audio: compress channel and use s16le. audio queue max limit added.
+  * typo fix
+  * fullscreen in apple is not available
+  * thread safe issue fixes
+  * use room name instead of room1
+  * add config.json
+  * config.json from system config added.
+  * forward config.json to httpd and use
+  * typo fix
+  * fix config
+  * config defaults fix
+  * css fix
+  * minor fix
+  * binary protocol
+  * protocol.py: simply
 
- -- Fatih Altun <fatih.altun@pardus.org.tr>  Mon, 03 Aug 2026 11:33:30 +0300
-
+ -- Fatih Altun <fatih.altun@pardus.org.tr>  Mon, 26 Oct 2026 12:24:51 +0300
