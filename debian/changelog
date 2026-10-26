@@ -1,3 +1,14 @@
+eta-remote (0.0.2) unshable; urgency=medium
+
+  [ Fatih Altun ]
+  * Update debian folder
+
+  [ Ali Riza KESKIN ]
+  * Add eta-remote command.
+  * desktop file: update commands
+
+ -- Fatih Altun <fatih.altun@pardus.org.tr>  Mon, 26 Oct 2026 16:10:46 +0300
+
 eta-remote (0.0.1) unshable; urgency=medium
 
   [ Ali Riza KESKIN ]
