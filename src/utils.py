@@ -3,8 +3,7 @@ import socket
 import struct
 import fcntl
 import json
-import uuid
-import zlib
+import secrets
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "config.json")
 if os.path.isfile("/etc/pardus/eta-remote.json"):
@@ -35,9 +34,5 @@ def get_local_ip():
 
 
 def get_uid():
-    # get uuid4
-    uid = str(uuid.uuid4())
-    # crc32 checksum
-    uid = zlib.crc32(uid.encode("utf-8"))
-    # hex string
-    return str(hex(uid))[2:]
+    # crc32 of a uuid was only 32 bits, keep the room id hard to guess
+    return secrets.token_hex(8)
