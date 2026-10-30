@@ -58,7 +58,9 @@ class NewConnection(Gtk.Dialog):
 
         self.add_button(_("Deny"), Gtk.ResponseType.REJECT)
         self.add_button(_("Allow"), Gtk.ResponseType.OK)
-        self.set_default_response(Gtk.ResponseType.OK)
+        # Input and image are already checked. This dialog can open while someone
+        # is typing, one Enter must not give control of the board to a stranger.
+        self.set_default_response(Gtk.ResponseType.REJECT)
         self.connect("response", self._on_response, Controller, client_id)
 
     def _on_response(self, _dialog, response, Controller, client_id):
