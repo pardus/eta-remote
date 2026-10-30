@@ -5,6 +5,7 @@ import os
 import sys
 import signal
 import json
+import secrets
 import threading
 
 import gi
@@ -115,13 +116,17 @@ class RemoteControl:
         # Create every long-lived object here, before any thread is spawned,
         # so stop() can never observe a half-initialized service.
         import server
+        address = self.address
         try:
             if self.ws_host == "0.0.0.0":
-                self.ws_server = server.serve(server.handler, self.ws_host, self.ws_port, max_size=None)
+                server.host_token = secrets.token_hex(16)
+                address += "?" + server.host_token
+                self.ws_server = server.serve(server.handler, self.ws_host, self.ws_port,
+                                              max_size=server.MAX_MESSAGE)
             if self.httpd_address == "0.0.0.0":
                 self.httpd = self._make_http_server()
             self.pipe_uinput = PipeUInputHandler()
-            self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
+            self.client = WebSocketClient(address, self.pipe_uinput.handle, self.window.control)
         except:
             self.stop()
             raise

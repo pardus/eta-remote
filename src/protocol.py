@@ -32,6 +32,10 @@ HEADER_FMT = ">BI"  # big-endian: uint8, uint32
 HEADER_SIZE = 5
 MAX_PAYLOAD = 0xFFFFFFFF  # 4GB max payload
 
+# Biggest websocket message the relay accepts. File chunks are 4 MiB and a
+# screen patch is one JPEG, anyone on the network can send to the relay.
+MAX_MESSAGE = 16 * 1024 * 1024
+
 INPUT_TYPES = {
     MsgType.TOUCH,
     MsgType.TOUCHPAD,
@@ -289,6 +293,9 @@ class BinaryProtocol:
         messages = []
         while len(self._buffer) >= HEADER_SIZE:
             msg_type, payload_len = unpack_header(self._buffer)
+            # forwarded messages are a bit bigger than the original
+            if payload_len > 2 * MAX_MESSAGE:
+                raise ValueError(f"Message too big: {payload_len}")
             total_len = HEADER_SIZE + payload_len
             if len(self._buffer) < total_len:
                 break  # wait for more data
