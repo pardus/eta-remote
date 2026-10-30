@@ -119,6 +119,9 @@ class Control:
 
     def _connect(self, data, client_id):
         with allow_lock:
+            # a repeated connect would reset the perms and open a new dialog
+            if client_id in self.allows:
+                return
             self.allows[client_id] = {"perm": [], "data": data, "time": time.time(), "new-connection": None}
         self._show_clients()
         if self.settings.get_boolean("auto-allow"):

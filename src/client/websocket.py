@@ -40,7 +40,9 @@ class WebSocketClient:
 
     def _process_message(self, ctx, msg_type, msg_data, sender_id=None):
         ctx.message = self._parse_message(msg_type, msg_data[HEADER_SIZE:])
-        if ctx.message is None:
+        # A client can send any type, some of them don't unpack to a dict.
+        # Raising here would drop the connection of the board.
+        if not isinstance(ctx.message, dict):
             return
         if sender_id is not None:
             ctx.message["id"] = sender_id
@@ -124,7 +126,7 @@ class WebSocketClient:
                 }
             if msg_type == MsgType.CONNECT:
                 _, client_data = result
-                return {"type": "connect", **(client_data or {})}
+                return {**(client_data or {}), "type": "connect"}
             return result
         except:
             print(traceback.format_exc())
