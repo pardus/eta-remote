@@ -140,6 +140,18 @@ class Control:
             self._show_main()
         self._update_ui()
 
+    def append_target(self, kind, data):
+        data["target"] = []
+        with allow_lock:
+            for cl in list(self.allows.keys()):
+                for perm in self.allows[cl].get("perm", []) + ["misc"]:
+                    if kind in all_permissions.get(perm, []):
+                        data["target"].append(cl)
+                        break
+        if len(data["target"]) == 0:
+            return
+        return data
+
     def control(self, ctx):
         """Filter and route one parsed websocket message."""
         with self.ws_lock:
@@ -156,15 +168,7 @@ class Control:
             elif kind == "disconnect":
                 ctx.wait = (len(self.allows.keys()) == 0)
                 GLib.idle_add(self._disconnect, client_id)
-
-            with allow_lock:
-                data["target"] = []
-                for cl in list(self.allows.keys()):
-                    for perm in self.allows[cl].get("perm", []) + ["misc"]:
-                        if kind in all_permissions.get(perm, []):
-                            data["target"].append(cl)
-                            break
-            ctx.message = data
+            ctx.message = self.append_target(kind, data)
         except:
             print(traceback.format_exc())
             return False

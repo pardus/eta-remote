@@ -18,7 +18,7 @@ import uuid
 import zlib
 
 from protocol import (
-    MsgType, BinaryProtocol, parse_message, pack, unpack,
+    MsgType, BinaryProtocol, parse_message, pack, unpack, unpack_targets,
 )
 
 rooms: dict[str, set] = {}
@@ -108,6 +108,13 @@ def handler(websocket):
                     if msg_type == MsgType.PERMS:
                         targets = unpack(MsgType.PERMS, payload)[4]
                         recipients = [c for c in clients if c.id in targets]
+                    elif msg_type in (MsgType.IMAGE, MsgType.AUDIO):
+                        targets = unpack_targets(msg_type, payload)
+                        if targets is None:
+                            # Older client without a target list: broadcast.
+                            recipients = clients - {client}
+                        else:
+                            recipients = [c for c in clients if c.id in targets]
                     else:
                         recipients = clients - {client}
 

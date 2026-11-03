@@ -121,7 +121,7 @@ class RemoteControl:
             if self.httpd_address == "0.0.0.0":
                 self.httpd = self._make_http_server()
             self.pipe_uinput = PipeUInputHandler()
-            self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control)
+            self.client = WebSocketClient(self.address, self.pipe_uinput.handle, self.window.control, self.window.append_target)
         except:
             self.stop()
             raise

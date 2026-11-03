@@ -70,10 +70,17 @@ def pulse_stop():
         pass
 
 
-def main(handler=None, stop_event=None):
+def main(handler=None, stop_event=None, append_target=None):
     for data in record_audio(stop_event):
         if handler:
-            handler(pack(MsgType.AUDIO, gzip.compress(data)))
+            target = None
+            if append_target is not None:
+                message = append_target("audio", {"type": "audio"})
+            if message is None:
+                continue
+            else:
+                target = message["target"]
+                handler(pack(MsgType.AUDIO, gzip.compress(data), target=target))
 
 
 if __name__ == "__main__":

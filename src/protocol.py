@@ -82,6 +82,15 @@ def pack_bytes(b):
     return struct.pack(">I", len(b)) + b
 
 
+def pack_targets(targets):
+    """Pack a list of client IDs as [count:2] then [length:2][utf-8]*."""
+    targets = targets or []
+    payload = struct.pack(">H", len(targets))
+    for target in targets:
+        payload += pack_str(target)
+    return payload
+
+
 def unpack_bytes(data, offset=0):
     """Unpack bytes. Returns (bytes, new_offset)."""
     if len(data) < offset + 4:
@@ -119,9 +128,13 @@ def pack(msg_type, *args, **kwargs):
         x, y, width, height, screen_width, screen_height, jpeg_data = args
         payload = struct.pack(">ffHHff", x, y, width, height, screen_width, screen_height)
         payload += pack_bytes(jpeg_data)
+        if "target" in kwargs:
+            payload += pack_targets(kwargs["target"])
     elif msg_type == MsgType.AUDIO:
         audio_data = args[0]
         payload = pack_bytes(audio_data)
+        if "target" in kwargs:
+            payload += pack_targets(kwargs["target"])
     elif msg_type == MsgType.PERMS:
         audio, file, image, input_ = args[:4]
         target_ids = args[4] if len(args) > 4 else kwargs.get("target_ids")
@@ -275,6 +288,32 @@ def unpack(msg_type, data):
         return {"type": "ping"}
     else:
         raise ValueError(f"Unsupported unpack message type: {msg_type}")
+
+
+def unpack_targets(msg_type, data):
+    """Read the optional trailing target list from an image/audio payload.
+
+    Returns the list of target client IDs, or None when the message was
+    produced by an older peer and does not carry a target list.
+    """
+    if msg_type == MsgType.IMAGE:
+        offset = 20
+        _, offset = unpack_bytes(data, offset)
+    elif msg_type == MsgType.AUDIO:
+        _, offset = unpack_bytes(data, 0)
+    else:
+        return None
+
+    if len(data) < offset + 2:
+        return None
+
+    num_targets = struct.unpack(">H", data[offset:offset+2])[0]
+    offset += 2
+    targets = []
+    for _ in range(num_targets):
+        target, offset = unpack_str(data, offset)
+        targets.append(target)
+    return targets
 
 
 class BinaryProtocol:

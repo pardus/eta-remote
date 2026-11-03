@@ -26,10 +26,11 @@ class context:
 
 
 class WebSocketClient:
-    def __init__(self, address, handler=print, control=print):
+    def __init__(self, address, handler=print, control=print, append_target=print):
         self.address = address
         self.handler = handler
         self.control = control
+        self.append_target = append_target
         self._wait_last = True
         self._stop_event = threading.Event()
         self._go_event = threading.Event()
@@ -141,6 +142,7 @@ class WebSocketClient:
             if message is None:
                 return
             try:
+                print("send:{}".format(len(message)))
                 self.ctx.websocket.send(message)
             except ConnectionClosed:
                 return
@@ -171,11 +173,11 @@ class WebSocketClient:
 
         capture_thread = threading.Thread(
             target=capture_main, args=(data_handler,),
-            kwargs={"stop_event": self._stop_event}, daemon=True
+            kwargs={"stop_event": self._stop_event,  "append_target":self.append_target}, daemon=True
         )
         audio_thread = threading.Thread(
             target=pulse_main, args=(audio_handler,),
-            kwargs={"stop_event": self._stop_event}, daemon=True
+            kwargs={"stop_event": self._stop_event,  "append_target":self.append_target}, daemon=True
         )
 
         capture_thread.start()

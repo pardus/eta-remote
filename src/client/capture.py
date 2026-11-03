@@ -118,7 +118,7 @@ def _should_stop(stop_event):
     return stop_event is not None and stop_event.is_set()
 
 
-def main(handler=None, stop_event=None):
+def main(handler=None, stop_event=None, append_target=None):
     global req_full
     global img_width
     global img_height
@@ -158,7 +158,16 @@ def main(handler=None, stop_event=None):
             patch = image_diff_patch(previous_image, current_image)
 
             if patch is not None and handler:
-                handler(pack(MsgType.IMAGE, *patch))
+                message = patch._asdict()
+                message["type"] = "image"
+                target = None
+                if append_target is not None:
+                    message = append_target("image", message)
+                if message is None:
+                    continue
+                else:
+                    target = message["target"]
+                    handler(pack(MsgType.IMAGE, *patch, target=target))
 
             previous_image = current_image
 
