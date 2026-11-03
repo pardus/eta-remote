@@ -67,10 +67,29 @@ install_data(
 conf = configuration_data()
 conf.set('PREFIX', get_option('prefix'))
 
-configure_file(
-  input: 'eta-remote.py.in',
-  output : 'eta-remote',
+eta_remote_main = configure_file(
+  input: 'eta-remote.c.in',
+  output : 'eta-remote.c',
   configuration: conf,
-  install_dir: get_option('bindir'),
-  install: true
+)
+
+
+py_mod = import('python')
+py_instance = py_mod.find_installation('python3')
+py_version = py_instance.version()
+py_version_parts = py_version.split('.')
+major_minor_version = py_version_parts[0] + '.' + py_version_parts[1]
+
+py_deps = [
+    dependency('python-'+major_minor_version+'-embed'),
+    dependency('python-'+major_minor_version)
+]
+
+
+executable(
+  'eta-remote',
+  eta_remote_main,
+  dependencies: py_deps,
+  install: true,
+  install_dir: get_option('bindir')
 )
