@@ -1,6 +1,30 @@
 #include <Python.h>
 
 int main(int argc, char *argv[]) {
+#if PY_VERSION_HEX >= 0x03080000
+    PyStatus status;
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+
+    /* Ignore environment variables like PYTHONPATH, PYTHONHOME, etc. */
+    config.use_environment = 0;
+    /* Do not add user site directory (~/.local/lib/...) */
+    config.user_site_directory = 0;
+
+    status = PyConfig_SetBytesArgv(&config, argc, argv);
+    if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
+        return 1;
+    }
+
+    status = Py_InitializeFromConfig(&config);
+    PyConfig_Clear(&config);
+    if (PyStatus_Exception(status)) {
+        return 1;
+    }
+#else
+    Py_IgnoreEnvironmentFlag = 1;
+    Py_NoUserSiteDirectory = 1;
     Py_Initialize();
 
     #if PY_MAJOR_VERSION >= 3
@@ -12,6 +36,7 @@ int main(int argc, char *argv[]) {
     #else
         PySys_SetArgv(argc, argv);
     #endif
+#endif
 
     const char *python_code =
         "import sys\n"
@@ -25,12 +50,14 @@ int main(int argc, char *argv[]) {
 
     int result = PyRun_SimpleString(python_code);
 
+#if PY_VERSION_HEX < 0x03080000
     #if PY_MAJOR_VERSION >= 3
         for (int i = 0; i < argc; i++) {
             PyMem_RawFree(wargv[i]);
         }
         free(wargv);
     #endif
+#endif
 
     Py_Finalize();
     return result;

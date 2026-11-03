@@ -11,26 +11,33 @@ from protocol import HEADER_SIZE, INPUT_TYPES, unpack_header, unpack
 from uinput import UInputHandler
 
 
-import os
-
 def auth_process():
     try:
         ppid = os.getppid()
         parent_exec = os.readlink(f"/proc/{ppid}/exe")
         parent_stat = os.stat(parent_exec)
         target_stat = os.stat("/usr/bin/eta-remote")
-        return (parent_stat.st_ino == target_stat.st_ino and
-                parent_stat.st_dev == target_stat.st_dev)
-    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        if parent_stat.st_ino == target_stat.st_ino and parent_stat.st_dev == target_stat.st_dev:
+            return True
+        # In case pkexec acts as an intermediary parent process
+        with open(f"/proc/{ppid}/stat", "r") as f:
+            gppid = int(f.read().split()[3])
+        gparent_exec = os.readlink(f"/proc/{gppid}/exe")
+        gparent_stat = os.stat(gparent_exec)
+        return (gparent_stat.st_ino == target_stat.st_ino and
+                gparent_stat.st_dev == target_stat.st_dev)
+    except (FileNotFoundError, ProcessLookupError, PermissionError, IndexError, ValueError):
         return False
+
 
 class PipeUInputHandler:
     """Forwards websocket messages to a privileged actions.py worker."""
 
     def __init__(self):
         action_file = os.path.dirname(__file__) + "/actions.py"
+        python_bin = "/usr/bin/python3" if os.path.exists("/usr/bin/python3") else sys.executable
         self.worker = subprocess.Popen(
-            ["pkexec", sys.executable, action_file],
+            ["pkexec", python_bin, action_file],
             stdin=subprocess.PIPE,
         )
 

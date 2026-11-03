@@ -8,7 +8,7 @@
     <description>Run the eta-remote uinput control worker without prompting</description>
     <message>Authentication is required to run the eta-remote uinput worker</message>
     <defaults>
-      <allow_any>yes</allow_any>
+      <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
       <allow_active>yes</allow_active>
     </defaults>
