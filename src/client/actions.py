@@ -11,6 +11,19 @@ from protocol import HEADER_SIZE, INPUT_TYPES, unpack_header, unpack
 from uinput import UInputHandler
 
 
+import os
+
+def auth_process():
+    try:
+        ppid = os.getppid()
+        parent_exec = os.readlink(f"/proc/{ppid}/exe")
+        parent_stat = os.stat(parent_exec)
+        target_stat = os.stat("/usr/bin/eta-remote")
+        return (parent_stat.st_ino == target_stat.st_ino and
+                parent_stat.st_dev == target_stat.st_dev)
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        return False
+
 class PipeUInputHandler:
     """Forwards websocket messages to a privileged actions.py worker."""
 
@@ -36,6 +49,9 @@ class PipeUInputHandler:
 
 
 def run():
+    if not auth_process():
+        print("Authentication Failed!")
+        sys.exit(1)
     handler = UInputHandler()
     for line in sys.stdin:
         line = line.strip()
