@@ -75,15 +75,15 @@ eta_remote_main = configure_file(
 
 
 py_mod = import('python')
-py_instance = py_mod.find_installation('python3')
-py_version = py_instance.version()
-py_version_parts = py_version.split('.')
-major_minor_version = py_version_parts[0] + '.' + py_version_parts[1]
+py = py_mod.find_installation('python3')
 
-py_deps = [
-    dependency('python-'+major_minor_version+'-embed'),
-    dependency('python-'+major_minor_version)
-]
+if not py.version().version_compare('>=3.8')
+  error('Python 3.8 or newer is required; found ' + py.version())
+endif
+
+
+py_deps = [py.dependency(), py.dependency(embed: true)]
+
 
 
 executable(

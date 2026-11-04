@@ -1,7 +1,6 @@
 #include <Python.h>
 
 int main(int argc, char *argv[]) {
-#if PY_VERSION_HEX >= 0x03080000
     PyStatus status;
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
@@ -10,6 +9,8 @@ int main(int argc, char *argv[]) {
     config.use_environment = 0;
     /* Do not add user site directory (~/.local/lib/...) */
     config.user_site_directory = 0;
+    /* Do not parse python args */
+    config.parse_argv = 0; 
 
     status = PyConfig_SetBytesArgv(&config, argc, argv);
     if (PyStatus_Exception(status)) {
@@ -18,25 +19,10 @@ int main(int argc, char *argv[]) {
     }
 
     status = Py_InitializeFromConfig(&config);
-    PyConfig_Clear(&config);
     if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
         return 1;
     }
-#else
-    Py_IgnoreEnvironmentFlag = 1;
-    Py_NoUserSiteDirectory = 1;
-    Py_Initialize();
-
-    #if PY_MAJOR_VERSION >= 3
-        wchar_t **wargv = (wchar_t **)malloc(sizeof(wchar_t *) * argc);
-        for (int i = 0; i < argc; i++) {
-            wargv[i] = Py_DecodeLocale(argv[i], NULL);
-        }
-        PySys_SetArgv(argc, wargv);
-    #else
-        PySys_SetArgv(argc, argv);
-    #endif
-#endif
 
     const char *python_code =
         "import sys\n"
@@ -46,19 +32,11 @@ int main(int argc, char *argv[]) {
         "from Main import Application\n"
         "\n"
         "app = Application()\n"
+        "print(sys.argv)\n"
         "app.run(sys.argv)\n";
 
     int result = PyRun_SimpleString(python_code);
-
-#if PY_VERSION_HEX < 0x03080000
-    #if PY_MAJOR_VERSION >= 3
-        for (int i = 0; i < argc; i++) {
-            PyMem_RawFree(wargv[i]);
-        }
-        free(wargv);
-    #endif
-#endif
-
+    PyConfig_Clear(&config);
     Py_Finalize();
     return result;
 }
