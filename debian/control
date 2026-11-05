@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Ali Rıza KESKİN <ali.riza.keskin@pardus.org.tr>
 Build-Depends: debhelper-compat (= 13),
                meson (>= 0.50.0),
+               python3-dev,
                pkg-config,
                libxext-dev,
                libx11-dev
@@ -17,6 +18,7 @@ Depends: ${misc:Depends},
          python3-evdev,
          ffmpeg,
          python3-qrcode,
-         python3-websockets (>=15.0)
+         python3-websockets (>=15.0),
+         ${shlibs:Depends}
 Description: Remote control application for etap.
  Etap Remote control.
