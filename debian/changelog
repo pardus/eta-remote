@@ -1,3 +1,18 @@
+eta-remote (0.0.3) unshable; urgency=medium
+
+  [ Ali Riza KESKIN ]
+  * The main eta-remote file is written in C and invokes Python code.
+  * add caller pid process authenticate. Block all uinput request except eta-remote
+  * hardening: disallow inactive polkit call
+  * fix: add target client for outgoing data (audio / image)
+  * Require Python 3.8+ and initialize via PyConfig
+  * add missing build dependencies
+
+  [ ahdplayer ]
+  * fix(security): prevent PYTHONPATH injection and restrict allow_any in polkit policy
+
+ -- Fatih Altun <fatih.altun@pardus.org.tr>  Thu, 05 Nov 2026 23:48:41 +0300
+
 eta-remote (0.0.2) unshable; urgency=medium
 
   [ Fatih Altun ]
