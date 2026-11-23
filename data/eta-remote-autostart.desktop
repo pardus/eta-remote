@@ -1,7 +1,9 @@
 [Desktop Entry]
 Type=Application
 Name=Eta Remote
+Name[pt]=Remoto Eta
 Comment=Remote control application for etap
+Comment[pt]=Aplicação de controlo remoto para o Etap
 Exec=eta-remote --autostart
 Terminal=false
 X-GNOME-Autostart-enabled=true
